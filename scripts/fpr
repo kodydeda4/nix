@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#=====================================================================================
+# fpr — swift-format
+#
+# Formats my Swift repos with SwiftFormat (nicklockwood/SwiftFormat, installed
+# by nix). Each repo's own .swiftformat file decides the style. Add or remove
+# repos in the DIRS list below.
+#
+# Usage:
+#   fpr                 format every repo in DIRS
+#   fpr --lint          extra arguments go to swiftformat (--lint, --dryrun, ...)
+#=====================================================================================
+
+set -uo pipefail
+
+DIRS=(
+	"$HOME/Developer/work/foresightcares/swift-ava-app"
+	"$HOME/Developer/personal/Applications/redfin/redfin-swift"
+)
+
+status=0
+for dir in "${DIRS[@]}"; do
+	if [ ! -d "$dir" ]; then
+		echo "skip (not found): $dir" >&2
+		continue
+	fi
+	echo "==> ${dir/#$HOME/~}"
+	swiftformat "$dir" "$@" || status=1
+done
+exit $status

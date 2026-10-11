@@ -1,0 +1,19 @@
+# kodydeda4 GitHub account (default).
+Host github.com
+	HostName github.com
+	User git
+	IdentityFile ~/.ssh/id_ed25519_kodydeda4
+	IdentitiesOnly yes
+	AddKeysToAgent yes
+	UseKeychain yes
+
+# foresightcares GitHub account. dotfiles/git/config rewrites every
+# github.com/foresightcares/... URL to this host.
+Host github-foresightcares
+	HostName github.com
+	User git
+	IdentityFile ~/.ssh/id_ed25519_foresightcares
+	IdentitiesOnly yes
+	AddKeysToAgent yes
+	UseKeychain yes
+	HostKeyAlias github.com

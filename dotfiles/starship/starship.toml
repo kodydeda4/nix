@@ -1,0 +1,23 @@
+# Starship prompt. Linked to ~/.config/starship.toml by home.nix.
+
+# One-line prompt: no newline before the prompt symbol or between prompts.
+add_newline = false
+
+[line_break]
+disabled = true
+
+# GitHub account for the current repo, from `github.user` in
+# dotfiles/git/<account>.config. Only shown inside a git repo.
+[custom.github_user]
+command = "git config github.user"
+when = "git config github.user"
+require_repo = true
+symbol = " "
+style = "bold purple"
+format = "as [$symbol$output]($style) "
+
+# Vi mode indicator (zsh `bindkey -v`): ❯ insert mode, ❮ normal mode.
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol   = "[❯](bold red)"
+vimcmd_symbol  = "[❮](bold green)"

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#=====================================================================================
+# ss — screenshot shadows (toggle)
+#
+# Turns the drop shadow on window screenshots (⌘⇧4 then Space) on or off.
+# Takes effect on the next screenshot.
+#
+# Usage:
+#   ss enable           window screenshots get the macOS shadow (default)
+#   ss disable          window screenshots without the shadow
+#=====================================================================================
+
+set -euo pipefail
+
+case "${1:-}" in
+enable) defaults write com.apple.screencapture disable-shadow -bool false && echo "Screenshot shadows enabled." ;;
+disable) defaults write com.apple.screencapture disable-shadow -bool true && echo "Screenshot shadows disabled." ;;
+*)
+	echo "usage: ss <enable|disable>" >&2
+	exit 1
+	;;
+esac

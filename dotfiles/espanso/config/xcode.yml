@@ -1,0 +1,5 @@
+filter_class: 'com.apple.dt.Xcode'
+enable: true
+
+extra_includes:
+  - "../match/_xcode.yml"

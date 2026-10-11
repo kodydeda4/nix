@@ -1,0 +1,4 @@
+# SwiftFormat settings for Swift files that have no .swiftformat of their own
+# (repos with a .swiftformat always use theirs). Used by conform.lua.
+--indent tabs
+--tabwidth 2

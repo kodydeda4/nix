@@ -1,0 +1,28 @@
+# Entry point: git only reads a file named `config`. Shared settings live
+# here; each account has its own file.
+
+# kodydeda4 (default)
+[include]
+	path = kodydeda4.config
+
+# foresightcares: any repo under ~/Developer/work/foresightcares/ (overrides the default)
+[includeIf "gitdir:~/Developer/work/foresightcares/"]
+	path = foresightcares.config
+
+# Any github.com/foresightcares/... URL (HTTPS or SSH, from any folder) goes
+# through the github-foresightcares SSH host, which uses the foresightcares key
+# (dotfiles/ssh/config). Needed for Xcode/SwiftPM, which clone private packages
+# over HTTPS into caches outside ~/Developer/work/foresightcares/.
+[url "git@github-foresightcares:foresightcares/"]
+	insteadOf = https://github.com/foresightcares/
+	insteadOf = git@github.com:foresightcares/
+	insteadOf = ssh://git@github.com/foresightcares/
+
+[init]
+	defaultBranch = main
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

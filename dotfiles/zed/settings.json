@@ -1,0 +1,64 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "agent": {
+    "favorite_models": [],
+    "model_parameters": [],
+    "terminal_init_command": ""
+  },
+  "show_whitespaces": "selection",
+  "format_on_save": "off",
+  "indent_guides": {
+    "enabled": true
+  },
+  "hard_tabs": false,
+  "ui_font_family": "SF Pro",
+  "agent_ui_font_family": "SF Pro",
+  "buffer_font_family": "SF Mono",
+  "cli_default_open_behavior": "new_window",
+  "project_panel": {
+    "dock": "left"
+  },
+  "icon_theme": "Material Icon Theme",
+  "auto_install_extensions": {
+    "material-icon-theme": true,
+    "one-dark-darkened": true,
+    "tokyo-night": true
+  },
+  "markdown_preview": {
+    "font_family": "SF Pro",
+    "code_font_family": "SF Mono"
+  },
+  "terminal": {
+    "font_family": "MesloLGL Nerd Font Mono"
+  },
+  "tab_size": 2,
+  "languages": {
+    "Rust": {
+      "tab_size": 2
+    }
+  },
+  "agent_servers": {
+    "codex-acp": {
+      "type": "registry"
+    },
+    "claude-acp": {
+      "type": "registry"
+    }
+  },
+  "ui_font_size": 20.0,
+  "buffer_font_size": 16,
+  "vim_mode": true,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "One Dark"
+  },
+  "disable_ai": true
+}

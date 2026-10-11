@@ -1,0 +1,13 @@
+# espanso match file
+# https://espanso.org/docs/
+
+matches:
+  # Print the current date
+  - trigger: ":date"
+    replace: "{{mydate}}"
+    vars:
+      - name: mydate
+        type: date
+        params:
+          format: "%m/%d/%Y"
+

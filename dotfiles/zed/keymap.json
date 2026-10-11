@@ -1,0 +1,384 @@
+// Zed keymap
+//
+// For information on binding keys, see the Zed
+// documentation: https://zed.dev/docs/key-bindings
+//
+// To see the default key bindings run `zed: open default keymap`
+// from the command palette.
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      // "shift shift": "file_finder::Toggle"
+    },
+  },
+  {
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      // "j k": "vim::NormalBefore"
+    },
+  },
+  {
+    "bindings": {
+      "cmd-shift-o": "editor::OpenFile"
+    }
+  },
+  {
+    "bindings": {
+      "ctrl-)": [
+        "zed::ResetBufferFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "unbind": {
+      "cmd-0": [
+        "zed::ResetBufferFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "bindings": {
+      "ctrl-alt-cmd-0": [
+        "zed::ResetBufferFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "unbind": {
+      "cmd-0": [
+        "zed::ResetBufferFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "bindings": {
+      "ctrl-alt-cmd-0": [
+        "zed::ResetBufferFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "unbind": {
+      "cmd-0": [
+        "zed::ResetBufferFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "context": "Onboarding",
+    "bindings": {
+      "ctrl-alt-cmd-0": [
+        "zed::ResetUiFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "context": "Onboarding",
+    "unbind": {
+      "cmd-0": [
+        "zed::ResetUiFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "context": "Welcome",
+    "bindings": {
+      "ctrl-alt-cmd-0": [
+        "zed::ResetUiFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "context": "Welcome",
+    "unbind": {
+      "cmd-0": [
+        "zed::ResetUiFontSize",
+        {
+          "persist": false
+        }
+      ]
+    }
+  },
+  {
+    "context": "ImageViewer",
+    "bindings": {
+      "ctrl-alt-cmd-0": "image_viewer::ResetZoom"
+    }
+  },
+  {
+    "context": "ImageViewer",
+    "unbind": {
+      "cmd-0": "image_viewer::ResetZoom"
+    }
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "cmd-0": "workspace::ToggleLeftDock"
+    }
+  },
+  {
+    "context": "Workspace",
+    "unbind": {
+      "cmd-b": "workspace::ToggleLeftDock"
+    }
+  },
+  {
+    "context": "Editor && !agent_diff && !AgentPanel",
+    "unbind": {
+      "cmd-shift-y": "git::UnstageAndNext"
+    }
+  },
+  {
+    "context": "GitPanel && ChangesList && !GitBranchSelector && !GitRepositorySelector",
+    "unbind": {
+      "cmd-shift-y": "git::UnstageFile"
+    }
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "cmd-shift-y": "terminal_panel::Toggle"
+    }
+  },
+  {
+    "context": "Workspace",
+    "unbind": {
+      "ctrl-`": "terminal_panel::Toggle"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "ctrl-cmd-l": "pane::GoForward"
+    }
+  },
+  {
+    "context": "vim_mode == literal",
+    "bindings": {
+      "ctrl-i": [
+        "vim::Literal",
+        [
+          "ctrl-i",
+          "\t"
+        ]
+      ]
+    }
+  },
+  {
+    "context": "Editor",
+    "unbind": {
+      "alt-cmd-[": "editor::Fold"
+    }
+  },
+  {
+    "context": "ThreadsSidebar && !Editor",
+    "bindings": {
+      "ctrl-cmd-,": "editor::FoldAll"
+    }
+  },
+  {
+    "context": "ThreadsSidebar && !Editor",
+    "unbind": {
+      "z shift-m": "editor::FoldAll"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "ctrl-cmd-,": "editor::FoldAll"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "unbind": {
+      "z shift-m": "editor::FoldAll"
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "ctrl-cmd-,": "editor::FoldAll"
+    }
+  },
+  {
+    "context": "Editor",
+    "unbind": {
+      "cmd-k cmd-0": "editor::FoldAll"
+    }
+  },
+  {
+    "context": "TextFinder || TextFinder > Picker > Editor || TextFinder > Picker > menu",
+    "bindings": {
+      "cmd-<": "text_finder::Fold"
+    }
+  },
+  {
+    "context": "TextFinder || TextFinder > Picker > Editor || TextFinder > Picker > menu",
+    "unbind": {
+      "alt-cmd-[": "text_finder::Fold"
+    }
+  },
+  {
+    "context": "ThreadsSidebar && !Editor",
+    "bindings": {
+      "ctrl-cmd-.": "editor::UnfoldAll"
+    }
+  },
+  {
+    "context": "ThreadsSidebar && !Editor",
+    "unbind": {
+      "z shift-r": "editor::UnfoldAll"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "ctrl-cmd-.": "editor::UnfoldAll"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "unbind": {
+      "z shift-r": "editor::UnfoldAll"
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "ctrl-cmd-.": "editor::UnfoldAll"
+    }
+  },
+  {
+    "context": "Editor",
+    "unbind": {
+      "cmd-k cmd-j": "editor::UnfoldAll"
+    }
+  },
+  {
+    "context": "TextFinder || TextFinder > Picker > Editor || TextFinder > Picker > menu",
+    "bindings": {
+      "cmd->": "text_finder::Unfold"
+    }
+  },
+  {
+    "context": "TextFinder || TextFinder > Picker > Editor || TextFinder > Picker > menu",
+    "unbind": {
+      "alt-cmd-]": "text_finder::Unfold"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "cmd->": "editor::UnfoldLines"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "unbind": {
+      "z o": "editor::UnfoldLines"
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+      "cmd->": "editor::UnfoldLines"
+    }
+  },
+  {
+    "context": "Editor",
+    "unbind": {
+      "alt-cmd-]": "editor::UnfoldLines"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "cmd-<": "editor::Fold"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "unbind": {
+      "z c": "editor::Fold"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "ctrl-cmd-j": "editor::GoToDefinition"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "unbind": {
+      "g d": "editor::GoToDefinition"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "ctrl-cmd-h": "pane::GoBack"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "unbind": {
+      "ctrl-o": "pane::GoBack"
+    }
+  },
+  {
+    "unbind": {
+      "ctrl-cmd-l": "lsp_tool::ToggleMenu"
+    }
+  },
+  {
+    "context": "Workspace",
+    "bindings": {
+      "cmd-shift-o": "projects::OpenRecent"
+    }
+  },
+  {
+    "context": "Workspace",
+    "unbind": {
+      "ctrl-r": "projects::OpenRecent"
+    }
+  },
+  {
+    // Like Xcode's Select Column Down/Up (also ⌥⌘J/K in nvim): add a cursor
+    // on the line below/above. Works in vim mode too.
+    "context": "Editor",
+    "bindings": {
+      "alt-cmd-j": "editor::AddSelectionBelow",
+      "alt-cmd-k": "editor::AddSelectionAbove"
+    }
+  }
+]

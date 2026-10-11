@@ -1,0 +1,32 @@
+# Yazi keybindings. ~/.config/yazi -> dotfiles/yazi (home.nix).
+# prepend_keymap runs before yazi's defaults, so these win on conflicts.
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "w" ]
+run  = "cd ~/Developer/work/foresightcares"
+desc = "Go to foresightcares"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "n" ]
+run  = [ "cd ~/Developer/personal/Developer/nix/", "shell --block 'nvim ~/Developer/personal/Developer/nix/flake.nix'" ]
+desc = "Open nix config (flake.nix) in nvim"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "d" ]
+run  = "cd ~/Developer/personal"
+desc = "Go to personal"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "c" ]
+run  = "cd ~/Developer/personal/Developer/nix/dotfiles/"
+desc  = "Go to dotfiles"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "p" ]
+run  = "cd ~/Pictures/wallpapers"
+desc = "Go to wallpapers"
+
+[[mgr.prepend_keymap]]
+on   = [ "g", "m" ]
+run  = "cd ~/Music/Music"
+desc = "Go to Music"

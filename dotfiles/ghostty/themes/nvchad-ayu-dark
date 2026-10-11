@@ -1,0 +1,24 @@
+# NvChad ayu_dark (base46), as a Ghostty theme. ANSI slots use ayu's named
+# colors (red = red, blue = blue, ...) so terminal apps look right.
+palette = 0=#1c1f25
+palette = 1=#F07178
+palette = 2=#AAD84C
+palette = 3=#E7C547
+palette = 4=#36A3D9
+palette = 5=#A37ACC
+palette = 6=#74c5aa
+palette = 7=#c9c7be
+palette = 8=#54575d
+palette = 9=#ff949b
+palette = 10=#b9e75b
+palette = 11=#f0df8a
+palette = 12=#43b0e6
+palette = 13=#c79bf4
+palette = 14=#95E6CB
+palette = 15=#E6E1CF
+background = 0B0E14
+foreground = c9c7be
+cursor-color = ced4df
+cursor-text = 0B0E14
+selection-background = 24272d
+selection-foreground = ced4df

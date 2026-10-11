@@ -1,0 +1,52 @@
+# Yazi theme. No flavor: yazi's default theme uses the terminal's ANSI colors,
+# so it follows Ghostty's atom-one-dark-oled / Atom One Light.
+# (Flavors are still in ./flavors: tokyo-night, catppuccin-latte, moonfly,
+# nightfly. Add a [flavor] section to use one.)
+
+# Custom folder icons (Nerd Font glyphs).
+[icon]
+prepend_dirs = [
+  { name = "Applications", text = "󰕰" },
+  { name = "Developer", text = "󰣪" },
+  { name = "Downloads", text = "" },
+  { name = "Pictures", text = "" },
+  { name = "Music", text = "󰝚" },
+]
+
+# Border color/symbol, used by the full-border plugin (init.lua).
+[mgr]
+border_symbol = "│"
+border_style  = { fg = "#3e4451" }
+
+# square hover highlight (default ends are rounded)
+[indicator]
+padding = { open = "█", close = "█" }
+
+# minimal tabs: active tab is bright text, others dim; no pills or rounded ends
+[tabs]
+active    = { fg = "#61afef", bold = true }
+inactive  = { fg = "#5c6370" }
+sep_inner = { open = "", close = "" }
+sep_outer = { open = "", close = "" }
+
+# minimal status bar: no blocks or separators, just colored text on the background
+[mode]
+normal_main = { fg = "#61afef", bold = true }
+normal_alt  = { fg = "#5c6370" }
+select_main = { fg = "#98c379", bold = true }
+select_alt  = { fg = "#5c6370" }
+unset_main  = { fg = "#c678dd", bold = true }
+unset_alt   = { fg = "#5c6370" }
+
+[status]
+overall   = { fg = "#5c6370" }
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }
+progress_label  = { fg = "#e0def4", bold = true }
+progress_normal = { fg = "#61afef" }
+progress_error  = { fg = "#e06c75" }
+perm_sep   = { fg = "#3e4451" }
+perm_type  = { fg = "#5c6370" }
+perm_read  = { fg = "#5c6370" }
+perm_write = { fg = "#5c6370" }
+perm_exec  = { fg = "#5c6370" }

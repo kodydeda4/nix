@@ -1,0 +1,24 @@
+# NvChad ayu_light (base46), as a Ghostty theme. ANSI slots use ayu's named
+# colors; "black"/"bright black" are dark so text stays readable on light bg.
+palette = 0=#26292f
+palette = 1=#E65050
+palette = 2=#6CBF43
+palette = 3=#F2AE49
+palette = 4=#399EE6
+palette = 5=#9F40FF
+palette = 6=#4CBF99
+palette = 7=#a0a0a0
+palette = 8=#5C6166
+palette = 9=#F07171
+palette = 10=#86B300
+palette = 11=#FA8D3E
+palette = 12=#2c91d9
+palette = 13=#8627e6
+palette = 14=#74c5aa
+palette = 15=#cdcdcd
+background = fafafa
+foreground = 5C6166
+cursor-color = 26292f
+cursor-text = fafafa
+selection-background = e1e1e1
+selection-foreground = 26292f

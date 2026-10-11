@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#=====================================================================================
+# nn — nix rebuild
+#
+# Applies the nix config: rebuilds and switches the whole Mac (nix-darwin +
+# Home Manager + Homebrew) from this repo. Asks for your password (sudo).
+#
+# Usage:
+#   nn                  rebuild and switch
+#   nn --show-trace     extra arguments are passed to darwin-rebuild
+#=====================================================================================
+
+set -euo pipefail
+
+# the repo this script lives in (scripts/..), so it works wherever it's cloned
+NIX_CONFIG_DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+
+exec sudo darwin-rebuild switch --flake "$NIX_CONFIG_DIR#mac" "$@"

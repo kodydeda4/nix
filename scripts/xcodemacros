@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#=====================================================================================
+# xcodemacros — xcode prebuilt macros (toggle)
+#
+# Turns Xcode's prebuilt Swift macros on or off (the IDEPackageEnablePrebuilts
+# setting). Restart Xcode afterwards for it to take effect.
+#
+# Usage:
+#   xcodemacros enable
+#   xcodemacros disable
+#=====================================================================================
+
+set -euo pipefail
+
+case "${1:-}" in
+enable) defaults write com.apple.dt.Xcode IDEPackageEnablePrebuilts -bool YES && echo "Xcode prebuilt macros enabled." ;;
+disable) defaults write com.apple.dt.Xcode IDEPackageEnablePrebuilts -bool NO && echo "Xcode prebuilt macros disabled." ;;
+*)
+	echo "usage: xcodemacros <enable|disable>" >&2
+	exit 1
+	;;
+esac

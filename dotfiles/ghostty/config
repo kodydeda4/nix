@@ -46,3 +46,6 @@ keybind = cmd+shift+equal=increase_font_size:1
 # nvim uses them to add a cursor below/above, like Xcode's Select Column Down/Up.
 keybind = cmd+alt+j=text:\x1bj
 keybind = cmd+alt+k=text:\x1bk
+
+# Linux-only extras (ThinkPad), written by home.nix. Missing on the Mac, so skipped.
+config-file = ?../ghostty-linux/config

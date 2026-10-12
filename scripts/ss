@@ -2,7 +2,7 @@
 #=====================================================================================
 # ss — screenshot shadows (toggle)
 #
-# Turns the drop shadow on window screenshots (⌘⇧4 then Space) on or off.
+# Mac only. Turns the drop shadow on window screenshots (⌘⇧4 then Space) on or off.
 # Takes effect on the next screenshot.
 #
 # Usage:

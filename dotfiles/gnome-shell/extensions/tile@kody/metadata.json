@@ -1,0 +1,6 @@
+{
+  "uuid": "tile@kody",
+  "name": "Tile",
+  "description": "Magnet-style window tiling and app shortcuts on Meh (Caps Lock held).",
+  "shell-version": ["49", "50", "51"]
+}

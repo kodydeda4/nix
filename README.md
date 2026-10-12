@@ -1,57 +1,174 @@
 # nix
 
-My whole Mac, declared in one repo: apps, CLI tools, macOS settings and dotfiles.
-One rebuild turns a fresh Mac into my setup.
+My Mac and my ThinkPad, declared in one repo: apps, CLI tools, OS settings,
+desktop setup and dotfiles. One rebuild (`nn`) turns a fresh machine into my setup.
 
-Built on [nix-darwin](https://github.com/nix-darwin/nix-darwin) (system),
-[Home Manager](https://github.com/nix-community/home-manager) (dotfiles) and
-[nix-homebrew](https://github.com/zhaofengli/nix-homebrew) (Homebrew casks + Mac App Store).
+| Machine | Flake output | Built on | Desktop |
+|---|---|---|---|
+| Mac | `#mac` | [nix-darwin](https://github.com/nix-darwin/nix-darwin) + [nix-homebrew](https://github.com/zhaofengli/nix-homebrew) | macOS |
+| ThinkPad | `#nixos` | NixOS | GNOME **or** Hyprland + Noctalia (pick at login) |
+
+Both use [Home Manager](https://github.com/nix-community/home-manager) for the
+dotfiles.
+
+## How it fits together
+
+There are three layers. Each machine stacks them like this:
+
+```
+                      flake.nix
+          (inputs, and which files make each machine)
+                 │                         │
+            #mac │                         │ #nixos
+                 ▼                         ▼
+   ┌─────────────────────────┐ ┌─────────────────────────┐
+   │ 1. SYSTEM (root)        │ │ 1. SYSTEM (root)        │
+   │  modules/common.nix  ◄──┼─┼──► modules/common.nix   │  shared apps + CLI tools
+   │  hosts/mac/             │ │  hosts/nixos/           │  per-machine apps + OS settings
+   ├─────────────────────────┤ ├─────────────────────────┤
+   │ 2. USER (Home Manager)  │ │ 2. USER (Home Manager)  │
+   │  home.nix  ◄────────────┼─┼──► home.nix             │  one file, OS-only parts gated
+   ├─────────────────────────┤ ├─────────────────────────┤
+   │ 3. DOTFILES (symlinks)  │ │ 3. DOTFILES (symlinks)  │
+   │  dotfiles/*  ◄──────────┼─┼──► dotfiles/*           │  the real config files
+   └─────────────────────────┘ └─────────────────────────┘
+```
+
+1. **System** – what's installed and how the OS behaves. `modules/common.nix`
+   is shared; `hosts/<machine>/default.nix` is everything that only exists on
+   that OS (Homebrew casks and macOS defaults on the Mac; boot, desktops, keyd,
+   sound, fonts on the ThinkPad).
+2. **User** – `home.nix` decides which dotfiles get linked where, plus a few
+   generated files (GTK themes, GNOME settings). Mac-only and Linux-only parts
+   are wrapped in `lib.mkIf isDarwin` / `lib.mkIf isLinux` and grouped under
+   headed sections in the file.
+3. **Dotfiles** – the actual config files, in their apps' own formats. They're
+   linked straight to this repo (not copied into the Nix store), so **editing a
+   file in `dotfiles/` takes effect immediately, no rebuild needed**. Apps that
+   save their own settings (Karabiner, Zed, Xcode, Noctalia) write back into the
+   repo, so those changes show up in `git diff`.
+
+Rule of thumb: **installing something or changing an OS setting = a `.nix` file
++ `nn`. Changing how an app behaves = a file in `dotfiles/`, no rebuild.**
+
+**The repo must live at `~/Developer/personal/Developer/nix`.** The links point
+at that path.
 
 ## Layout
 
 ```
 nix/
-├── flake.nix       # system: packages, casks, App Store apps, macOS defaults
-├── flake.lock      # pinned versions of everything (update with `nix flake update`)
-├── home.nix        # dotfile links (Home Manager)
-├── scripts/        # executables = commands on PATH (nn, xcodemacros); *.zsh = shell functions .zshrc loads (r)
-└── dotfiles/       # the actual config files, linked into ~ and ~/.config
-    ├── fastfetch/  → ~/.config/fastfetch      (small greeting on new terminals)
-    ├── ghostty/    → ~/.config/ghostty
-    ├── git/        → ~/.config/git            (config + one file per GitHub account)
-    ├── karabiner/  → ~/.config/karabiner
-    ├── nvim/       → ~/.config/nvim           (NvChad; plugins pinned in lazy-lock.json)
-    ├── ssh/config  → ~/.ssh/config
-    ├── starship/   → ~/.config/starship.toml
-    ├── tmux/       → ~/.config/tmux
-    ├── yazi/       → ~/.config/yazi           (shortcuts, theme, borders)
-    └── zsh/.zshrc  → ~/.zshrc
+├── flake.nix            # inputs (nixpkgs, nix-darwin, home-manager, …) and the two machines
+├── flake.lock           # pinned versions of everything (`nix flake update` to bump)
+├── modules/
+│   └── common.nix       # BOTH: shared apps (Brave, Zed, Obsidian, Slack), CLI tools, Meslo font
+├── hosts/
+│   ├── mac/default.nix  # MAC: Mac apps, Homebrew casks, App Store apps, macOS defaults, zsh
+│   └── nixos/
+│       ├── default.nix  # THINKPAD: boot, GNOME + Hyprland, keyd, game mode, fonts, sound, Linux apps
+│       └── hardware-configuration.nix   # from the installer (disks, kernel modules)
+├── home.nix             # dotfile links + GTK/GNOME settings (sections: shared / Mac / ThinkPad)
+├── scripts/             # executables = commands on PATH; *.zsh = shell functions .zshrc loads
+└── dotfiles/            # linked into ~ by home.nix
 ```
+
+### Dotfiles
+
+| Folder | Linked to | Machines | Notes |
+|---|---|---|---|
+| `zsh/.zshrc` | `~/.zshrc` | both | also puts `scripts/` on PATH |
+| `git/` | `~/.config/git` | both | config + one file per GitHub account (see [Git accounts](#git-accounts)) |
+| `ssh/config` | `~/.ssh/config` | both | which key per GitHub account |
+| `starship/` | `~/.config/starship.toml` | both | prompt |
+| `ghostty/` | `~/.config/ghostty` | both | Linux key fixes are generated in `home.nix` (`ghostty-linux/config`) |
+| `tmux/` | `~/.config/tmux` | both | |
+| `nvim/` | `~/.config/nvim` | both | NvChad; plugins pinned in `lazy-lock.json` |
+| `zed/` | `~/.config/zed` | both | |
+| `yazi/` | `~/.config/yazi` | both | shortcuts, theme, borders (flavors/plugins are plain copies) |
+| `fastfetch/` | `~/.config/fastfetch` | both | greeting on new terminals |
+| `karabiner/` | `~/.config/karabiner` | Mac | Caps Lock = Esc/Hyper, Brave-profile shortcuts |
+| `espanso/` | `~/Library/Application Support/espanso` | Mac | text expansion |
+| `xcode/KeyBindings/` | `~/Library/Developer/Xcode/UserData/KeyBindings` | Mac | |
+| `hypr/` | `~/.config/hypr` | ThinkPad | Hyprland config (`hyprland.lua`) + helper scripts |
+| `noctalia/` | `~/.config/noctalia` | ThinkPad | Hyprland's bar / launcher / notifications |
+| `gnome-shell/extensions/tile@kody/` | `~/.local/share/gnome-shell/extensions/` | ThinkPad | my GNOME tiling extension |
 
 `home.nix` also creates an empty `~/.hushlogin` (hides "Last login") and
 shortcut links into other repos: `~/Pictures/wallpapers` and
 `~/Music/Music/guitar-pro-tabs/`.
 
-Dotfiles are linked straight to this repo (not copied into the Nix store), so
-editing a file here takes effect immediately, no rebuild needed. Apps that save
-their own settings (Karabiner) write back into the repo, so changes show up in
-`git diff`.
+### Scripts
 
-**The repo must live at `~/Developer/personal/Developer/nix`.** The links point at
-that path.
+Run `scripts` to list them, `scripts <name>` for one's full usage.
+
+| Command | What it does |
+|---|---|
+| `nn` | Apply the config (`darwin-rebuild … #mac` / `nixos-rebuild … #nixos`) |
+| `repos` | Clone any of my repos missing from `~/Developer` (`repos --list` shows which) |
+| `r` | Open yazi; cd to wherever you quit it (`r.zsh`, a shell function) |
+| `fpr` | Run SwiftFormat on my Swift repos |
+| `ss enable\|disable` | Window shadows on screenshots (Mac only) |
+| `xcodemacros enable\|disable` | Xcode's prebuilt Swift macros (Mac only) |
+| `scripts` | List these scripts |
 
 ## Everyday use
 
 | Command | What it does |
 |---|---|
-| `nn` | Apply the config (`sudo darwin-rebuild switch --flake …#mac`) |
+| `nn` | Rebuild and switch this machine |
 | `nix fmt` | Format all `.nix` files (alejandra) |
-| `nix flake update` | Update nixpkgs, Home Manager, etc. then `nn` |
-| `brew update` | Refresh Homebrew's cask list (auto-update is off, see below) |
+| `nix flake update` | Update nixpkgs, Home Manager, etc., then `nn` |
+| `brew update` | Refresh Homebrew's cask list (auto-update is off, see Gotchas) |
 | `src` | Reload `~/.zshrc` in the current shell |
-| `xcodemacros enable\|disable` | Toggle Xcode's prebuilt Swift macros |
 
-### Shell & terminal
+### Where do I add…?
+
+| What | Where |
+|---|---|
+| CLI tool or app for both machines | `environment.systemPackages` in `modules/common.nix` (`nix search nixpkgs <name>`) |
+| App for one machine only | `environment.systemPackages` in `hosts/mac/` or `hosts/nixos/` |
+| Mac app only on Homebrew, or with a broken nixpkgs build | `homebrew.casks` in `hosts/mac/default.nix` (`brew search <name>`) |
+| Mac App Store app | `homebrew.masApps` in `hosts/mac/default.nix` (ID from `mas search <name>`) |
+| A macOS setting | `system.defaults` in `hosts/mac/default.nix` |
+| A ThinkPad system service / keyboard remap | `hosts/nixos/default.nix` (keyd is there) |
+| A GNOME setting | `dconf.settings` in `home.nix` (find the key with `dconf watch /` while changing it in Settings) |
+| A Hyprland shortcut or rule | `dotfiles/hypr/hyprland.lua` (reloads on save) |
+| A config file for some app | put it in `dotfiles/`, add one `link` line in `home.nix` (inside the Mac/ThinkPad section if it's one OS only) |
+| A repo to clone on new machines | `REPOS` in `scripts/repos` |
+| A new script | `scripts/<name>`, `chmod +x`, header in the same format as the others |
+
+Prefer nixpkgs; use a cask when the nixpkgs app won't open on the Mac
+("damaged" = broken code signature, e.g. Discord) or isn't packaged.
+
+**Flakes only see files git knows about.** After creating a new file, `git add`
+it before rebuilding, or Nix won't find it.
+
+Check a change still builds on the *other* machine without switching to it:
+
+```bash
+nix eval .#nixosConfigurations.nixos.config.system.build.toplevel.drvPath
+```
+
+```bash
+nix eval .#darwinConfigurations.mac.system.drvPath
+```
+
+(The first from the Mac, the second from the ThinkPad.) A package that doesn't
+exist on that OS fails here.
+
+## Keyboard & shell (both machines)
+
+The goal is the same keys everywhere. On the ThinkPad that's done by **keyd**
+(`hosts/nixos/default.nix`), which runs below every desktop:
+
+| Key | Mac (Karabiner) | ThinkPad (keyd) |
+|---|---|---|
+| Caps Lock tap / hold | Esc / Hyper | Esc / Meh (Ctrl+Super+Alt) |
+| Key next to space | ⌘ | acts as ⌘ (sends Ctrl; Ctrl and Alt are swapped) |
+| ⌘←/→, ⌥←/→ | line start/end, word jump | same (Super is where ⌥ is) |
+| ⌘Tab | app switcher | app switcher |
+
+So in the GNOME settings and `hyprland.lua`, **"Cmd" is written as Ctrl.**
 
 - **Ghostty starts tmux** (attaches to the running session). Prefix is Ctrl+A;
   Ctrl+E / Ctrl+V split, Ctrl+H/J/K/L move between tmux panes *and* nvim splits,
@@ -59,24 +176,38 @@ that path.
 - **zsh**: vi mode (Esc = normal, prompt shows ❯/❮), grey history suggestions
   (→ accepts), syntax highlighting, Ctrl+R fuzzy history (fzf), `cd` is zoxide
   (`cd foo` jumps, `cdi` picks).
-- **yazi** (`r` opens it and cds on exit): `g w` work, `g n` this repo,
-  `g d` ~/Developer/personal, `g p` wallpapers, `g m` music.
+- **yazi** (`r`): `g w` work, `g n` this repo, `g d` ~/Developer/personal,
+  `g p` wallpapers, `g m` music.
 
-### Adding things
+## The ThinkPad's two desktops
 
-| What | Where |
-|---|---|
-| CLI tool or app in nixpkgs | `environment.systemPackages` in `flake.nix` (search: `nix search nixpkgs <name>`) |
-| App only on Homebrew, or a broken/unsigned nixpkgs build | `homebrew.casks` in `flake.nix` (search: `brew search <name>`) |
-| Mac App Store app | `homebrew.masApps` in `flake.nix` (ID from `mas search <name>`) |
-| A config file | put it in `dotfiles/`, add one `link` line in `home.nix` |
-| A macOS setting | `system.defaults` in `flake.nix` |
+On the GDM login screen, the gear icon picks the session:
 
-Rule of thumb: prefer nixpkgs; use a cask when the nixpkgs app won't open
-("damaged" = broken code signature, e.g. Discord) or isn't packaged.
+- **GNOME** – the default. Settings in `home.nix` (`dconf.settings`), tiling via
+  my extension `dotfiles/gnome-shell/extensions/tile@kody` (Meh+H/L halves,
+  Meh+Shift+H/L ⅔ + ⅓, Meh+Space fill, Meh+Shift+Space center). Blur my Shell
+  for the blurred top bar.
+- **Hyprland (uwsm-managed)** – *not* plain "Hyprland", which never starts the
+  portal so apps miss dark mode. Config in `dotfiles/hypr/hyprland.lua`, with
+  [Noctalia](https://docs.noctalia.dev) (`dotfiles/noctalia/`) as the bar,
+  launcher (Cmd+Space), notifications and lock screen. Same tiling keys as
+  GNOME, plus:
+  - Meh+letter opens/focuses/hides an app (T Ghostty, C Brave, X Zed, A Claude, …)
+  - Meh+arrows focus, Meh+1-9 workspaces, Meh+F float/tile (Super is left
+    to Ghostty, where it acts as ⌥ like the Mac)
+  - Meh+0 zen mode (hides bar + dock, drops gaps)
+  - Cmd+Q force-quits the whole app (`hypr/kill-app.sh`, also used by GNOME)
+  - **Game mode** (gamepad button on the bar, `hypr/gamemode.sh`): turns off
+    keyd's modifier remaps so Ctrl/Alt/Super act as labeled. It starts two
+    root services defined in `hosts/nixos` that polkit lets me run without a password.
 
-**Flakes only see files git knows about.** After creating a new file, run
-`git add` on it before rebuilding, or Nix won't find it.
+Shared between both: SF Pro / SF Mono / Apple emoji fonts, Papirus-Dark icons,
+Adwaita cursor, a darker GTK dark mode (all in `hosts/nixos` + `home.nix`).
+GTK windows have square corners only in Hyprland (Hyprland links
+`hypr/gtk.css` in at start; logging in to GNOME removes it).
+
+Generated, gitignored files: `dotfiles/hypr/noctalia.lua` (border colors from
+the wallpaper) and `dotfiles/noctalia/zz-gamemode-state.toml`.
 
 ## New Mac
 
@@ -94,9 +225,41 @@ Rule of thumb: prefer nixpkgs; use a cask when the nixpkgs app won't open
    sudo nix run nix-darwin/master#darwin-rebuild -- switch --flake ~/Developer/personal/Developer/nix#mac
    ```
    Afterwards, open a new terminal and use `nn`.
-4. Work through the **manual steps** below.
+4. Work through the [manual steps](#manual-steps-for-the-mac-cant-be-automated) below.
 
-## Manual steps (can't be automated)
+## New ThinkPad
+
+1. **Install NixOS** from the GNOME graphical ISO (nixos.org/download). Choose
+   any desktop in the installer (this config replaces it), and name the user
+   **`kody`**.
+2. **Clone this repo** to the exact path:
+   ```bash
+   nix-shell -p git --run 'git clone https://github.com/kodydeda4/nix.git ~/Developer/personal/Developer/nix'
+   ```
+3. **Use the real hardware config** (disks, kernel modules) in place of the one in the repo:
+   ```bash
+   cp /etc/nixos/hardware-configuration.nix ~/Developer/personal/Developer/nix/hosts/nixos/
+   ```
+   Also set `system.stateVersion` in `hosts/nixos/default.nix` to the value
+   in `/etc/nixos/configuration.nix`. Commit both.
+4. **First build** (adds flakes for this one command; the config turns them on for good):
+   ```bash
+   sudo NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake ~/Developer/personal/Developer/nix#nixos
+   ```
+   Reboot, log in, open Ghostty, and use `nn` from then on.
+5. ThinkPad manual steps:
+   - [ ] SSH keys + `gh auth login` (same as the Mac steps below; `UseKeychain`
+         is ignored on Linux, so run `ssh-add` after login if asked for a passphrase).
+   - [ ] `sudo tailscale up` and sign in.
+   - [ ] Firmware: `fwupdmgr refresh && fwupdmgr update` (or GNOME Software → Updates).
+   - [ ] `repos` to clone the rest of `~/Developer/personal` (after the SSH keys work).
+   - [ ] Rust and nvim: same as the Mac's dev tooling steps.
+
+Not on the ThinkPad (yet): Zen (not in nixpkgs; Brave is installed), Raycast
+(Noctalia's launcher / GNOME search instead), espanso, Karabiner's
+Brave-profile shortcuts, Figma, and the music software.
+
+## Manual steps for the Mac (can't be automated)
 
 These involve secrets, licenses or macOS permission prompts that only a person
 can approve. Do them once per Mac.
@@ -139,8 +302,7 @@ can approve. Do them once per Mac.
       `sudo xcode-select -s /Applications/Xcode.app && sudo xcodebuild -runFirstLaunch`
 - [ ] Rust: `rustup default stable && rustup target add wasm32-unknown-unknown`
 - [ ] nvim: just open it once; lazy.nvim installs the plugins from `lazy-lock.json`.
-- [ ] Clone other repos into `~/Developer/personal/` (`Applications/`, `Developer/`,
-      `Documents/`, `Music/`, `Pictures/`, `Study/`). The links in
+- [ ] `repos` clones the rest of `~/Developer/personal`. The links in
       `~/Music/Music/guitar-pro-tabs/` and `~/Pictures/wallpapers` point at
       `personal/Music/` and `personal/Pictures/wallpapers`.
 
@@ -180,6 +342,20 @@ Don't set your name/email in GitHub Desktop's settings: it writes into
 
 ## Gotchas (learned the hard way)
 
+**Both machines**
+- **Don't link a folder and files inside it** in `home.nix`, and don't switch a
+  folder link to per-file links in one rebuild: Home Manager writes through the
+  old link into the repo and creates symlink loops ("Too many levels of
+  symbolic links"). Remove the old link first.
+- **Before adding a link, move whatever already exists at that path** (e.g.
+  `mv ~/.config/foo ~/.config/foo.old`). Otherwise Home Manager renames it to
+  `*.hm-backup`.
+- **Root-owned files** in the repo (from running git or nix with `sudo`) break
+  `git add` / `flake.lock` updates: `sudo chown -R kody ~/Developer/personal/Developer/nix`.
+- **Yazi themes/plugins are plain copies** in `dotfiles/yazi/` (flavors,
+  full-border). They don't auto-update.
+
+**Mac**
 - **`homebrew.onActivation.autoUpdate` must stay `false`.** With it on, brew
   re-execs itself under nix-homebrew, loses `/opt/homebrew/bin` from its PATH and
   fails with "Unable to install … mas installation failed".
@@ -187,18 +363,19 @@ Don't set your name/email in GitHub Desktop's settings: it writes into
   App Store installs work during a non-interactive rebuild.
 - **`cleanup = "zap"`**: anything installed with `brew install` outside this repo
   is removed on rebuild. Add it here instead.
-- **Don't link a folder and files inside it** in `home.nix`, and don't switch a
-  folder link to per-file links in one rebuild: Home Manager writes through the
-  old link into the repo and creates symlink loops ("Too many levels of
-  symbolic links"). Remove the old link first.
-- **Before adding a link, move whatever already exists at that path** (e.g.
-  `mv ~/.config/foo ~/.config/foo.old`).
-- **Root-owned files** in the repo (from running git or nix with `sudo`) break
-  `git add` / `flake.lock` updates: `sudo chown -R kody ~/Developer/personal/Developer/nix`.
 - **"App is damaged"** on a nixpkgs app = broken signature; use its cask instead.
 - **Xcode "could not read Username for https://github.com"** when resolving
   packages: the package's org isn't routed to an SSH key. Add an `insteadOf`
   rule for it in `dotfiles/git/config` (see Git accounts), then File → Packages →
   Reset Package Caches.
-- **Yazi themes/plugins are plain copies** in `dotfiles/yazi/` (flavors,
-  full-border). They don't auto-update.
+
+**ThinkPad**
+- **`hosts/nixos/hardware-configuration.nix` must be this machine's** (from the
+  installer), or it won't find its disks at boot.
+- **Pick "Hyprland (uwsm-managed)"**, not "Hyprland", at login, or apps ignore
+  dark mode and screen sharing / file pickers break.
+- **DNS lookups failing** ("Could not resolve hostname github.com"): the home
+  router mangles EDNS replies; `networking.resolvconf.dnsExtensionMechanism = false`
+  in `hosts/nixos` works around it.
+- **Prebuilt Linux binaries** (e.g. the Claude Code binary Claude Desktop
+  downloads) need `programs.nix-ld.enable`, or they exit with code 127.

@@ -2,12 +2,13 @@
 #=====================================================================================
 # nn — nix rebuild
 #
-# Applies the nix config: rebuilds and switches the whole Mac (nix-darwin +
-# Home Manager + Homebrew) from this repo. Asks for your password (sudo).
+# Applies the nix config: rebuilds and switches this machine from this repo.
+# On the Mac that's nix-darwin + Home Manager + Homebrew (#mac); on the
+# ThinkPad it's NixOS + Home Manager (#nixos). Asks for your password (sudo).
 #
 # Usage:
 #   nn                  rebuild and switch
-#   nn --show-trace     extra arguments are passed to darwin-rebuild
+#   nn --show-trace     extra arguments are passed to darwin-rebuild / nixos-rebuild
 #=====================================================================================
 
 set -euo pipefail
@@ -15,4 +16,8 @@ set -euo pipefail
 # the repo this script lives in (scripts/..), so it works wherever it's cloned
 NIX_CONFIG_DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 
-exec sudo darwin-rebuild switch --flake "$NIX_CONFIG_DIR#mac" "$@"
+if [[ "$(uname)" == "Darwin" ]]; then
+	exec sudo darwin-rebuild switch --flake "$NIX_CONFIG_DIR#mac" "$@"
+else
+	exec sudo nixos-rebuild switch --flake "$NIX_CONFIG_DIR#nixos" "$@"
+fi

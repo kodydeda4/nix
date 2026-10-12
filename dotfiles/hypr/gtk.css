@@ -1,0 +1,3 @@
+/* Square GTK window corners in Hyprland. Linked to ~/.config/gtk-{3,4}.0/hyprland.css
+   at start (hyprland.lua), which gtk.css there imports (home.nix). */
+window, window.csd, window.csd decoration, decoration, .window-frame, .titlebar, headerbar { border-radius: 0; }

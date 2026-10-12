@@ -1,0 +1,416 @@
+-- Hyprland (ThinkPad), with Noctalia as the bar/launcher/notifications.
+-- Pick "Hyprland (uwsm-managed)" on the GDM login screen (gear icon), not plain
+-- "Hyprland": that one never starts the portal, so apps miss dark mode.
+--
+-- Keys match GNOME and the Mac. keyd (hosts/nixos) already handles, everywhere:
+--   Caps Lock tap = Esc, hold = Meh (Ctrl+Super+Alt)
+--   Alt-labeled key = Cmd (sends Ctrl), Ctrl-labeled key sends Alt
+--   Cmd+←/→ = Home/End, Super+←/→ = word jumps, Cmd+Tab sends Alt+Tab
+-- So below, "Cmd" is CTRL.
+-- Docs: https://wiki.hypr.land/Configuring/Start/
+
+local CMD = "CTRL"
+local MEH = "CTRL + SUPER + ALT"
+local terminal = "ghostty"
+
+hl.monitor({
+    output   = "",
+    mode     = "preferred",
+    position = "auto",
+    -- 1x like GNOME. "auto" picked 1.5x on the 1920x1200 panel (everything
+    -- looked huge). Try 1.25 if text is too small.
+    scale    = 1,
+})
+
+hl.on("hyprland.start", function()
+    hl.exec_cmd("noctalia")
+    -- Zen mode (Meh+0) resets at log-in, but Noctalia remembers a hidden dock;
+    -- show it again once Noctalia is up.
+    hl.exec_cmd("for i in $(seq 40); do noctalia msg dock-show && break; sleep 0.5; done")
+    -- Game mode (bar button) starts off at log-in
+    hl.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/hypr/gamemode.sh off")
+    -- Square GTK window corners here only; GNOME removes these links at log-in
+    -- (see home.nix).
+    hl.exec_cmd("for v in 3 4; do ln -sf ~/.config/hypr/gtk.css ~/.config/gtk-$v.0/hyprland.css; done")
+end)
+
+-- Same cursor as GNOME (Adwaita, 24px). Without a theme set, Hyprland and each
+-- app fell back to different default cursors.
+hl.env("XCURSOR_THEME", "Adwaita")
+hl.env("XCURSOR_SIZE", "24")
+hl.env("HYPRCURSOR_THEME", "Adwaita")
+hl.env("HYPRCURSOR_SIZE", "24")
+
+hl.config({
+    general = {
+        gaps_in     = 12, -- (zen mode, Meh+0, sets these and the border to 0)
+        gaps_out    = 24,
+        border_size = 2,
+        layout      = "dwindle",
+    },
+    decoration = {
+        rounding = 0, -- square window corners
+    },
+    animations = {
+        enabled = false, -- windows and workspaces switch instantly
+    },
+    dwindle = {
+        preserve_split = true,
+    },
+    misc = {
+        force_default_wallpaper = 0,
+        disable_hyprland_logo   = true,
+    },
+    input = {
+        kb_layout    = "us",
+        -- same fast key repeat as GNOME and the Mac (225 ms delay, 30 ms interval)
+        repeat_delay = 225,
+        repeat_rate  = 33,
+        follow_mouse = 1,
+        touchpad = {
+            natural_scroll = true,
+        },
+    },
+})
+
+hl.gesture({
+    fingers   = 3,
+    direction = "horizontal",
+    action    = "workspace",
+})
+
+------------------
+---- MAC KEYS ----
+------------------
+
+-- Cmd+Space: Noctalia's launcher (Spotlight/Raycast)
+hl.bind(CMD .. " + space", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
+-- Cmd+Tab (keyd sends Alt+Tab): next window
+hl.bind("ALT + Tab", hl.dsp.window.cycle_next())
+
+-- Cmd+` / Cmd+Shift+`: next/previous window of the focused app, like the Mac.
+local function cycle_app_windows(step)
+    return function()
+        local active = hl.get_active_window()
+        if not active then return end
+        local wins = {}
+        for _, w in ipairs(hl.get_windows({ class = active.class }) or {}) do
+            -- only this app, only windows you can see (skips hidden ones, Cmd+H)
+            if w.class == active.class and w.mapped and not w.hidden
+                and w.workspace and w.workspace.id == active.workspace.id then
+                wins[#wins + 1] = w
+            end
+        end
+        if #wins < 2 then return end
+        table.sort(wins, function(a, b) return a.stable_id < b.stable_id end)
+        for i, w in ipairs(wins) do
+            if w.address == active.address then
+                local nxt = wins[(i - 1 + step) % #wins + 1]
+                hl.dispatch(hl.dsp.focus({ window = "address:" .. nxt.address }))
+                hl.dispatch(hl.dsp.window.bring_to_top())
+                return
+            end
+        end
+    end
+end
+hl.bind(CMD .. " + grave",         cycle_app_windows(1))
+hl.bind(CMD .. " + SHIFT + grave", cycle_app_windows(-1))
+-- Cmd+H: hide into a scratch workspace; Meh+H... is tiling, so unhide with Cmd+Shift+H
+-- follow = false: without it the hidden workspace opens on screen, so the
+-- window looked like it never hid.
+-- Cmd+Shift+4: screenshot of a region (saved to ~/Pictures and copied), like the Mac
+hl.bind(CMD .. " + SHIFT + 4", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
+hl.bind(CMD .. " + H", hl.dsp.window.move({ workspace = "special:hidden", follow = false }))
+hl.bind(CMD .. " + SHIFT + H", hl.dsp.workspace.toggle_special("hidden"))
+-- Cmd+Q force-kills the focused app (SIGKILL, no prompts, no "minimize to
+-- tray"): its whole process tree, via kill-app.sh next to this file.
+-- Cmd+W / Cmd+N are left to apps (they see Ctrl+W/N).
+-- Apps in CLOSE_ONLY just get their window closed (Steam keeps running in the
+-- tray).
+local KILL_APP = os.getenv("HOME") .. "/.config/hypr/kill-app.sh"
+local CLOSE_ONLY = { steam = true }
+hl.bind(CMD .. " + Q", function()
+    local w = hl.get_active_window()
+    if not w then return end
+    if CLOSE_ONLY[(w.class or ""):lower()] then
+        hl.dispatch(hl.dsp.window.close())
+    elseif w.pid then
+        hl.exec_cmd("bash " .. KILL_APP .. " " .. w.pid)
+    end
+end)
+-- Ctrl+Cmd+Q: lock screen, like the Mac (the Ctrl-labeled key sends Alt).
+hl.bind(CMD .. " + ALT + Q", hl.dsp.exec_cmd("noctalia msg session lock"))
+-- Ctrl+Alt+Delete: Noctalia's session menu (log out, reboot, shut down, ...).
+-- keyd swaps Ctrl and Alt, so the labeled keys still arrive as Ctrl+Alt.
+hl.bind("CTRL + ALT + Delete", hl.dsp.exec_cmd("noctalia msg panel-toggle session"))
+
+------------------
+---- WINDOWS  ----
+------------------
+
+-- Floating by default, like the Mac and GNOME. Meh+F tiles/floats one window.
+-- (No Super+key binds: in Ghostty, Super is ⌥/Alt like the Mac, see home.nix.)
+hl.window_rule({
+    name  = "float-everything",
+    match = { class = ".*" },
+    float = true,
+})
+hl.bind(MEH .. " + F", hl.dsp.window.float({ action = "toggle" }))
+
+-- Magnet-style snapping, same keys as GNOME (tile@kody). Each rect is
+-- { x, y, width, height } as fractions of the screen minus Noctalia's bar.
+local function work_area()
+    local m = hl.get_active_monitor()
+    local scale = m.scale or 1
+    local w, h = m.width / scale, m.height / scale
+    -- reserved space (the bar): {top, right, bottom, left} or named fields
+    local r = type(m.reserved) == "table" and m.reserved or {}
+    local top    = r.top    or r[1] or 0
+    local right  = r.right  or r[2] or 0
+    local bottom = r.bottom or r[3] or 0
+    local left   = r.left   or r[4] or 0
+    return m.x + left, m.y + top, w - left - right, h - top - bottom
+end
+
+-- Padding (px) around snapped windows: GAP from the screen edges and GAP
+-- between two windows side by side. Zen mode (Meh+0) sets it to 0.
+local GAP_NORMAL = 24
+local GAP = GAP_NORMAL
+
+local RECTS = {
+    left_half       = { 0, 0, 1 / 2, 1 },
+    right_half      = { 1 / 2, 0, 1 / 2, 1 },
+    left_two_thirds = { 0, 0, 2 / 3, 1 },
+    right_third     = { 2 / 3, 0, 1 / 3, 1 },
+    maximize        = { 0, 0, 1, 1 },
+    center          = { 0.2, 0.2, 0.6, 0.6 }, -- centered, 60%
+}
+
+-- Where a window snapped to `rect` goes right now: x, y, width, height.
+local function geometry(rect)
+    local ax, ay, aw, ah = work_area()
+    ax, ay, aw, ah = ax + GAP / 2, ay + GAP / 2, aw - GAP, ah - GAP
+    local x, y, w, h = rect[1], rect[2], rect[3], rect[4]
+    return math.floor(ax + x * aw + GAP / 2), math.floor(ay + y * ah + GAP / 2),
+        math.floor(w * aw - GAP), math.floor(h * ah - GAP)
+end
+
+local function place(window, rect)
+    local x, y, w, h = geometry(rect)
+    hl.dispatch(hl.dsp.window.resize({ x = w, y = h, window = window }))
+    hl.dispatch(hl.dsp.window.move({ x = x, y = y, window = window }))
+end
+
+local function snap(rect)
+    return function()
+        local win = hl.get_active_window()
+        if win then
+            place("address:" .. win.address, rect)
+        end
+    end
+end
+
+-- The snap position a window is sitting in exactly (give or take 2px), if any.
+local function snapped_rect(win)
+    local at, size = win.at or {}, win.size or {}
+    for _, rect in pairs(RECTS) do
+        local x, y, w, h = geometry(rect)
+        if math.abs((at.x or -1e9) - x) <= 2 and math.abs((at.y or -1e9) - y) <= 2
+            and math.abs((size.x or -1e9) - w) <= 2 and math.abs((size.y or -1e9) - h) <= 2 then
+            return rect
+        end
+    end
+end
+
+-- Zen mode, Meh+0: hides Noctalia's bar and dock, and drops the gaps, window
+-- borders and shadows; Meh+0 again brings them back. Snapped windows are re-fitted
+-- to the new space. The on/off state lives in a flag file so it survives config
+-- reloads (Hyprland reloads on every save, and whenever Noctalia rewrites the
+-- border colors), and resets at log-in.
+local ZEN_FLAG = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen"
+
+local function zen_on()
+    local f = io.open(ZEN_FLAG, "r")
+    if f then f:close() end
+    return f ~= nil
+end
+
+local function apply_zen(on)
+    GAP = on and 0 or GAP_NORMAL
+    hl.config({
+        general = {
+            gaps_in     = on and 0 or 12,
+            gaps_out    = on and 0 or 24,
+            border_size = on and 0 or 2,
+        },
+        decoration = {
+            shadow = { enabled = not on },
+        },
+    })
+end
+
+hl.bind(MEH .. " + 0", function()
+    -- Note which windows are snapped before anything moves.
+    local resnap = {}
+    for _, win in ipairs(hl.get_windows() or {}) do
+        local rect = snapped_rect(win)
+        if rect then
+            resnap[#resnap + 1] = { "address:" .. win.address, rect }
+        end
+    end
+
+    local on = not zen_on()
+    if on then
+        local f = io.open(ZEN_FLAG, "w")
+        if f then f:close() end
+        hl.exec_cmd("noctalia msg bar-hide; noctalia msg dock-hide")
+    else
+        os.remove(ZEN_FLAG)
+        hl.exec_cmd("noctalia msg bar-show; noctalia msg dock-show")
+    end
+    apply_zen(on)
+
+    -- Re-fit once Noctalia has hidden/shown the bar (which changes the free space).
+    hl.timer(function()
+        for _, item in ipairs(resnap) do
+            place(item[1], item[2])
+        end
+    end, { timeout = 300, type = "oneshot" })
+end)
+
+if zen_on() then
+    apply_zen(true)
+end
+
+hl.bind(MEH .. " + H",             snap(RECTS.left_half))
+hl.bind(MEH .. " + L",             snap(RECTS.right_half))
+hl.bind(MEH .. " + SHIFT + H",     snap(RECTS.left_two_thirds))
+hl.bind(MEH .. " + SHIFT + L",     snap(RECTS.right_third))
+hl.bind(MEH .. " + space",         snap(RECTS.maximize))
+hl.bind(MEH .. " + SHIFT + space", snap(RECTS.center))
+
+-- Meh+arrows: focus the window in that direction (Meh+H/L snap, above)
+hl.bind(MEH .. " + left",  hl.dsp.focus({ direction = "left" }))
+hl.bind(MEH .. " + right", hl.dsp.focus({ direction = "right" }))
+hl.bind(MEH .. " + up",    hl.dsp.focus({ direction = "up" }))
+hl.bind(MEH .. " + down",  hl.dsp.focus({ direction = "down" }))
+
+-- Workspaces 1-5 always exist, so the bar always shows five dots.
+for i = 1, 5 do
+    hl.workspace_rule({ workspace = tostring(i), persistent = true })
+end
+
+-- Meh+1..9: workspaces; Meh+Shift+1..9: send window there
+for i = 1, 9 do
+    hl.bind(MEH .. " + " .. i,         hl.dsp.focus({ workspace = i }))
+    hl.bind(MEH .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+end
+
+-- Super+drag moves windows, Super+right-drag resizes
+hl.bind("SUPER + mouse:272", hl.dsp.window.drag(),   { mouse = true })
+hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
+
+------------------
+---- APP KEYS ----
+------------------
+
+-- Meh+key: open the app if it isn't running, focus it if it is, and hide it
+-- (all its windows, like Cmd+H) if it's already focused (same keys as GNOME).
+-- `classes` are the window classes the app may report (checked ignoring case;
+-- `hyprctl clients` shows them). With several windows, the most recently used
+-- one wins; a window hidden with Cmd+H is brought back first.
+local function app(classes, cmd)
+    local want = {}
+    for _, c in ipairs(classes) do
+        want[c:lower()] = true
+    end
+    local function matches(w)
+        local class, initial = (w.class or ""):lower(), (w.initial_class or ""):lower()
+        return w.mapped and (want[class] or want[initial])
+    end
+    return function()
+        local active = hl.get_active_window()
+        if active and matches(active) and not (active.workspace and active.workspace.special) then
+            for _, w in ipairs(hl.get_windows() or {}) do
+                if matches(w) and not (w.workspace and w.workspace.special) then
+                    hl.dispatch(hl.dsp.window.move({
+                        workspace = "special:hidden", follow = false, window = "address:" .. w.address,
+                    }))
+                end
+            end
+            return
+        end
+
+        local best
+        for _, w in ipairs(hl.get_windows() or {}) do
+            if matches(w) and (not best or w.focus_history_id < best.focus_history_id) then
+                best = w
+            end
+        end
+        if not best then
+            hl.exec_cmd(cmd)
+            return
+        end
+        local sel = "address:" .. best.address
+        if best.workspace and best.workspace.special then
+            local ws = hl.get_active_workspace()
+            hl.dispatch(hl.dsp.window.move({ workspace = ws and ws.id or 1, window = sel }))
+        end
+        hl.dispatch(hl.dsp.focus({ window = sel }))
+        hl.dispatch(hl.dsp.window.bring_to_top())
+    end
+end
+
+hl.bind(MEH .. " + G", app({ "GitHub Desktop", "github-desktop", "GitHubDesktop" }, "github-desktop"))
+hl.bind(MEH .. " + C", app({ "brave-browser", "Brave-browser" }, "brave"))
+hl.bind(MEH .. " + X", app({ "dev.zed.Zed", "Zed", "zed" }, "zeditor"))
+hl.bind(MEH .. " + T", app({ "com.mitchellh.ghostty" }, terminal))
+hl.bind(MEH .. " + E", app({ "geary", "org.gnome.Geary" }, "geary"))
+hl.bind(MEH .. " + N", app({ "obsidian", "md.obsidian.Obsidian" }, "obsidian"))
+hl.bind(MEH .. " + A", app({ "com.anthropic.Claude", "Claude" }, "claude-desktop"))
+hl.bind(MEH .. " + R", app({ "org.gnome.Nautilus", "nautilus" }, "nautilus"))
+hl.bind(MEH .. " + D", app({ "discord" }, "discord"))
+
+-- Meh+W: Noctalia's Wallhaven browser (plugin enabled in dotfiles/noctalia)
+hl.bind(MEH .. " + W", hl.dsp.exec_cmd("noctalia msg panel-toggle noctalia/wallhaven:browser"))
+
+-------------------------
+---- LAPTOP FN KEYS  ----
+-------------------------
+
+-- Through Noctalia so its on-screen indicators show.
+local fn = { locked = true, repeating = true }
+hl.bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd("noctalia msg volume-up"),       fn)
+hl.bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd("noctalia msg volume-down"),     fn)
+hl.bind("XF86AudioMute",         hl.dsp.exec_cmd("noctalia msg volume-mute"),     fn)
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("noctalia msg brightness-up"),   fn)
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("noctalia msg brightness-down"), fn)
+
+-------------------------------
+---- WALLPAPER BORDER COLORS ----
+-------------------------------
+
+-- Noctalia's "hyprland" template (enabled in dotfiles/noctalia) writes the
+-- wallpaper's palette to noctalia.lua next to this file, and rewrites it when
+-- the wallpaper changes: focused window = primary color, others = surface.
+-- pcall so Hyprland still starts before Noctalia has written it the first time.
+-- (Noctalia looks for the line `require("noctalia").apply_theme()` and appends
+-- it if missing; this comment keeps it from doing that.)
+local has_noctalia, noctalia = pcall(require, "noctalia")
+if has_noctalia then
+    noctalia.apply_theme()
+
+    -- Tone the focused-window border down: mix the wallpaper color with the
+    -- dark surface color. BORDER_BRIGHTNESS 1 = full color, 0 = surface color.
+    local BORDER_BRIGHTNESS = 0.55
+    local function hex(c) return c:match("%x%x%x%x%x%x") end
+    local p, s = hex(noctalia.colors.primary or ""), hex(noctalia.colors.surface or "")
+    if p and s then
+        local mixed = ""
+        for i = 1, 5, 2 do
+            local a, b = tonumber(p:sub(i, i + 1), 16), tonumber(s:sub(i, i + 1), 16)
+            mixed = mixed .. string.format("%02x", math.floor(b + (a - b) * BORDER_BRIGHTNESS + 0.5))
+        end
+        hl.config({ general = { col = { active_border = "rgb(" .. mixed .. ")" } } })
+    end
+end

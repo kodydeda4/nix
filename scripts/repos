@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+#=====================================================================================
+# repos — clone my repos
+#
+# Recreates ~/Developer on a new machine: clones every repo in REPOS below that
+# isn't there yet. Repos that already exist are left alone (never pulled or
+# changed). Needs the SSH keys set up first (README → Git accounts). Add or
+# remove repos in the REPOS list below.
+#
+# Usage:
+#   repos               clone whatever is missing
+#   repos --list        show every repo and whether it's cloned
+#=====================================================================================
+
+set -uo pipefail
+
+# folder (under ~/Developer) and clone URL. ~/Developer/work/foresightcares is
+# left out on purpose (cloned by hand).
+REPOS=(
+	"personal/Applications/browser-homepage               git@github.com:kodydeda4/browser-homepage.git"
+	"personal/Applications/guitar-pro/guitar-pro          git@github.com:kodydeda4/guitar-pro.git"
+	"personal/Applications/guitar-pro/guitar-pro-rs       git@github.com:kodydeda4/guitar-pro-rs.git"
+	"personal/Applications/guitar-pro/guitar-pro-svelte   git@github.com:kodydeda4/guitar-pro-svelte.git"
+	"personal/Applications/guitar-pro/guitar-pro-website  git@github.com:kodydeda4/guitar-pro-website.git"
+	"personal/Applications/redfin/redfin                  git@github.com:kodydeda4/redfin.git"
+	"personal/Applications/redfin/redfin-prototypes       git@github.com:kodydeda4/redfin-prototypes.git"
+	"personal/Applications/redfin/redfin-swift            git@github.com:kodydeda4/redfin-swift.git"
+	"personal/Applications/redfin/redfin-web              git@github.com:kodydeda4/redfin-web.git"
+	"personal/Applications/website                        git@github.com:kodydeda4/website.git"
+	"personal/Developer/homebrew-tap                      git@github.com:kodydeda4/homebrew-tap.git"
+	"personal/Developer/nix                               git@github.com:kodydeda4/nix.git"
+	"personal/Documents/notes                             git@github.com:kodydeda4/notes.git"
+	"personal/Documents/resume                            git@github.com:kodydeda4/resume.git"
+	"personal/Music/guitar-pro-tabs                       git@github.com:kodydeda4/guitar-pro-tabs.git"
+	"personal/Music/guitar-pro-tabs-kody                  git@github.com:kodydeda4/guitar-pro-tabs-kody.git"
+	"personal/Pictures/wallpapers                         git@github.com:kodydeda4/wallpapers.git"
+	"personal/Study/rust                                  git@github.com:kodydeda4/rust.git"
+)
+
+# Empty folders that should exist anyway (somewhere to clone other people's code).
+DIRS=(
+	"third-party"
+	"work"
+)
+
+ROOT="$HOME/Developer"
+
+if [[ "${1:-}" == "--list" ]]; then
+	for entry in "${REPOS[@]}"; do
+		read -r path url <<<"$entry"
+		if [[ -e "$ROOT/$path/.git" ]]; then
+			printf '\033[1;32m✓\033[0m %s\n' "$path"
+		else
+			printf '\033[1;31m✗\033[0m %s  \033[2m(%s)\033[0m\n' "$path" "$url"
+		fi
+	done
+	exit 0
+fi
+
+for dir in "${DIRS[@]}"; do
+	mkdir -p "$ROOT/$dir"
+done
+
+status=0
+for entry in "${REPOS[@]}"; do
+	read -r path url <<<"$entry"
+	dest="$ROOT/$path"
+	[[ -e "$dest" ]] && continue
+	echo "==> $path"
+	mkdir -p "$(dirname "$dest")"
+	git clone "$url" "$dest" || status=1
+done
+
+[[ $status -eq 0 ]] && echo "All repos cloned."
+exit $status

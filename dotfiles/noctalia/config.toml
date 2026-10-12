@@ -1,0 +1,85 @@
+# Noctalia (Hyprland's bar/launcher). Settings changed in the GUI go to
+# settings.toml next to this file; this one is for things set by hand.
+# Docs: https://docs.noctalia.dev/v5/
+
+[shell]
+# 12-hour clock (lock screen, control center, calendar)
+time_format = "{:%-I:%M %p}"
+
+[shell.animation]
+enabled = false # no animations (Hyprland's are off too)
+
+[shell.panel]
+transparency_mode = "glass" # translucent launcher, control center, panels
+
+[bar.default]
+# Full-width bar flush with the screen edges, like the Mac's menu bar
+margin_ends = 0
+radius = 0
+concave_edge_corners = false
+# Translucent, with the wallpaper blurred behind it
+background_opacity = 0.7
+compositor_blur = true
+# Left side: just the workspace dots. (Launcher: Cmd+Space. Wallhaven: right
+# click the clock, or Meh+W.)
+start = ["workspaces"]
+# Right side, read right to left: power, battery, wifi, volume, brightness,
+# bluetooth, clipboard, notifications, then app tray icons. (No "now playing"
+# or control-center button; the control center opens by clicking the clock.)
+end = ["tray", "gamemode", "notifications", "clipboard", "bluetooth", "brightness", "volume", "network", "battery", "session"]
+
+# Game mode button: plain Ctrl, Alt and Super while on (keyd's modifier
+# remaps off); see dotfiles/hypr/gamemode.sh. It lights up while on: gamemode.sh
+# writes that look to zz-gamemode-state.toml next to this file.
+[widget.gamemode]
+type = "custom_button"
+glyph = "device-gamepad-2"
+tooltip = "Game mode: off"
+
+[widget.gamemode.actions]
+left = "exec bash ~/.config/hypr/gamemode.sh toggle"
+
+[widget.workspaces]
+# Plain dots for workspaces 1-5 (kept alive in dotfiles/hypr); the selected
+# one is highlighted in the wallpaper color
+show_labels = false
+active_pill_size = 1.0
+inactive_pill_size = 1.0
+focused_color = "primary"
+occupied_color = "on_surface_variant"
+empty_color = "surface_variant"
+
+[widget.clock]
+# 12-hour clock in the bar
+format = "{:%-I:%M %p}"
+
+[widget.clock.actions]
+left = "panel-toggle control-center home" # what right click did (default left: calendar)
+right = "panel-toggle noctalia/wallhaven:browser" # Wallhaven browser
+
+[dock]
+enabled = true
+show_dots = true # dot under every open app, like the Mac
+show_instance_count = false # just the dot, no window count
+# Same apps as the GNOME dock (desktop file names without .desktop)
+pinned = [
+  "org.gnome.Nautilus",
+  "brave-browser",
+  "dev.zed.Zed",
+  "com.anthropic.Claude",
+  "github-desktop",
+  "org.gnome.Calendar",
+  "org.gnome.Geary",
+  "com.mitchellh.ghostty",
+  "md.obsidian.Obsidian",
+  "steam",
+  "slack",
+]
+
+[theme.templates]
+# Window borders in Hyprland take their colors from the wallpaper
+builtin_ids = ["hyprland"]
+
+[plugins]
+# Wallhaven: browse wallhaven.cc and set a wallpaper (Meh+W in Hyprland).
+enabled = ["noctalia/wallhaven"]

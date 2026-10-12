@@ -2,7 +2,7 @@
 #=====================================================================================
 # xcodemacros — xcode prebuilt macros (toggle)
 #
-# Turns Xcode's prebuilt Swift macros on or off (the IDEPackageEnablePrebuilts
+# Mac only. Turns Xcode's prebuilt Swift macros on or off (the IDEPackageEnablePrebuilts
 # setting). Restart Xcode afterwards for it to take effect.
 #
 # Usage:

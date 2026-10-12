@@ -14,7 +14,7 @@ if [[ -z "$TMUX" && "$TERM_PROGRAM" == "ghostty" ]]; then
 fi
 
 # Small greeting on every new terminal (dotfiles/fastfetch/config.jsonc).
-fastfetch
+fastfetch && echo
 
 #=====================================================================================
 # vi mode
@@ -66,12 +66,16 @@ alias src="source ~/.zshrc"
 alias ls='lsd -lah --color=always --group-directories-first --blocks name,size'
 alias ll="ls"
 alias gg="lazygit"
-alias ff='clear && fastfetch'
+alias ff='clear && fastfetch && echo'
 alias tt="smassh"
 alias h="history"
 alias conf="cd ~/Developer/personal/Developer/nix/dotfiles/; nvim ."
 
-alias ip-address="ipconfig getifaddr en0"
+if [[ "$OSTYPE" == darwin* ]]; then
+	alias ip-address="ipconfig getifaddr en0"
+else
+	alias ip-address="hostname -I | cut -d' ' -f1"
+fi
 alias internet-speed-test="speedtest-cli --simple"
 alias bonsai="cbonsai --seed 119 --live"
 

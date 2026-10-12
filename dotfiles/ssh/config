@@ -1,3 +1,7 @@
+# UseKeychain (below) is macOS-only; Linux ssh would refuse the whole file
+# without this line.
+IgnoreUnknown UseKeychain
+
 # kodydeda4 GitHub account (default).
 Host github.com
 	HostName github.com

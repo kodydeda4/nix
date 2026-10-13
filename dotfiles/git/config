@@ -18,6 +18,11 @@
 	insteadOf = git@github.com:foresightcares/
 	insteadOf = ssh://git@github.com/foresightcares/
 
+# Same for kodydeda4: HTTPS clones of my own repos go over SSH (the default
+# github.com host in dotfiles/ssh/config), so git never asks for a password.
+[url "git@github.com:kodydeda4/"]
+	insteadOf = https://github.com/kodydeda4/
+
 [init]
 	defaultBranch = main
 

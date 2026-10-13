@@ -25,6 +25,23 @@
     claude-desktop,
     apple-fonts,
   }: let
+    # System config shared by every machine (Mac and ThinkPad). Anything that
+    # only exists on one OS goes in hosts/<machine>/default.nix instead.
+    shared = {pkgs, ...}: let
+      packages = import ./packages.nix {inherit pkgs inputs;};
+    in {
+      nixpkgs.config.allowUnfree = true;
+
+      environment.systemPackages = packages.shared;
+      fonts.packages = packages.fonts;
+
+      # Necessary for using flakes on this system.
+      nix.settings.experimental-features = ["nix-command" "flakes"];
+
+      # Set Git commit hash for darwin-version / nixos-version.
+      system.configurationRevision = self.rev or self.dirtyRev or null;
+    };
+
     # Dotfiles (home.nix), the same on every machine.
     homeManagerConfig = {
       home-manager.useGlobalPkgs = true;
@@ -46,9 +63,9 @@
     # Mac. Build using:
     # $ darwin-rebuild build --flake .#mac
     darwinConfigurations."mac" = nix-darwin.lib.darwinSystem {
-      specialArgs = {inherit self;};
+      specialArgs = {inherit self inputs;};
       modules = [
-        ./modules/common.nix
+        shared
         ./hosts/mac
         nix-homebrew.darwinModules.nix-homebrew
         {
@@ -69,7 +86,7 @@
     nixosConfigurations."nixos" = nixpkgs.lib.nixosSystem {
       specialArgs = {inherit self inputs;};
       modules = [
-        ./modules/common.nix
+        shared
         ./hosts/nixos
         home-manager.nixosModules.home-manager
         homeManagerConfig

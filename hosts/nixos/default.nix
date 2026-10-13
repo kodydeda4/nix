@@ -1,4 +1,4 @@
-# The ThinkPad (NixOS + GNOME). Shared packages live in modules/common.nix;
+# The ThinkPad (NixOS + GNOME). All packages are listed in packages.nix;
 # this file is the Linux-only part: boot, desktop, hardware services, apps.
 {
   pkgs,
@@ -191,29 +191,7 @@
     shell = pkgs.zsh;
   };
 
-  environment.systemPackages = [
-    ## Apps (Linux versions of the Mac's casks)
-    pkgs.ghostty
-    pkgs.discord
-    pkgs.github-desktop
-    pkgs.mpv
-    pkgs.geary
-    inputs.claude-desktop.packages.${pkgs.stdenv.hostPlatform.system}.default
-
-    pkgs.git
-
-    ## Icons (Papirus-Dark, set in home.nix)
-    pkgs.papirus-icon-theme
-
-    ## GNOME extensions (turned on in home.nix)
-    pkgs.gnomeExtensions.blur-my-shell
-
-    ## Build tools nvim expects (the Mac gets these from Xcode): treesitter
-    ## compiles parsers with a C compiler, Mason unzips language servers.
-    pkgs.gcc
-    pkgs.gnumake
-    pkgs.unzip
-  ];
+  environment.systemPackages = (import ../../packages.nix {inherit pkgs inputs;}).linux;
 
   # zsh, matching the Mac: history suggestions (→ accepts), syntax
   # highlighting, Ctrl+R fuzzy history and `**<Tab>` fuzzy completion.

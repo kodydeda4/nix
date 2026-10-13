@@ -23,8 +23,8 @@ There are three layers. Each machine stacks them like this:
                  ▼                         ▼
    ┌─────────────────────────┐ ┌─────────────────────────┐
    │ 1. SYSTEM (root)        │ │ 1. SYSTEM (root)        │
-   │  modules/common.nix  ◄──┼─┼──► modules/common.nix   │  shared apps + CLI tools
-   │  hosts/mac/             │ │  hosts/nixos/           │  per-machine apps + OS settings
+   │  flake.nix `shared`  ◄──┼─┼──► flake.nix `shared`   │  shared settings
+   │  hosts/mac/             │ │  hosts/nixos/           │  per-machine OS settings
    ├─────────────────────────┤ ├─────────────────────────┤
    │ 2. USER (Home Manager)  │ │ 2. USER (Home Manager)  │
    │  home.nix  ◄────────────┼─┼──► home.nix             │  one file, OS-only parts gated
@@ -34,9 +34,11 @@ There are three layers. Each machine stacks them like this:
    └─────────────────────────┘ └─────────────────────────┘
 ```
 
-1. **System** – what's installed and how the OS behaves. `modules/common.nix`
+1. **System** – what's installed and how the OS behaves. Every package (both
+   machines, Homebrew and the App Store too) is listed in `packages.nix`;
+   the files below read from it. The `shared` block in `flake.nix`
    is shared; `hosts/<machine>/default.nix` is everything that only exists on
-   that OS (Homebrew casks and macOS defaults on the Mac; boot, desktops, keyd,
+   that OS (macOS defaults on the Mac; boot, desktops, keyd,
    sound, fonts on the ThinkPad).
 2. **User** – `home.nix` decides which dotfiles get linked where, plus a few
    generated files (GTK themes, GNOME settings). Mac-only and Linux-only parts
@@ -58,12 +60,11 @@ at that path.
 
 ```
 nix/
-├── flake.nix            # inputs (nixpkgs, nix-darwin, home-manager, …) and the two machines
+├── flake.nix            # inputs, settings shared by both machines, and the two machines
 ├── flake.lock           # pinned versions of everything (`nix flake update` to bump)
-├── modules/
-│   └── common.nix       # BOTH: shared apps (Brave, Zed, Obsidian, Slack), CLI tools, Meslo font
+├── packages.nix         # EVERY package: shared / mac / linux, Homebrew, App Store
 ├── hosts/
-│   ├── mac/default.nix  # MAC: Mac apps, Homebrew casks, App Store apps, macOS defaults, zsh
+│   ├── mac/default.nix  # MAC: macOS defaults, Homebrew setup, zsh
 │   └── nixos/
 │       ├── default.nix  # THINKPAD: boot, GNOME + Hyprland, keyd, game mode, fonts, sound, Linux apps
 │       └── hardware-configuration.nix   # from the installer (disks, kernel modules)
@@ -125,10 +126,10 @@ Run `scripts` to list them, `scripts <name>` for one's full usage.
 
 | What | Where |
 |---|---|
-| CLI tool or app for both machines | `environment.systemPackages` in `modules/common.nix` (`nix search nixpkgs <name>`) |
-| App for one machine only | `environment.systemPackages` in `hosts/mac/` or `hosts/nixos/` |
-| Mac app only on Homebrew, or with a broken nixpkgs build | `homebrew.casks` in `hosts/mac/default.nix` (`brew search <name>`) |
-| Mac App Store app | `homebrew.masApps` in `hosts/mac/default.nix` (ID from `mas search <name>`) |
+| CLI tool or app for both machines | `shared` in `packages.nix` (`nix search nixpkgs <name>`) |
+| App for one machine only | `mac` or `linux` in `packages.nix` |
+| Mac app only on Homebrew, or with a broken nixpkgs build | `casks` in `packages.nix` (`brew search <name>`) |
+| Mac App Store app | `masApps` in `packages.nix` (ID from `mas search <name>`) |
 | A macOS setting | `system.defaults` in `hosts/mac/default.nix` |
 | A ThinkPad system service / keyboard remap | `hosts/nixos/default.nix` (keyd is there) |
 | A GNOME setting | `dconf.settings` in `home.nix` (find the key with `dconf watch /` while changing it in Settings) |

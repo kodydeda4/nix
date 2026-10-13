@@ -1,56 +1,20 @@
 # The Mac (nix-darwin): Mac-only apps, Homebrew casks, App Store apps and
-# macOS settings. Shared packages live in modules/common.nix.
+# macOS settings. All packages are listed in packages.nix.
 {
   pkgs,
   config,
+  inputs,
   ...
-}: {
+}: let
+  packages = import ../../packages.nix {inherit pkgs inputs;};
+in {
   system.primaryUser = "kody";
 
-  environment.systemPackages = [
-    ## Apps
-    pkgs.ghostty-bin
-    pkgs.raycast
-    pkgs.espanso
-    pkgs.mos
-    pkgs.alt-tab-macos
-
-    ## Install Script
-    pkgs.mkalias
-  ];
+  environment.systemPackages = packages.mac;
 
   homebrew = {
     enable = true;
-    brews = [
-      "mas"
-      "mole"
-    ];
-    casks = [
-      "zen"
-      "github"
-      "discord"
-      "figma"
-      "claude"
-      "devcleaner"
-      "tailscale-app"
-      "betterdisplay"
-      "font-sf-pro"
-      "font-sf-mono"
-      "karabiner-elements"
-      "ik-product-manager"
-      "proxy-audio-device"
-      "iina"
-      "private-internet-access"
-      "balenaetcher"
-    ];
-    masApps = {
-      "Xcode" = 497799835;
-      "Apple Developer" = 640199958;
-      "TestFlight" = 899247664;
-      "Logic Pro" = 634148309;
-      "Final Cut Pro" = 424389933;
-      "Magnet" = 441258766;
-    };
+    inherit (packages) brews casks masApps;
     onActivation.cleanup = "zap";
     # Must stay false: brew's auto-update re-exec drops /opt/homebrew/bin from
     # its PATH under nix-homebrew, so `brew bundle` can't find mas.

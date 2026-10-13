@@ -16,8 +16,6 @@
 in {
   home.stateVersion = "26.11";
 
-  home.packages = [pkgs.git-lfs];
-
   # ~/.config/git -> dotfiles/git
   xdg.configFile."git".source = link "git";
 

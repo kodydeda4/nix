@@ -8,8 +8,8 @@ desc = "Go to foresightcares"
 
 [[mgr.prepend_keymap]]
 on   = [ "g", "n" ]
-run  = [ "cd ~/Developer/personal/Developer/nix/", "shell --block 'nvim ~/Developer/personal/Developer/nix/flake.nix'" ]
-desc = "Open nix config (flake.nix) in nvim"
+run  = [ "cd ~/Developer/personal/Developer/nix/", "shell --block 'nvim ~/Developer/personal/Developer/nix/packages.nix'" ]
+desc = "Edit nix packages"
 
 [[mgr.prepend_keymap]]
 on   = [ "g", "d" ]

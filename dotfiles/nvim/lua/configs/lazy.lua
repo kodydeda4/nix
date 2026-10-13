@@ -25,6 +25,7 @@ return {
         "netrwSettings",
         "netrwFileHandlers",
         "matchit",
+        "matchparen", -- no highlight on the bracket matching the one under the cursor
         "tar",
         "tarPlugin",
         "rrhelper",

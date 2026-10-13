@@ -110,6 +110,7 @@ Run `scripts` to list them, `scripts <name>` for one's full usage.
 | `fpr` | Run SwiftFormat on my Swift repos |
 | `ss enable\|disable` | Window shadows on screenshots (Mac only) |
 | `xcodemacros enable\|disable` | Xcode's prebuilt Swift macros (Mac only) |
+| `xc build\|run\|stop\|scheme\|device` | Build / run / stop / pick the scheme / pick the simulator or iPhone, for the Xcode project here (Zed's ⌘B / ⌘R / ⌘. / ⌃T / ⌃G) |
 | `scripts` | List these scripts |
 
 ## Everyday use

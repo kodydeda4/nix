@@ -1,0 +1,53 @@
+// Zed tasks
+//
+// Xcode build / run / stop / scheme / device for iOS projects; they call scripts/xc and are
+// bound to ⌘B / ⌘R / ⌘. / ⌃T / ⌃G in keymap.json.
+//
+// For information on tasks, see https://zed.dev/docs/tasks
+[
+  {
+    "label": "Xcode: Build",
+    "command": "xc build",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "hide": "never"
+  },
+  {
+    "label": "Xcode: Run",
+    "command": "xc run",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "hide": "never"
+  },
+  {
+    "label": "Xcode: Stop",
+    "command": "xc stop",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "no_focus",
+    "hide": "on_success"
+  },
+  {
+    "label": "Xcode: Choose Device",
+    "command": "xc device",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "hide": "on_success"
+  },
+  {
+    "label": "Xcode: Choose Scheme",
+    "command": "xc scheme",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "hide": "on_success"
+  }
+]

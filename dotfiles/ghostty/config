@@ -3,22 +3,27 @@
 #----------------------------------
 # theme = dark:Atom One Dark, light:Atom One Light
 # theme = dark:coolnight, light:TokyoNight Day
-theme = dark:atom-one-dark-oled.conf, light:Atom One Light
+theme = dark:atom-one-dark-oled.conf, light:atom-one-light-thick.conf
 # theme = dark:TokyoNight, light:TokyoNight Day
 
-font-family = MesloLGS Nerd Font
+# SF Mono (font-sf-mono cask); Ghostty's built-in Nerd Font symbols fill in the icons
+font-family = SF Mono
 font-size = 16
 # background-opacity = 1
 background-opacity = 0.90
+# background-opacity = 0.5
 # background-blur-radius = 20
-background-blur-radius = 25
+# translucent, blurred background; shows wherever nvim leaves the background
+# empty, like the file tree. (macos-glass-regular, the native glass, came out
+# nearly opaque; macos-glass-clear is the see-through variant.)
+background-blur = 25
 unfocused-split-opacity = 0.75
 confirm-close-surface = false
 window-width = 100
 window-height = 30
 window-padding-x = 8
 # top, bottom (px): space under the tmux bar
-window-padding-y = 0, 8
+window-padding-y = 0, 0
 window-padding-balance = true
 
 #----------------------------------
@@ -42,10 +47,33 @@ link-url = true
 keybind = cmd+shift+equal=increase_font_size:1
 
 
-# ⌥⌘J / ⌥⌘K -> send ⌥J / ⌥K, so they reach tmux and nvim (terminals never see ⌘).
-# nvim uses them to add a cursor below/above, like Xcode's Select Column Down/Up.
-keybind = cmd+alt+j=text:\x1bj
-keybind = cmd+alt+k=text:\x1bk
+# ⌥⌘J / ⌥⌘K -> send ⌥N / ⌥P to nvim (terminals never see ⌘), which adds a cursor
+# below/above, like Xcode's Select Column Down/Up. (Not ⌥J / ⌥K: plain ⌥J / ⌥K
+# switch tmux tabs.)
+keybind = cmd+alt+j=text:\x1bn
+keybind = cmd+alt+k=text:\x1bp
+
+# ⌃⌘J / ⌃⌘H / ⌃⌘L -> send ⌥⇧J / ⌥⇧H / ⌥⇧L for nvim's go to definition / back /
+# forward (same keys as Zed). Capitals so they don't hit tmux's ⌥H/⌥L.
+keybind = ctrl+cmd+j=text:\x1bJ
+keybind = ctrl+cmd+h=text:\x1bH
+keybind = ctrl+cmd+l=text:\x1bL
+
+# ⌘⇧J -> send ⌥⇧R: nvim reveals the current file in the file tree (like Xcode).
+keybind = cmd+shift+j=text:\x1bR
+
+# ⌃M -> send ⌥M: nvim's "Format to Multiple Lines" (like Xcode's ⌃M). Terminals
+# normally read ⌃M as Enter; Enter itself is unaffected.
+keybind = ctrl+m=text:\x1bm
+
+# ⌘⇧O -> send ⌥⇧S: nvim's symbol search, like Xcode's Open Quickly
+keybind = cmd+shift+o=text:\x1bS
+
+# ⌘> / ⌘< -> send ⌥> / ⌥<: nvim folds / unfolds the whole file / the current scope.
+# (⌘< replaces Ghostty's default reload-config shortcut; config reloads still
+# happen from the menu bar: Ghostty > Reload Configuration.)
+keybind = cmd+shift+period=text:\x1b>
+keybind = cmd+shift+comma=text:\x1b<
 
 # Linux-only extras (ThinkPad), written by home.nix. Missing on the Mac, so skipped.
 config-file = ?../ghostty-linux/config

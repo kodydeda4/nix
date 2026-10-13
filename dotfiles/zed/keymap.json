@@ -380,5 +380,35 @@
       "alt-cmd-j": "editor::AddSelectionBelow",
       "alt-cmd-k": "editor::AddSelectionAbove"
     }
+  },
+  {
+    // Xcode-style build / run / stop / scheme / device (tasks.json -> scripts/xc). Bound in
+    // both contexts so they beat Editor defaults; ⌃T / ⌃G stay out of the
+    // terminal so fzf's ⌃T still works there.
+    "context": "Workspace",
+    "bindings": {
+      "cmd-b": ["task::Spawn", { "task_name": "Xcode: Build" }],
+      "cmd-r": ["task::Spawn", { "task_name": "Xcode: Run" }],
+      "cmd-.": ["task::Spawn", { "task_name": "Xcode: Stop" }]
+    }
+  },
+  {
+    "context": "Editor && mode == full",
+    "bindings": {
+      "cmd-b": ["task::Spawn", { "task_name": "Xcode: Build" }],
+      "cmd-r": ["task::Spawn", { "task_name": "Xcode: Run" }],
+      "cmd-.": ["task::Spawn", { "task_name": "Xcode: Stop" }],
+      "ctrl-t": ["task::Spawn", { "task_name": "Xcode: Choose Scheme" }],
+      "ctrl-g": ["task::Spawn", { "task_name": "Xcode: Choose Device" }]
+    }
+  },
+  {
+    // Ctrl+J / Ctrl+K: next / previous tab, like in nvim. Editor only, so the
+    // terminal keeps them.
+    "context": "Editor && mode == full",
+    "bindings": {
+      "ctrl-j": "pane::ActivateNextItem",
+      "ctrl-k": "pane::ActivatePreviousItem"
+    }
   }
 ]

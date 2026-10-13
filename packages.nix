@@ -19,9 +19,11 @@
     cowsay
     dioxus-cli
     fastfetch
+    fd
     firebase-tools
     fzf
     gh
+    imagemagick # snacks.nvim images (sizes/converts them)
     git-lfs
     jdk
     lazygit
@@ -59,6 +61,7 @@
     mos
     alt-tab-macos
     mkalias
+    xcbeautify # xcodebuild.nvim log formatting
   ];
 
   masApps = {
@@ -92,6 +95,7 @@
   brews = [
     "mas"
     "mole"
+    "xcode-build-server"
   ];
 
   # -------------------------------------------------------------------------

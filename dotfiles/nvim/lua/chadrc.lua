@@ -10,7 +10,7 @@ M.base46 = {
 	-- Space t t switches between these (matches Ghostty atom-one-dark-oled / Atom One Light)
 	theme_toggle = { "onedark", "one_light" },
 	-- Space t b flips this (and rewrites this line so it sticks across restarts)
-	transparency = true,
+	transparency = false,
 
 	-- match Ghostty's atom-one-dark-oled: pure black background, its text and
 	-- selection colors; everything else is NvChad's onedark

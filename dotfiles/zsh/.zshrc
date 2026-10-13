@@ -14,7 +14,7 @@ if [[ -z "$TMUX" && "$TERM_PROGRAM" == "ghostty" ]]; then
 fi
 
 # Small greeting on every new terminal (dotfiles/fastfetch/config.jsonc).
-fastfetch && echo
+# fastfetch && echo
 
 #=====================================================================================
 # vi mode

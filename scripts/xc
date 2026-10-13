@@ -1,0 +1,305 @@
+#!/usr/bin/env bash
+#=====================================================================================
+# xc — Xcode build / run / scheme from the terminal
+#
+# Mac only, iOS apps. Works on the .xcworkspace (or .xcodeproj) in the current
+# folder. Zed calls it for ⌘B / ⌘R / ⌘. / ⌃T / ⌃G (dotfiles/zed/tasks.json + keymap.json).
+# The chosen scheme is stored in buildServer.json (xcode-build-server), so
+# switching scheme also points Zed's Swift autocomplete at it.
+#
+# Usage:
+#   xc scheme           pick a scheme (fzf) and write buildServer.json
+#   xc device           pick the run destination (fzf): a simulator or a paired iPhone/iPad
+#   xc build            build the scheme for that destination
+#   xc run              build, then install and launch it there
+#   xc stop             stop the build/run going on in this folder
+#
+# Like Xcode, starting a build or run first stops the one already going in
+# this folder (two builds at once fight over the same build database).
+#
+# Destination: the one picked with `xc device` (kept in ~/.local/state/xc/device,
+# shared by all projects), else the booted simulator, else XC_SIMULATOR (a name,
+# e.g. "iPhone 17"), else the first iPhone simulator on the newest iOS runtime.
+#=====================================================================================
+
+set -euo pipefail
+
+# command-line builds can't answer Xcode's "Trust & Enable" prompt for package
+# plugins/macros (e.g. aws-sdk-swift's code generator), so skip it
+XCODEBUILD_FLAGS=(-skipPackagePluginValidation -skipMacroValidation)
+
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/xc"
+
+die() {
+	echo "xc: $*" >&2
+	exit 1
+}
+
+# temp files to delete on exit, and the "build in progress" marker we own
+CLEANUP=()
+BG_PIDS=()
+ACTIVE_FILE=""
+cleanup() {
+	# stop our background xcodebuilds, which ignore ⌃C
+	[[ ${#BG_PIDS[@]} -gt 0 ]] && kill "${BG_PIDS[@]}" 2>/dev/null || true
+	rm -f ${CLEANUP[@]+"${CLEANUP[@]}"}
+	if [[ -n $ACTIVE_FILE && "$(cut -f1 "$ACTIVE_FILE" 2>/dev/null)" == "$$" ]]; then
+		rm -f "$ACTIVE_FILE"
+	fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
+
+# one marker per folder, holding the pid of the xc build/run going on there
+active_file() {
+	echo "$STATE_DIR/active-$(printf '%s' "$PWD" | shasum | cut -c1-12)"
+}
+
+# signal an xc process and everything it started
+signal_xc() {
+	local sig=$1 pid=$2
+	if [[ "$(ps -o pgid= -p "$pid" | tr -d ' ')" == "$pid" ]]; then
+		kill "-$sig" -- "-$pid" 2>/dev/null || true # its own process group (Zed tasks, shell jobs)
+	else
+		pkill "-$sig" -P "$pid" 2>/dev/null || true
+		kill "-$sig" "$pid" 2>/dev/null || true
+	fi
+}
+
+# stop the xc build/run going on in this folder, if any
+stop_active() {
+	local file pid action scheme
+	file=$(active_file)
+	[[ -f $file ]] || return 1
+	IFS=$'\t' read -r pid action scheme <"$file"
+	rm -f "$file"
+	# pids get reused: only touch it if it's still an xc
+	[[ $pid != "$$" ]] && ps -o command= -p "$pid" 2>/dev/null | grep -Eq 'xc (build|run)' || return 1
+	echo "Stopping ${action:-build} of ${scheme:-?}…"
+	signal_xc TERM "$pid"
+	for _ in $(seq 40); do
+		kill -0 "$pid" 2>/dev/null || return 0
+		sleep 0.25
+	done
+	signal_xc KILL "$pid"
+}
+
+claim_active() {
+	stop_active || true
+	mkdir -p "$STATE_DIR"
+	ACTIVE_FILE=$(active_file)
+	printf '%s\t%s\t%s\n' "$$" "$1" "$SCHEME" >"$ACTIVE_FILE"
+}
+
+# xcodebuild treats ⌃C as "cancel gracefully", which can take over a minute.
+# Run it in the background (background jobs ignore ⌃C) and wait: the INT trap
+# then exits right away, and cleanup() stops it with TERM, which it obeys at once.
+#
+# The output goes to a log; only errors (with their context) are printed, and
+# warnings are just counted.
+xcb() {
+	local pid status=0 log="$STATE_DIR/last-build.log"
+	mkdir -p "$STATE_DIR"
+	xcodebuild "$@" >"$log" 2>&1 &
+	pid=$!
+	BG_PIDS+=("$pid")
+	wait "$pid" || status=$?
+	summarize "$log"
+	return "$status"
+}
+
+# print the errors from an xcodebuild log, and how many (unique) warnings it had
+summarize() {
+	awk -v logfile="${1/#$HOME/~}" '
+		# -quiet wraps every compile step that printed only warnings in this
+		# (exit code 0 = it succeeded), so it is not a real error
+		/^error: the following command failed with exit code 0 / { context = 0; next }
+		/(^|: )warning: / { if (!warned[$0]++) warnings++; context = 0; next }
+		/(^|: )error: /   { if (!errored[$0]++) { print; context = 1 } else context = 0; next }
+		/^\*\* /          { print; context = 0; next }
+		context           { print }
+		END {
+			if (warnings) printf "%d warning%s (all of them: %s)\n", warnings, (warnings == 1 ? "" : "s"), logfile
+		}' "$1"
+}
+
+# -workspace X / -project X for the folder we're in
+container() {
+	local f
+	for f in *.xcworkspace; do [[ -e $f ]] && CONTAINER=(-workspace "$f") && return; done
+	for f in *.xcodeproj; do [[ -e $f ]] && CONTAINER=(-project "$f") && return; done
+	die "no .xcworkspace or .xcodeproj in $PWD"
+}
+
+pick_scheme() {
+	local scheme current="" all
+	[[ -f buildServer.json ]] && current=$(jq -r '.scheme // empty' buildServer.json)
+	# `xcodebuild -list` takes ~20s (it resolves packages first), so start with the
+	# scheme files on disk (instant: the apps and shared schemes) and only load
+	# the full list, with every package's auto-generated scheme, on ⌃A
+	printf -v all '%q ' "${CONTAINER[@]}"
+	all="xcodebuild -list -json $all 2>/dev/null | jq -r '(.workspace // .project).schemes[]'"
+	scheme=$(find . \( -name .git -o -name .build -o -name DerivedData -o -name node_modules -o -name Pods \) -prune \
+		-o -name '*.xcscheme' -print | sed 's#.*/##; s#\.xcscheme$##' | sort -u |
+		fzf --prompt "scheme> " --height 40% --reverse \
+			--header "current: ${current:-none} · ⌃A: all schemes (slow)" \
+			--bind "ctrl-a:change-header(loading all schemes…)+reload($all)+change-header(current: ${current:-none})") ||
+		die "no scheme picked"
+
+	# `xcode-build-server config` spends ~25s in `xcodebuild -showBuildSettings`
+	# just to find DerivedData, which is the same for every scheme of a
+	# workspace. If buildServer.json already has it for this workspace, only
+	# swap the scheme.
+	local tmp
+	if [[ -f buildServer.json ]] &&
+		[[ "$(jq -r '.workspace // empty' buildServer.json)" == "$PWD/${CONTAINER[1]}" ]] &&
+		[[ -d "$(jq -r '.build_root // empty' buildServer.json)" ]]; then
+		tmp=$(mktemp)
+		jq --tab --arg s "$scheme" '.scheme = $s' buildServer.json >"$tmp" && mv "$tmp" buildServer.json
+	else
+		xcode-build-server config "${CONTAINER[@]}" -scheme "$scheme"
+	fi
+	echo "Scheme: $scheme (restart the language server in Zed to pick it up)"
+}
+
+current_scheme() {
+	[[ -f buildServer.json ]] || pick_scheme >&2
+	SCHEME=$(jq -r '.scheme // empty' buildServer.json)
+	[[ -n $SCHEME ]] || die "no scheme in buildServer.json, run: xc scheme"
+}
+
+DEVICE_FILE="$STATE_DIR/device"
+
+# every destination as "label<TAB>kind<TAB>udid", kind = sim or device
+list_devices() {
+	local physical
+	xcrun simctl list devices available -j | jq -r '
+		.devices | to_entries[] | select(.key | test("iOS"))
+		| (.key | sub(".*SimRuntime\\.iOS-"; "iOS ") | gsub("-"; ".")) as $os
+		| .value[]
+		| "\(.name) (\($os) Simulator)\(if .state == "Booted" then " — booted" else "" end)\tsim\t\(.udid)"'
+	physical=$(mktemp)
+	CLEANUP+=("$physical")
+	if xcrun devicectl list devices --json-output "$physical" >/dev/null 2>&1; then
+		jq -r '
+			.result.devices[]
+			| select(.hardwareProperties.reality == "physical" and .hardwareProperties.platform == "iOS")
+			| select(.connectionProperties.pairingState == "paired")
+			| "\(.deviceProperties.name) (iOS \(.deviceProperties.osVersionNumber // "?") device)\(if .connectionProperties.tunnelState == "connected" then "" else " — not connected" end)\tdevice\t\(.hardwareProperties.udid)"' "$physical"
+	fi
+	rm -f "$physical"
+}
+
+pick_device() {
+	local line label
+	line=$(list_devices | fzf --prompt "device> " --height 40% --reverse \
+		--delimiter $'\t' --with-nth 1) || die "no device picked"
+	# drop the " — booted" / " — not connected" status, it's only true right now
+	label=${line%%$'\t'*}
+	label=${label% — *}
+	mkdir -p "$(dirname "$DEVICE_FILE")"
+	printf '%s\t%s\n' "$label" "${line#*$'\t'}" >"$DEVICE_FILE"
+	echo "Device: $label"
+}
+
+# sets DEST_KIND (sim/device), DEST_ID (udid) and DEST_NAME
+destination() {
+	local label kind udid
+	if [[ -f $DEVICE_FILE ]]; then
+		IFS=$'\t' read -r label kind udid <"$DEVICE_FILE"
+		# keep it only while it still exists (simulators get deleted, devices unpaired)
+		if list_devices | cut -f3 | grep -qx "$udid"; then
+			DEST_KIND=$kind DEST_ID=$udid DEST_NAME=$label
+			return
+		fi
+		echo "xc: saved device \"$label\" is gone, falling back to a simulator" >&2
+	fi
+	simulator
+	DEST_KIND=sim DEST_ID=$SIM DEST_NAME=$(xcrun simctl list devices -j | jq -r --arg id "$SIM" '[.devices[][] | select(.udid == $id)][0].name')
+}
+
+simulator() {
+	local devices
+	devices=$(xcrun simctl list devices available -j)
+	SIM=$(jq -r --arg name "${XC_SIMULATOR:-}" '
+		[.devices | to_entries[] | select(.key | test("iOS")) | .value[]] as $all
+		| ([$all[] | select(.state == "Booted")] | first)
+		// (if $name != "" then [$all[] | select(.name == $name)] | first else null end)
+		// ([.devices | to_entries[] | select(.key | test("iOS"))] | last | [.value[] | select(.name | startswith("iPhone"))] | first)
+		| .udid // empty' <<<"$devices")
+	[[ -n $SIM ]] || die "no iOS simulator found (install one in Xcode > Settings > Components)"
+}
+
+build() {
+	echo "Building ${SCHEME} for ${DEST_NAME}…"
+	# a real device needs signing; let Xcode create/refresh the profiles
+	[[ $DEST_KIND == device ]] && XCODEBUILD_FLAGS+=(-allowProvisioningUpdates)
+	xcb "${CONTAINER[@]}" "${XCODEBUILD_FLAGS[@]}" -scheme "$SCHEME" -destination "id=$DEST_ID" -quiet build
+	echo "Built ${SCHEME}."
+}
+
+run() {
+	local settings settings_pid app bundle
+	# build settings take ~10s, so read them while the build runs
+	settings=$(mktemp)
+	CLEANUP+=("$settings")
+	xcodebuild "${CONTAINER[@]}" "${XCODEBUILD_FLAGS[@]}" -scheme "$SCHEME" -destination "id=$DEST_ID" \
+		-showBuildSettings -json >"$settings" 2>/dev/null &
+	settings_pid=$!
+	BG_PIDS+=("$settings_pid")
+	build
+	wait "$settings_pid" || die "couldn't read build settings for $SCHEME"
+
+	IFS=$'\t' read -r app bundle < <(jq -r '
+		[.[].buildSettings | select(.WRAPPER_EXTENSION == "app")] | first
+		| "\(.TARGET_BUILD_DIR)/\(.WRAPPER_NAME)\t\(.PRODUCT_BUNDLE_IDENTIFIER)"' "$settings")
+	[[ -d $app ]] || die "$SCHEME doesn't build an app"
+
+	echo "Launching ${SCHEME} on ${DEST_NAME}…"
+
+	if [[ $DEST_KIND == device ]]; then
+		xcrun devicectl device install app --device "$DEST_ID" "$app"
+		xcrun devicectl device process launch --terminate-existing --device "$DEST_ID" "$bundle"
+	else
+		xcrun simctl boot "$DEST_ID" 2>/dev/null || true
+		# Xcode 27 replaced Simulator.app with DeviceHub.app (same simulators)
+		open -b com.apple.dt.Devices 2>/dev/null || open -a Simulator
+		xcrun simctl install "$DEST_ID" "$app"
+		xcrun simctl launch --terminate-running-process "$DEST_ID" "$bundle"
+	fi
+	echo "${SCHEME} is running on ${DEST_NAME}."
+}
+
+[[ "$(uname)" == "Darwin" ]] || die "Mac only"
+
+case "${1:-}" in
+scheme)
+	container
+	pick_scheme
+	;;
+device)
+	pick_device
+	;;
+build)
+	container
+	current_scheme
+	destination
+	claim_active build
+	build
+	;;
+run)
+	container
+	current_scheme
+	destination
+	claim_active run
+	run
+	;;
+stop)
+	stop_active && echo "Stopped." || echo "Nothing running."
+	;;
+*)
+	echo "usage: xc <scheme|device|build|run|stop>" >&2
+	exit 1
+	;;
+esac

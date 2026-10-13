@@ -47,5 +47,14 @@ keybind = cmd+shift+equal=increase_font_size:1
 keybind = cmd+alt+j=text:\x1bj
 keybind = cmd+alt+k=text:\x1bk
 
+# ⌃⌘J / ⌃⌘H / ⌃⌘L -> send ⌥⇧J / ⌥⇧H / ⌥⇧L for nvim's go to definition / back /
+# forward (same keys as Zed). Capitals so they don't hit tmux's ⌥H/⌥L.
+keybind = ctrl+cmd+j=text:\x1bJ
+keybind = ctrl+cmd+h=text:\x1bH
+keybind = ctrl+cmd+l=text:\x1bL
+
+# ⌘⇧J -> send ⌥⇧R: nvim reveals the current file in the file tree (like Xcode).
+keybind = cmd+shift+j=text:\x1bR
+
 # Linux-only extras (ThinkPad), written by home.nix. Missing on the Mac, so skipped.
 config-file = ?../ghostty-linux/config

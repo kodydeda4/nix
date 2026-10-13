@@ -47,6 +47,7 @@ hl.config({
         gaps_out    = 24,
         border_size = 2,
         layout      = "dwindle",
+        resize_on_border = true, -- drag a window's edge to resize it, like the Mac
     },
     decoration = {
         rounding = 0, -- square window corners
@@ -118,7 +119,7 @@ hl.bind(CMD .. " + SHIFT + grave", cycle_app_windows(-1))
 -- Cmd+H: hide into a scratch workspace; Meh+H... is tiling, so unhide with Cmd+Shift+H
 -- follow = false: without it the hidden workspace opens on screen, so the
 -- window looked like it never hid.
--- Cmd+Shift+4: screenshot of a region (saved to ~/Pictures and copied), like the Mac
+-- Cmd+Shift+4: screenshot of a region (saved to ~/Pictures/Screenshots and copied), like the Mac
 hl.bind(CMD .. " + SHIFT + 4", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
 hl.bind(CMD .. " + H", hl.dsp.window.move({ workspace = "special:hidden", follow = false }))
 hl.bind(CMD .. " + SHIFT + H", hl.dsp.workspace.toggle_special("hidden"))
@@ -159,6 +160,21 @@ hl.bind(MEH .. " + F", hl.dsp.window.float({ action = "toggle" }))
 
 -- Magnet-style snapping, same keys as GNOME (tile@kody). Each rect is
 -- { x, y, width, height } as fractions of the screen minus Noctalia's bar.
+-- Noctalia's dock (Super+Alt shows/hides it). Its space is kept free here
+-- rather than by Noctalia (reserve_space): Noctalia only gives it back ~2s
+-- after hiding, so windows lagged and spamming the key lost track of them.
+-- Whether it's hidden lives in a file so it survives config reloads, and
+-- resets at log-in (Noctalia's dock is shown then too, see hyprland.start).
+local DOCK_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-dock-hidden"
+local DOCK_SPACE = 76 -- px the dock takes at the bottom (its exclusive zone)
+local dock_space = DOCK_SPACE -- what's kept free right now (0 when hidden or zen)
+
+local function dock_hidden()
+    local f = io.open(DOCK_FILE, "r")
+    if f then f:close() end
+    return f ~= nil
+end
+
 local function work_area()
     local m = hl.get_active_monitor()
     local scale = m.scale or 1
@@ -169,6 +185,7 @@ local function work_area()
     local right  = r.right  or r[2] or 0
     local bottom = r.bottom or r[3] or 0
     local left   = r.left   or r[4] or 0
+    bottom = bottom + dock_space
     return m.x + left, m.y + top, w - left - right, h - top - bottom
 end
 
@@ -222,21 +239,47 @@ local function snapped_rect(win)
     end
 end
 
--- Zen mode, Meh+0: hides Noctalia's bar and dock, and drops the gaps, window
--- borders and shadows; Meh+0 again brings them back. Snapped windows are re-fitted
--- to the new space. The on/off state lives in a flag file so it survives config
--- reloads (Hyprland reloads on every save, and whenever Noctalia rewrites the
--- border colors), and resets at log-in.
-local ZEN_FLAG = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen"
+-- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, and drops the
+-- gaps, window borders and shadows, on the workspace you're on; Meh+0 there
+-- again brings them back. Switching workspaces switches zen with it. Snapped
+-- windows are re-fitted to the new space. Which workspaces are zen lives in a
+-- file (one name per line) so it survives config reloads (Hyprland reloads on
+-- every save, and whenever Noctalia rewrites the border colors), and resets at
+-- log-in.
+local ZEN_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen-workspaces"
 
-local function zen_on()
-    local f = io.open(ZEN_FLAG, "r")
-    if f then f:close() end
-    return f ~= nil
+local function zen_workspaces()
+    local set = {}
+    local f = io.open(ZEN_FILE, "r")
+    if f then
+        for name in f:lines() do set[name] = true end
+        f:close()
+    end
+    return set
 end
 
-local function apply_zen(on)
+local function save_zen_workspaces(set)
+    local f = io.open(ZEN_FILE, "w")
+    if not f then return end
+    for name in pairs(set) do f:write(name, "\n") end
+    f:close()
+end
+
+-- The regular workspace on screen (a special one like Cmd+H's sits on top of it)
+local function active_workspace_name()
+    local ws = hl.get_active_workspace()
+    return ws and ws.name
+end
+
+local zen_shown -- what's on screen right now (nil until the first apply)
+
+-- show_bar = false at config load: Noctalia isn't up yet at log-in, and on a
+-- reload the bar is already right.
+local function apply_zen(on, show_bar)
+    if on == zen_shown then return end
+    zen_shown = on
     GAP = on and 0 or GAP_NORMAL
+    dock_space = (on or dock_hidden()) and 0 or DOCK_SPACE
     hl.config({
         general = {
             gaps_in     = on and 0 or 12,
@@ -247,40 +290,85 @@ local function apply_zen(on)
             shadow = { enabled = not on },
         },
     })
+    if show_bar ~= false then
+        hl.exec_cmd(on and "noctalia msg bar-hide; noctalia msg dock-hide"
+            or "noctalia msg bar-show" .. (dock_hidden() and "" or "; noctalia msg dock-show"))
+    end
 end
 
-hl.bind(MEH .. " + 0", function()
+-- Runs change() (something that changes the free space: gaps, the bar, the
+-- dock) and then re-fits the windows that were snapped before it, on
+-- workspace `name` or, with no name, on every regular workspace. With `delay`
+-- (ms), waits that long first, for Noctalia to hide/show the bar.
+local function refit_snapped(change, name, delay)
     -- Note which windows are snapped before anything moves.
     local resnap = {}
     for _, win in ipairs(hl.get_windows() or {}) do
-        local rect = snapped_rect(win)
+        local ws = win.workspace
+        local rect = ws and not ws.special and (not name or ws.name == name) and snapped_rect(win)
         if rect then
             resnap[#resnap + 1] = { "address:" .. win.address, rect }
         end
     end
 
-    local on = not zen_on()
-    if on then
-        local f = io.open(ZEN_FLAG, "w")
-        if f then f:close() end
-        hl.exec_cmd("noctalia msg bar-hide; noctalia msg dock-hide")
-    else
-        os.remove(ZEN_FLAG)
-        hl.exec_cmd("noctalia msg bar-show; noctalia msg dock-show")
-    end
-    apply_zen(on)
+    change()
 
-    -- Re-fit once Noctalia has hidden/shown the bar (which changes the free space).
-    hl.timer(function()
+    local function refit()
         for _, item in ipairs(resnap) do
             place(item[1], item[2])
         end
-    end, { timeout = 300, type = "oneshot" })
+    end
+    if delay then
+        hl.timer(refit, { timeout = delay, type = "oneshot" })
+    else
+        refit()
+    end
+end
+
+hl.bind(MEH .. " + 0", function()
+    local name = active_workspace_name()
+    if not name then return end
+    refit_snapped(function()
+        local set = zen_workspaces()
+        local on = not set[name]
+        set[name] = on or nil
+        save_zen_workspaces(set)
+        apply_zen(on)
+    end, name, 300)
 end)
 
-if zen_on() then
-    apply_zen(true)
+-- Super+Alt (the labeled keys, so Super+Cmd; alone, on release): show/hide
+-- Noctalia's dock, like the Mac's ⌥⌘D. Snapped windows grow into its space
+-- or move clear of it right away. Does nothing in zen mode (the dock's
+-- already hidden there). Either key can be let go first; Meh
+-- (Ctrl+Super+Alt) has an extra modifier, so it doesn't trigger this.
+local function toggle_dock()
+    if zen_shown then return end
+    refit_snapped(function()
+        local hide = not dock_hidden()
+        if hide then
+            local f = io.open(DOCK_FILE, "w")
+            if f then f:close() end
+        else
+            os.remove(DOCK_FILE)
+        end
+        dock_space = hide and 0 or DOCK_SPACE
+        -- show/hide rather than toggle, so Noctalia can't drift out of step
+        hl.exec_cmd("noctalia msg " .. (hide and "dock-hide" or "dock-show"))
+    end)
 end
+for _, key in ipairs({ "Control_L", "Super_L" }) do
+    hl.bind("SUPER + " .. CMD .. " + " .. key, toggle_dock, { release = true })
+end
+
+hl.on("workspace.active", function()
+    local name = active_workspace_name()
+    if name then
+        apply_zen(zen_workspaces()[name] == true)
+    end
+end)
+
+apply_zen(zen_workspaces()[active_workspace_name() or ""] == true, false)
 
 hl.bind(MEH .. " + H",             snap(RECTS.left_half))
 hl.bind(MEH .. " + L",             snap(RECTS.right_half))

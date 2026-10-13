@@ -9,6 +9,9 @@ time_format = "{:%-I:%M %p}"
 [shell.animation]
 enabled = false # no animations (Hyprland's are off too)
 
+[shell.screenshot]
+directory = "~/Pictures/Screenshots" # default is ~/Pictures
+
 [shell.panel]
 transparency_mode = "glass" # translucent launcher, control center, panels
 
@@ -47,7 +50,7 @@ active_pill_size = 1.0
 inactive_pill_size = 1.0
 focused_color = "primary"
 occupied_color = "on_surface_variant"
-empty_color = "surface_variant"
+empty_color = "outline" # lighter than surface_variant, still dimmer than occupied
 
 [widget.clock]
 # 12-hour clock in the bar
@@ -61,6 +64,7 @@ right = "panel-toggle noctalia/wallhaven:browser" # Wallhaven browser
 enabled = true
 show_dots = true # dot under every open app, like the Mac
 show_instance_count = false # just the dot, no window count
+reserve_space = false # Hyprland keeps its space free instead (dotfiles/hypr, Super+Alt)
 # Same apps as the GNOME dock (desktop file names without .desktop)
 pinned = [
   "org.gnome.Nautilus",
@@ -79,6 +83,10 @@ pinned = [
 [theme.templates]
 # Window borders in Hyprland take their colors from the wallpaper
 builtin_ids = ["hyprland"]
+
+[wallpaper]
+# Wallpaper picker folder; the Wallhaven plugin downloads here too (default ~/Pictures)
+directory = "~/Pictures/wallpapers"
 
 [plugins]
 # Wallhaven: browse wallhaven.cc and set a wallpaper (Meh+W in Hyprland).

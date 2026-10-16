@@ -349,11 +349,13 @@ end
 hl.bind(MEH .. " + 0", toggle_zen)
 hl.bind(MEH .. " + 6", toggle_zen)
 
--- Super+Alt (the labeled keys, so Super+Cmd; alone, on release): show/hide
+-- Cmd+Super (tap one while holding the other, nothing else): show/hide
 -- Noctalia's dock, like the Mac's ⌥⌘D. Snapped windows grow into its space
 -- or move clear of it right away. Does nothing in zen mode (the dock's
--- already hidden there). Either key can be let go first; Meh
--- (Ctrl+Super+Alt) has an extra modifier, so it doesn't trigger this.
+-- already hidden there). keyd turns the tap into F18 (XF86Launch9), with
+-- Cmd's Ctrl or Super's Super still held (hosts/nixos); binding the modifier
+-- keys' release here instead missed presses, since keyd taps Ctrl when Super
+-- is let go.
 local function toggle_dock()
     if zen_shown then return end
     refit_snapped(function()
@@ -369,8 +371,8 @@ local function toggle_dock()
         hl.exec_cmd("noctalia msg " .. (hide and "dock-hide" or "dock-show"))
     end)
 end
-for _, key in ipairs({ "Control_L", "Super_L" }) do
-    hl.bind("SUPER + " .. CMD .. " + " .. key, toggle_dock, { release = true })
+for _, mods in ipairs({ CMD, "SUPER", "SUPER + " .. CMD }) do
+    hl.bind(mods .. " + XF86Launch9", toggle_dock)
 end
 
 hl.on("workspace.active", function()

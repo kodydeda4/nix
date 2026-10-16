@@ -135,24 +135,35 @@
         right = "C-S-right";
       };
     };
+    # Cmd+Super, tapped together with nothing else (either one held, the other
+    # tapped): F18, which Hyprland binds to show/hide the dock. Held, they act
+    # as usual (Cmd+Super+key). `cmdKeys` / `superKeys`: the physical keys.
+    dockTap = cmdKeys: superKeys: {
+      "cmd:C" = lib.genAttrs superKeys (_: "overload(meta, f18)");
+      meta = lib.genAttrs cmdKeys (_: "overload(cmd, f18)");
+    };
   in {
     enable = true;
     keyboards.default = {
       ids = ["*"];
-      inherit settings;
+      settings = lib.recursiveUpdate settings
+        (dockTap ["leftalt" "rightalt"] ["leftmeta" "rightmeta"]);
     };
     # Glove80: Cmd and Super swapped - its Super-labeled key is Cmd (sends
     # Ctrl) and its Alt-labeled key is Super. Everything else as above.
     keyboards.glove80 = {
       ids = ["16c0:27db"];
-      settings = lib.recursiveUpdate settings {
-        main = {
-          leftalt = "layer(meta)";
-          rightalt = "layer(meta)";
-          leftmeta = "layer(cmd)";
-          rightmeta = "layer(cmd)";
-        };
-      };
+      settings = lib.foldl' lib.recursiveUpdate settings [
+        {
+          main = {
+            leftalt = "layer(meta)";
+            rightalt = "layer(meta)";
+            leftmeta = "layer(cmd)";
+            rightmeta = "layer(cmd)";
+          };
+        }
+        (dockTap ["leftmeta" "rightmeta"] ["leftalt" "rightalt"])
+      ];
     };
   };
   # Game mode (bar button, dotfiles/hypr/gamemode.sh): plain modifiers. Ctrl,
@@ -172,6 +183,8 @@
           'leftalt = layer(alt)' 'rightalt = layer(alt)' \
           'leftmeta = layer(meta)' 'rightmeta = layer(meta)' \
           'meta.left = M-left' 'meta.right = M-right' \
+          'meta.leftalt = layer(alt)' 'meta.rightalt = layer(alt)' \
+          'meta.leftmeta = layer(meta)' 'meta.rightmeta = layer(meta)' \
           'meta+shift.left = M-S-left' 'meta+shift.right = M-S-right'
         touch /run/keyd-gamemode
       '';

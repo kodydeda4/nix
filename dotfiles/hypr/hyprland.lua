@@ -334,7 +334,7 @@ local function refit_snapped(change, name, delay)
     end
 end
 
-hl.bind(MEH .. " + 0", function()
+local function toggle_zen()
     local name = active_workspace_name()
     if not name then return end
     refit_snapped(function()
@@ -344,7 +344,10 @@ hl.bind(MEH .. " + 0", function()
         save_zen_workspaces(set)
         apply_zen(on)
     end, name, 300)
-end)
+end
+-- Meh+0 or Meh+6 (so there's no workspace 6, below)
+hl.bind(MEH .. " + 0", toggle_zen)
+hl.bind(MEH .. " + 6", toggle_zen)
 
 -- Super+Alt (the labeled keys, so Super+Cmd; alone, on release): show/hide
 -- Noctalia's dock, like the Mac's ⌥⌘D. Snapped windows grow into its space
@@ -397,10 +400,13 @@ for i = 1, 5 do
     hl.workspace_rule({ workspace = tostring(i), persistent = true })
 end
 
--- Meh+1..9: workspaces; Meh+Shift+1..9: send window there
+-- Meh+1..9: workspaces; Meh+Shift+1..9: send window there. Not 6: Meh+6 is
+-- zen mode (above).
 for i = 1, 9 do
-    hl.bind(MEH .. " + " .. i,         hl.dsp.focus({ workspace = i }))
-    hl.bind(MEH .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+    if i ~= 6 then
+        hl.bind(MEH .. " + " .. i,         hl.dsp.focus({ workspace = i }))
+        hl.bind(MEH .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+    end
 end
 
 -- Super+drag moves windows, Super+right-drag resizes

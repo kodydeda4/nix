@@ -3,8 +3,8 @@
 
 [[mgr.prepend_keymap]]
 on   = [ "g", "w" ]
-run  = "cd ~/Developer/work/foresightcares"
-desc = "Go to foresightcares"
+run  = [ "cd ~/Developer/work/foresightcares/swift-ava-app", "shell --block 'cd ~/Developer/work/foresightcares/swift-ava-app && nvim .'" ]
+desc = "Open swift-ava-app in nvim"
 
 [[mgr.prepend_keymap]]
 on   = [ "g", "n" ]

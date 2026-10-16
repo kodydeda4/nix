@@ -23,7 +23,7 @@
     firebase-tools
     fzf
     gh
-    imagemagick # snacks.nvim images (sizes/converts them)
+    imagemagick
     git-lfs
     jdk
     lazygit

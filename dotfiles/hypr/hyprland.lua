@@ -22,6 +22,15 @@ hl.monitor({
     scale    = 1,
 })
 
+-- The 4K ASUS monitor: 1.25x (3072x1728 worth of space). Matched by name, so
+-- it gets this on any port.
+hl.monitor({
+    output   = "desc:ASUSTek COMPUTER INC XG32UCWG",
+    mode     = "preferred",
+    position = "auto",
+    scale    = 1.25,
+})
+
 hl.on("hyprland.start", function()
     hl.exec_cmd("noctalia")
     -- Zen mode (Meh+0) resets at log-in, but Noctalia remembers a hidden dock;
@@ -325,7 +334,7 @@ local function refit_snapped(change, name, delay)
     end
 end
 
-hl.bind(MEH .. " + 0", function()
+local function toggle_zen()
     local name = active_workspace_name()
     if not name then return end
     refit_snapped(function()
@@ -335,13 +344,18 @@ hl.bind(MEH .. " + 0", function()
         save_zen_workspaces(set)
         apply_zen(on)
     end, name, 300)
-end)
+end
+-- Meh+0 or Meh+6 (so there's no workspace 6, below)
+hl.bind(MEH .. " + 0", toggle_zen)
+hl.bind(MEH .. " + 6", toggle_zen)
 
--- Super+Alt (the labeled keys, so Super+Cmd; alone, on release): show/hide
+-- Cmd+Super (tap one while holding the other, nothing else): show/hide
 -- Noctalia's dock, like the Mac's ⌥⌘D. Snapped windows grow into its space
 -- or move clear of it right away. Does nothing in zen mode (the dock's
--- already hidden there). Either key can be let go first; Meh
--- (Ctrl+Super+Alt) has an extra modifier, so it doesn't trigger this.
+-- already hidden there). keyd turns the tap into F18 (XF86Launch9), with
+-- Cmd's Ctrl or Super's Super still held (hosts/nixos); binding the modifier
+-- keys' release here instead missed presses, since keyd taps Ctrl when Super
+-- is let go.
 local function toggle_dock()
     if zen_shown then return end
     refit_snapped(function()
@@ -357,8 +371,8 @@ local function toggle_dock()
         hl.exec_cmd("noctalia msg " .. (hide and "dock-hide" or "dock-show"))
     end)
 end
-for _, key in ipairs({ "Control_L", "Super_L" }) do
-    hl.bind("SUPER + " .. CMD .. " + " .. key, toggle_dock, { release = true })
+for _, mods in ipairs({ CMD, "SUPER", "SUPER + " .. CMD }) do
+    hl.bind(mods .. " + XF86Launch9", toggle_dock)
 end
 
 hl.on("workspace.active", function()
@@ -388,10 +402,13 @@ for i = 1, 5 do
     hl.workspace_rule({ workspace = tostring(i), persistent = true })
 end
 
--- Meh+1..9: workspaces; Meh+Shift+1..9: send window there
+-- Meh+1..9: workspaces; Meh+Shift+1..9: send window there. Not 6: Meh+6 is
+-- zen mode (above).
 for i = 1, 9 do
-    hl.bind(MEH .. " + " .. i,         hl.dsp.focus({ workspace = i }))
-    hl.bind(MEH .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+    if i ~= 6 then
+        hl.bind(MEH .. " + " .. i,         hl.dsp.focus({ workspace = i }))
+        hl.bind(MEH .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+    end
 end
 
 -- Super+drag moves windows, Super+right-drag resizes

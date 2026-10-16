@@ -1,4 +1,4 @@
--- Follow macOS light / dark mode: use chadrc's theme_light or theme_dark, and
+-- Follow the system's light / dark mode (macOS or GNOME): use chadrc's theme_light or theme_dark, and
 -- switch as soon as the system appearance changes.
 
 local M = {}
@@ -48,10 +48,16 @@ local function set_mode(mode)
   end
 end
 
--- AppleInterfaceStyle is "Dark" in dark mode and missing in light mode
+-- macOS: AppleInterfaceStyle is "Dark" in dark mode and missing in light mode.
+-- Linux: GNOME's color-scheme is 'prefer-dark' in dark mode (home.nix sets it,
+-- so Hyprland has it too).
+local cmd = vim.fn.has "mac" == 1 and { "defaults", "read", "-g", "AppleInterfaceStyle" }
+  or { "gsettings", "get", "org.gnome.desktop.interface", "color-scheme" }
+
 local function check()
-  vim.system({ "defaults", "read", "-g", "AppleInterfaceStyle" }, { text = true }, function(out)
-    local mode = out.stdout:match "Dark" and "dark" or "light"
+  -- pcall: a missing command would otherwise abort the whole config at startup
+  pcall(vim.system, cmd, { text = true }, function(out)
+    local mode = (out.stdout or ""):lower():match "dark" and "dark" or "light"
     vim.schedule(function()
       set_mode(mode)
     end)

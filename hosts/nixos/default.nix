@@ -1,6 +1,7 @@
 # The ThinkPad (NixOS + GNOME). All packages are listed in packages.nix;
 # this file is the Linux-only part: boot, desktop, hardware services, apps.
 {
+  lib,
   pkgs,
   inputs,
   ...
@@ -96,45 +97,60 @@
 
   # Caps Lock: tap = Esc, hold = Ctrl+Super+Alt (like the Mac's Karabiner setup).
   # Ctrl and Alt are swapped on both sides.
-  services.keyd = {
+  services.keyd = let
+    settings = {
+      main = {
+        capslock = "overload(hyper, esc)";
+        leftcontrol = "layer(alt)";
+        leftalt = "layer(cmd)";
+        rightcontrol = "layer(alt)";
+        rightalt = "layer(cmd)";
+      };
+      "hyper:C-M-A" = {};
+      # Arrows like the Mac (+Shift selects). After the swap, the key next to
+      # space (labeled Alt, now Ctrl) is where ⌘ is and Super is where ⌥ is:
+      # Alt-key+←/→ = start/end of line (⌘←/⌘→)
+      "cmd:C" = {
+        left = "home";
+        right = "end";
+        # Cmd+Tab: GNOME's app switcher (Alt+Tab), held open while Cmd is
+        # held, like the Mac. Shift+Tab goes back.
+        tab = "swap(appswitch)";
+      };
+      "appswitch:A" = {
+        tab = "A-tab";
+      };
+      # (not "cmd+shift": Nix sorts sections, and keyd needs cmd defined first)
+      "shift+cmd" = {
+        left = "S-home";
+        right = "S-end";
+      };
+      # Super+←/→ = previous/next word (⌥←/⌥→)
+      meta = {
+        left = "C-left";
+        right = "C-right";
+      };
+      "meta+shift" = {
+        left = "C-S-left";
+        right = "C-S-right";
+      };
+    };
+  in {
     enable = true;
     keyboards.default = {
       ids = ["*"];
-      settings = {
+      inherit settings;
+    };
+    # Glove80: Cmd and Super swapped - its Super-labeled key is Cmd (sends
+    # Ctrl) and its Alt-labeled key is Super. Everything else as above.
+    keyboards.glove80 = {
+      ids = ["16c0:27db"];
+      settings = lib.recursiveUpdate settings {
         main = {
-          capslock = "overload(hyper, esc)";
-          leftcontrol = "layer(alt)";
-          leftalt = "layer(cmd)";
-          rightcontrol = "layer(alt)";
-          rightalt = "layer(cmd)";
-        };
-        "hyper:C-M-A" = {};
-        # Arrows like the Mac (+Shift selects). After the swap, the key next to
-        # space (labeled Alt, now Ctrl) is where ⌘ is and Super is where ⌥ is:
-        # Alt-key+←/→ = start/end of line (⌘←/⌘→)
-        "cmd:C" = {
-          left = "home";
-          right = "end";
-          # Cmd+Tab: GNOME's app switcher (Alt+Tab), held open while Cmd is
-          # held, like the Mac. Shift+Tab goes back.
-          tab = "swap(appswitch)";
-        };
-        "appswitch:A" = {
-          tab = "A-tab";
-        };
-        # (not "cmd+shift": Nix sorts sections, and keyd needs cmd defined first)
-        "shift+cmd" = {
-          left = "S-home";
-          right = "S-end";
-        };
-        # Super+←/→ = previous/next word (⌥←/⌥→)
-        meta = {
-          left = "C-left";
-          right = "C-right";
-        };
-        "meta+shift" = {
-          left = "C-S-left";
-          right = "C-S-right";
+          leftalt = "layer(meta)";
+          rightalt = "layer(meta)";
+          leftmeta = "layer(cmd)";
+          rightmeta = "layer(cmd)";
         };
       };
     };
@@ -154,6 +170,7 @@
         ${keyd} bind reset \
           'leftcontrol = layer(control)' 'rightcontrol = layer(control)' \
           'leftalt = layer(alt)' 'rightalt = layer(alt)' \
+          'leftmeta = layer(meta)' 'rightmeta = layer(meta)' \
           'meta.left = M-left' 'meta.right = M-right' \
           'meta+shift.left = M-S-left' 'meta+shift.right = M-S-right'
         touch /run/keyd-gamemode

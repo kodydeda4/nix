@@ -22,6 +22,15 @@ hl.monitor({
     scale    = 1,
 })
 
+-- The 4K ASUS monitor: 1.25x (3072x1728 worth of space). Matched by name, so
+-- it gets this on any port.
+hl.monitor({
+    output   = "desc:ASUSTek COMPUTER INC XG32UCWG",
+    mode     = "preferred",
+    position = "auto",
+    scale    = 1.25,
+})
+
 hl.on("hyprland.start", function()
     hl.exec_cmd("noctalia")
     -- Zen mode (Meh+0) resets at log-in, but Noctalia remembers a hidden dock;

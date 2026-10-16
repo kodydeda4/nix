@@ -318,7 +318,8 @@ Two accounts, switched automatically. Two separate rules:
 | URL | Account | SSH key |
 |---|---|---|
 | `github.com/foresightcares/…` (HTTPS or SSH) | kody-foresightcares | `id_ed25519_foresightcares` |
-| any other `github.com/…` | kodydeda4 | `id_ed25519_kodydeda4` |
+| any other `github.com/…`, from inside `~/Developer/work/foresightcares/` | kody-foresightcares | `id_ed25519_foresightcares` |
+| any other `github.com/…`, anywhere else | kodydeda4 | `id_ed25519_kodydeda4` |
 
 `dotfiles/git/config` rewrites every foresightcares URL to the SSH host
 `github-foresightcares`, which `dotfiles/ssh/config` maps to the foresightcares
@@ -337,8 +338,9 @@ The Starship prompt shows the active account inside a repo (`as  kodydeda4`).
 Check a repo with `git config --show-origin user.email`. `gitdir:` only matches
 inside a repo, so in a plain folder it always shows the default.
 
-Test access: `ssh -T git@github.com` → "Hi kodydeda4!",
-`ssh -T git@github-foresightcares` → "Hi kody-foresightcares!".
+Test access: `ssh -T git@github.com` → "Hi kodydeda4!" ("Hi kody-foresightcares!"
+inside `~/Developer/work/foresightcares/`, via a `Match … exec` rule in
+`dotfiles/ssh/config`), `ssh -T git@github-foresightcares` → "Hi kody-foresightcares!".
 
 Don't set your name/email in GitHub Desktop's settings: it writes into
 `dotfiles/git/config` and overrides the per-folder identities.

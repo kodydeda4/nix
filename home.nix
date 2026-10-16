@@ -213,24 +213,35 @@ in {
     source = link "gnome-shell/extensions/tile@kody";
   };
 
-  # Ghostty on Linux: Cmd sends Ctrl here, but Ghostty's Linux defaults use
-  # Ctrl+Shift, so map Cmd+N/W/Q like the Mac. (Loaded by dotfiles/ghostty/config.)
-  # Super sits where ⌥ is, so it acts as Alt here, like macos-option-as-alt:
-  # Super+T / Super+1-9 reach tmux as M-t / M-1-9. Ghostty's Linux defaults
-  # take Alt+1-9 for its own tabs (the Mac doesn't), so those are unbound.
-  # ⌥⌘J/K (the Mac's cmd+alt+j/k) arrives here as Super+Cmd = alt+ctrl.
+  # Ghostty on Linux: keyd makes Cmd send Ctrl and the Ctrl-labeled key send
+  # Alt, and Super sits where ⌥ is. Ghostty turns them back into the Mac's
+  # modifiers (remaps don't chain): Cmd = super, Ctrl-labeled key = ctrl,
+  # Super = alt. So ⌃J/K reach nvim as Ctrl, ⌥J/K and Super+T / Super+1-9
+  # reach tmux as M-j/k/t/1-9, and the Mac config's cmd+... keybinds work here
+  # as-is. (Loaded by dotfiles/ghostty/config.)
+  # Ghostty's Linux defaults use Ctrl+Shift, so Cmd+N/W/Q/C/V and font size are
+  # set like the Mac's, and take Alt+1-9 for its own tabs (the Mac doesn't), so
+  # those are unbound. Super+←/→ (keyd sends Ctrl+←/→, so super here) jumps
+  # words like ⌥←/→ in the Mac's Ghostty.
   xdg.configFile."ghostty-linux/config" = lib.mkIf isLinux {
     text = ''
-      keybind = ctrl+n=new_window
-      keybind = ctrl+w=close_surface
-      keybind = ctrl+q=quit
+      key-remap = ctrl=super
+      key-remap = alt=ctrl
       key-remap = super=alt
+      keybind = super+n=new_window
+      keybind = super+w=close_surface
+      keybind = super+q=quit
+      keybind = super+c=copy_to_clipboard
+      keybind = super+v=paste_from_clipboard
+      keybind = super+equal=increase_font_size:1
+      keybind = super+minus=decrease_font_size:1
+      keybind = super+zero=reset_font_size
+      keybind = super+left=esc:b
+      keybind = super+right=esc:f
       ${lib.concatMapStrings (i: ''
         keybind = alt+${i}=unbind
         keybind = alt+digit_${i}=unbind
       '') ["1" "2" "3" "4" "5" "6" "7" "8" "9"]}
-      keybind = ctrl+alt+j=text:\x1bj
-      keybind = ctrl+alt+k=text:\x1bk
     '';
   };
 }

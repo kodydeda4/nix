@@ -282,26 +282,58 @@ end
 
 local zen_shown -- what's on screen right now (nil until the first apply)
 
+-- Gaps, window borders and shadows can each be turned off everywhere, from
+-- the launcher's Toggle Gaps / Borders / Shadows (home.nix). Off = a flag file, so
+-- it survives config reloads and resets at log-in, like the dock.
+local function flag_file(name)
+    return (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-" .. name
+end
+
+local function flag_set(name)
+    local f = io.open(flag_file(name), "r")
+    if f then f:close() end
+    return f ~= nil
+end
+
+-- gaps (and the snap padding, GAP), borders and shadows: off in zen mode or
+-- when toggled off
+local function apply_decorations()
+    local no_gaps = zen_shown or flag_set("gaps-off")
+    GAP = no_gaps and 0 or GAP_NORMAL
+    hl.config({
+        general = {
+            gaps_in     = no_gaps and 0 or 12,
+            gaps_out    = no_gaps and 0 or 24,
+            border_size = (zen_shown or flag_set("borders-off")) and 0 or 2,
+        },
+        decoration = { shadow = { enabled = not (zen_shown or flag_set("shadows-off")) } },
+    })
+end
+
+local function toggle_flag(name)
+    if flag_set(name) then
+        os.remove(flag_file(name))
+    else
+        local f = io.open(flag_file(name), "w")
+        if f then f:close() end
+    end
+    apply_decorations()
+end
+-- `hyprctl eval 'toggle_borders()'` / `'toggle_shadows()'`
+_G.toggle_borders = function() toggle_flag("borders-off") end
+_G.toggle_shadows = function() toggle_flag("shadows-off") end
+
 -- show_bar = false at config load: Noctalia isn't up yet at log-in, and on a
 -- reload the bar is already right.
 local function apply_zen(on, show_bar)
     if on == zen_shown then return end
     zen_shown = on
-    GAP = on and 0 or GAP_NORMAL
     dock_space = (on or dock_hidden()) and 0 or DOCK_SPACE
-    hl.config({
-        general = {
-            gaps_in     = on and 0 or 12,
-            gaps_out    = on and 0 or 24,
-            border_size = on and 0 or 2,
-        },
-        decoration = {
-            shadow = { enabled = not on },
-        },
-    })
+    apply_decorations()
     if show_bar ~= false then
         hl.exec_cmd(on and "noctalia msg bar-hide; noctalia msg dock-hide"
-            or "noctalia msg bar-show" .. (dock_hidden() and "" or "; noctalia msg dock-show"))
+            or (flag_set("bar-hidden") and "true" or "noctalia msg bar-show")
+                .. (dock_hidden() and "" or "; noctalia msg dock-show"))
     end
 end
 
@@ -334,6 +366,23 @@ local function refit_snapped(change, name, delay)
     end
 end
 
+-- `hyprctl eval 'toggle_gaps()'`: snapped windows are re-fitted to the new gaps
+_G.toggle_gaps = function()
+    refit_snapped(function() toggle_flag("gaps-off") end)
+end
+
+-- `hyprctl eval 'toggle_bar()'`: show/hide Noctalia's bar (the menu bar), on
+-- top of zen mode, which hides it anyway. Snapped windows are re-fitted once
+-- Noctalia has given back / taken its space.
+_G.toggle_bar = function()
+    refit_snapped(function()
+        toggle_flag("bar-hidden")
+        if not zen_shown then
+            hl.exec_cmd("noctalia msg " .. (flag_set("bar-hidden") and "bar-hide" or "bar-show"))
+        end
+    end, nil, 300)
+end
+
 local function toggle_zen()
     local name = active_workspace_name()
     if not name then return end
@@ -352,8 +401,8 @@ hl.bind(MEH .. " + 6", toggle_zen)
 -- Cmd+Super (tap one while holding the other, nothing else): show/hide
 -- Noctalia's dock, like the Mac's ⌥⌘D. Snapped windows grow into its space
 -- or move clear of it right away. Does nothing in zen mode (the dock's
--- already hidden there). keyd turns the tap into F18 (XF86Launch9), with
--- Cmd's Ctrl or Super's Super still held (hosts/nixos); binding the modifier
+-- already hidden there). keyd turns the tap into F18 (XF86Launch9), sent
+-- after it has let go of both modifiers (hosts/nixos); binding the modifier
 -- keys' release here instead missed presses, since keyd taps Ctrl when Super
 -- is let go.
 local function toggle_dock()
@@ -371,9 +420,9 @@ local function toggle_dock()
         hl.exec_cmd("noctalia msg " .. (hide and "dock-hide" or "dock-show"))
     end)
 end
-for _, mods in ipairs({ CMD, "SUPER", "SUPER + " .. CMD }) do
-    hl.bind(mods .. " + XF86Launch9", toggle_dock)
-end
+hl.bind("XF86Launch9", toggle_dock)
+-- also `hyprctl eval 'toggle_dock()'`: the launcher's Toggle Dock entry (home.nix)
+_G.toggle_dock = toggle_dock
 
 hl.on("workspace.active", function()
     local name = active_workspace_name()

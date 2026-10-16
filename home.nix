@@ -213,6 +213,47 @@ in {
     source = link "gnome-shell/extensions/tile@kody";
   };
 
+  # Commands in Noctalia's launcher (Cmd+Space), next to the apps.
+  xdg.desktopEntries = lib.mkIf isLinux {
+    toggle-dock = {
+      name = "Toggle Dock";
+      comment = "Show or hide the dock";
+      icon = "view-app-grid-symbolic";
+      # toggle_dock() is in dotfiles/hypr/hyprland.lua
+      exec = ''hyprctl eval "toggle_dock()"'';
+    };
+    toggle-bar = {
+      name = "Toggle Menu Bar";
+      comment = "Show or hide the bar at the top of the screen";
+      icon = "view-continuous-symbolic";
+      exec = ''hyprctl eval "toggle_bar()"'';
+    };
+    toggle-gaps = {
+      name = "Toggle Gaps";
+      comment = "Add or remove the space around windows";
+      icon = "view-grid-symbolic";
+      exec = ''hyprctl eval "toggle_gaps()"'';
+    };
+    toggle-borders = {
+      name = "Toggle Borders";
+      comment = "Show or hide window borders";
+      icon = "view-restore-symbolic";
+      exec = ''hyprctl eval "toggle_borders()"'';
+    };
+    toggle-shadows = {
+      name = "Toggle Shadows";
+      comment = "Show or hide window shadows";
+      icon = "weather-overcast-symbolic";
+      exec = ''hyprctl eval "toggle_shadows()"'';
+    };
+    toggle-appearance = {
+      name = "Toggle Appearance";
+      comment = "Switch between light and dark mode";
+      icon = "weather-clear-night-symbolic";
+      exec = "bash ${config.home.homeDirectory}/.config/hypr/toggle-appearance.sh";
+    };
+  };
+
   # Ghostty on Linux: keyd makes Cmd send Ctrl and the Ctrl-labeled key send
   # Alt, and Super sits where ⌥ is. Ghostty turns them back into the Mac's
   # modifiers (remaps don't chain): Cmd = super, Ctrl-labeled key = ctrl,

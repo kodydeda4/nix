@@ -87,7 +87,7 @@ nix/
 | `zed/` | `~/.config/zed` | both | |
 | `yazi/` | `~/.config/yazi` | both | shortcuts, theme, borders (flavors/plugins are plain copies) |
 | `fastfetch/` | `~/.config/fastfetch` | both | greeting on new terminals |
-| `karabiner/` | `~/.config/karabiner` | Mac | Caps Lock = Esc/Hyper, Brave-profile shortcuts |
+| `karabiner/` | `~/.config/karabiner` | Mac | Caps Lock = Esc/Hyper, Hyper+letter app keys (`app-toggle.sh`), Brave-profile shortcuts |
 | `espanso/` | `~/Library/Application Support/espanso` | Mac | text expansion |
 | `xcode/KeyBindings/` | `~/Library/Developer/Xcode/UserData/KeyBindings` | Mac | |
 | `hypr/` | `~/.config/hypr` | ThinkPad | Hyprland config (`hyprland.lua`) + helper scripts |
@@ -169,6 +169,7 @@ The goal is the same keys everywhere. On the ThinkPad that's done by **keyd**
 | Key next to space | ⌘ | acts as ⌘ (sends Ctrl; Ctrl and Alt are swapped) |
 | ⌘←/→, ⌥←/→ | line start/end, word jump | same (Super is where ⌥ is) |
 | ⌘Tab | app switcher | app switcher |
+| Hyper/Meh + letter | open / focus / hide an app: T Ghostty, C Zen, B Zed, X Xcode, F Figma, M Messages, A Claude, … | same idea: T Ghostty, C Brave, X Zed, A Claude, … |
 
 So in the GNOME settings and `hyprland.lua`, **"Cmd" is written as Ctrl.**
 
@@ -317,7 +318,8 @@ Two accounts, switched automatically. Two separate rules:
 | URL | Account | SSH key |
 |---|---|---|
 | `github.com/foresightcares/…` (HTTPS or SSH) | kody-foresightcares | `id_ed25519_foresightcares` |
-| any other `github.com/…` | kodydeda4 | `id_ed25519_kodydeda4` |
+| any other `github.com/…`, from inside `~/Developer/work/foresightcares/` | kody-foresightcares | `id_ed25519_foresightcares` |
+| any other `github.com/…`, anywhere else | kodydeda4 | `id_ed25519_kodydeda4` |
 
 `dotfiles/git/config` rewrites every foresightcares URL to the SSH host
 `github-foresightcares`, which `dotfiles/ssh/config` maps to the foresightcares
@@ -336,8 +338,9 @@ The Starship prompt shows the active account inside a repo (`as  kodydeda4`).
 Check a repo with `git config --show-origin user.email`. `gitdir:` only matches
 inside a repo, so in a plain folder it always shows the default.
 
-Test access: `ssh -T git@github.com` → "Hi kodydeda4!",
-`ssh -T git@github-foresightcares` → "Hi kody-foresightcares!".
+Test access: `ssh -T git@github.com` → "Hi kodydeda4!" ("Hi kody-foresightcares!"
+inside `~/Developer/work/foresightcares/`, via a `Match … exec` rule in
+`dotfiles/ssh/config`), `ssh -T git@github-foresightcares` → "Hi kody-foresightcares!".
 
 Don't set your name/email in GitHub Desktop's settings: it writes into
 `dotfiles/git/config` and overrides the per-folder identities.

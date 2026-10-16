@@ -10,6 +10,11 @@
 in {
   system.primaryUser = "kody";
 
+  # Nix itself is installed and managed by Determinate (its own daemon), which
+  # nix-darwin refuses to activate over. Flakes are turned on in
+  # /etc/nix/nix.custom.conf instead of `nix.settings`.
+  nix.enable = false;
+
   environment.systemPackages = packages.mac;
 
   homebrew = {
@@ -43,6 +48,21 @@ in {
   system.defaults.finder = {
     ShowPathbar = true;
     _FXShowPosixPathInTitle = true;
+    # Column view by default; new windows open in the home folder.
+    FXPreferredViewStyle = "clmv";
+    NewWindowTarget = "Home";
+    # Desktop: show external drives and removable media, not the internal disk.
+    ShowExternalHardDrivesOnDesktop = true;
+    ShowHardDrivesOnDesktop = false;
+    ShowRemovableMediaOnDesktop = true;
+  };
+
+  # Finder settings nix-darwin has no option for.
+  system.defaults.CustomUserPreferences."com.apple.finder" = {
+    # Group new windows by Kind (View → Use Groups).
+    FXPreferredGroupBy = "Kind";
+    # Hide the Tags section in the sidebar.
+    ShowRecentTags = false;
   };
 
   # Fast key repeat. Units are 15 ms; System Settings' fastest is

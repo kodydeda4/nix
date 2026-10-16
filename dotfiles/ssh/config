@@ -2,11 +2,18 @@
 # without this line.
 IgnoreUnknown UseKeychain
 
-# kodydeda4 GitHub account (default).
+# Plain github.com picks the account by folder: the foresightcares key inside
+# ~/Developer/work/foresightcares/, the kodydeda4 key everywhere else. Only one
+# key per case: with both listed, ssh offers them in ssh-agent's order (not this
+# file's), so whichever key was loaded first would win.
+Match host github.com exec "pwd | grep -qE '/Developer/work/foresightcares(/|$)'"
+	IdentityFile ~/.ssh/id_ed25519_foresightcares
+Match host github.com !exec "pwd | grep -qE '/Developer/work/foresightcares(/|$)'"
+	IdentityFile ~/.ssh/id_ed25519_kodydeda4
+
 Host github.com
 	HostName github.com
 	User git
-	IdentityFile ~/.ssh/id_ed25519_kodydeda4
 	IdentitiesOnly yes
 	AddKeysToAgent yes
 	UseKeychain yes

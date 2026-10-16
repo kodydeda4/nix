@@ -31,3 +31,6 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
+[user]
+	name = Kody Deda
+	email = kodydeda4@gmail.com

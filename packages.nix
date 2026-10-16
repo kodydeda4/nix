@@ -86,7 +86,6 @@
     "iina"
     "ik-product-manager"
     "karabiner-elements"
-    "private-internet-access"
     "proxy-audio-device"
     "tailscale-app"
     "zen"

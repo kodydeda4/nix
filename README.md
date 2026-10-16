@@ -87,7 +87,7 @@ nix/
 | `zed/` | `~/.config/zed` | both | |
 | `yazi/` | `~/.config/yazi` | both | shortcuts, theme, borders (flavors/plugins are plain copies) |
 | `fastfetch/` | `~/.config/fastfetch` | both | greeting on new terminals |
-| `karabiner/` | `~/.config/karabiner` | Mac | Caps Lock = Esc/Hyper, Brave-profile shortcuts |
+| `karabiner/` | `~/.config/karabiner` | Mac | Caps Lock = Esc/Hyper, Hyper+letter app keys (`app-toggle.sh`), Brave-profile shortcuts |
 | `espanso/` | `~/Library/Application Support/espanso` | Mac | text expansion |
 | `xcode/KeyBindings/` | `~/Library/Developer/Xcode/UserData/KeyBindings` | Mac | |
 | `hypr/` | `~/.config/hypr` | ThinkPad | Hyprland config (`hyprland.lua`) + helper scripts |
@@ -169,6 +169,7 @@ The goal is the same keys everywhere. On the ThinkPad that's done by **keyd**
 | Key next to space | ⌘ | acts as ⌘ (sends Ctrl; Ctrl and Alt are swapped) |
 | ⌘←/→, ⌥←/→ | line start/end, word jump | same (Super is where ⌥ is) |
 | ⌘Tab | app switcher | app switcher |
+| Hyper/Meh + letter | open / focus / hide an app: T Ghostty, C Zen, B Zed, X Xcode, F Figma, M Messages, A Claude, … | same idea: T Ghostty, C Brave, X Zed, A Claude, … |
 
 So in the GNOME settings and `hyprland.lua`, **"Cmd" is written as Ctrl.**
 

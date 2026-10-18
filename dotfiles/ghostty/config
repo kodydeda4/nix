@@ -79,7 +79,7 @@ keybind = cmd+shift+o=text:\x1bS
 
 # ⌘0 -> send ⌥⇧E: nvim shows / hides the file tree, like Xcode's navigator.
 # (Replaces Ghostty's default reset-font-size shortcut.)
-keybind = cmd+digit_0=text:\x1bE
+keybind = cmd+0=text:\x1bE
 
 # ⌘⇧Y -> send ⌥⇧Y: nvim shows / hides a terminal below the editor, like Xcode's debug area
 keybind = cmd+shift+y=text:\x1bY

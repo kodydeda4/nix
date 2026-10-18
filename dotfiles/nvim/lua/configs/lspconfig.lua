@@ -242,7 +242,9 @@ vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
   end,
 })
 
-local servers = { "html", "cssls", "sourcekit" }
+-- rust_analyzer: from rustup (`rustup component add rust-analyzer`), so it
+-- matches the toolchain
+local servers = { "html", "cssls", "sourcekit", "rust_analyzer" }
 vim.lsp.enable(servers)
 
 -- read :h vim.lsp.config for changing options of lsp servers

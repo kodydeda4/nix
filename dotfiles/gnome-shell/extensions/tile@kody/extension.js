@@ -34,7 +34,7 @@ const BINDINGS = {
 // Values are .desktop file names (ls /run/current-system/sw/share/applications).
 const APPS = {
     [`${MEH}g`]: 'github-desktop.desktop',
-    [`${MEH}c`]: 'brave-browser.desktop',
+    [`${MEH}c`]: 'zen-beta.desktop',
     [`${MEH}x`]: 'dev.zed.Zed.desktop',
     [`${MEH}t`]: 'com.mitchellh.ghostty.desktop',
     [`${MEH}e`]: 'org.gnome.Geary.desktop',

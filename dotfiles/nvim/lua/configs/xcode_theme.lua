@@ -102,6 +102,9 @@ return function(name, kind, c)
       WinSeparator = { fg = c.separator, bg = c.bg }, -- between splits
       -- folded lines: a faint band (NvChad's grey is too strong)
       Folded = { bg = shade(kind == "light" and 4 or 6) },
+      -- selected suggestion in popup menus (completion too): your selection
+      -- color with normal text, not NvChad's black on bright cyan
+      PmenuSel = { fg = c.text, bg = c.selection },
     },
 
     -- file tree like Xcode's navigator: blue folder icons, plain names
@@ -131,6 +134,14 @@ return function(name, kind, c)
     blankline = {
       IblChar = { fg = shade(9) },
       IblScopeChar = { fg = shade(18) },
+    },
+
+    -- completion menu: the letters you typed stand out by being brighter and
+    -- bold instead of cyan (the selected row is PmenuSel, above)
+    blink = {
+      BlinkCmpLabel = { fg = shade(75) },
+      BlinkCmpLabelMatch = { fg = c.text, bold = true },
+      BlinkCmpSignatureHelpActiveParameter = { fg = c.text, bold = true },
     },
 
     syntax = {

@@ -261,7 +261,8 @@ in {
   # reach tmux as M-j/k/t/1-9, and the Mac config's cmd+... keybinds work here
   # as-is. (Loaded by dotfiles/ghostty/config.)
   # Ghostty's Linux defaults use Ctrl+Shift, so Cmd+N/W/Q/C/V and font size are
-  # set like the Mac's, and take Alt+1-9 for its own tabs (the Mac doesn't), so
+  # set like the Mac's (except Cmd+0, which toggles nvim's file tree from the
+  # main config), and take Alt+1-9 for its own tabs (the Mac doesn't), so
   # those are unbound. Super+←/→ (keyd sends Ctrl+←/→, so super here) jumps
   # words like ⌥←/→ in the Mac's Ghostty.
   xdg.configFile."ghostty-linux/config" = lib.mkIf isLinux {
@@ -276,7 +277,6 @@ in {
       keybind = super+v=paste_from_clipboard
       keybind = super+equal=increase_font_size:1
       keybind = super+minus=decrease_font_size:1
-      keybind = super+zero=reset_font_size
       keybind = super+left=esc:b
       keybind = super+right=esc:f
       ${lib.concatMapStrings (i: ''

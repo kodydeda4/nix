@@ -593,7 +593,7 @@
                         "product_id": 10203,
                         "vendor_id": 5824
                     },
-                    "ignore": true
+                    "ignore": false
                 },
                 {
                     "identifiers": {

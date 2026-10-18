@@ -9,13 +9,37 @@ map("i", "jk", "<ESC>")
 
 -- vim-tmux-navigator (overrides NvChad defaults)
 map("n", "<C-h>", "<cmd>TmuxNavigateLeft<cr>")
--- Ctrl+J / Ctrl+K: next / previous tab (buffer), like in Zed
+-- Ctrl+J / Ctrl+K: next / previous tab (buffer), like in Zed. With the ⌘⇧Y
+-- terminal open below, Ctrl+J moves down into it and Ctrl+K moves back up to
+-- the editor instead.
+local function is_term(win)
+  return vim.bo[vim.api.nvim_win_get_buf(win)].buftype == "terminal"
+end
+local function win_toward(dir)
+  local nr = vim.fn.winnr(dir)
+  return nr ~= vim.fn.winnr() and vim.fn.win_getid(nr) or nil
+end
+
 map("n", "<C-j>", function()
-  require("nvchad.tabufline").next()
-end, { desc = "next tab" })
-map("n", "<C-k>", function()
-  require("nvchad.tabufline").prev()
-end, { desc = "previous tab" })
+  local below = win_toward "j"
+  if below and is_term(below) and not is_term(0) then
+    vim.api.nvim_set_current_win(below)
+    vim.cmd.startinsert()
+  else
+    require("nvchad.tabufline").next()
+  end
+end, { desc = "next tab / go to terminal below" })
+map({ "n", "t" }, "<C-k>", function()
+  local above = win_toward "k"
+  if is_term(0) and above then
+    vim.cmd.stopinsert() -- leave terminal mode so the editor is in normal mode
+    vim.api.nvim_set_current_win(above)
+  elseif vim.fn.mode() == "t" then
+    vim.api.nvim_feedkeys(vim.keycode "<C-k>", "n", false) -- pass it to the shell
+  else
+    require("nvchad.tabufline").prev()
+  end
+end, { desc = "previous tab / back to editor" })
 map("n", "<C-l>", "<cmd>TmuxNavigateRight<cr>")
 
 -- ⌃⌘J / ⌃⌘H / ⌃⌘L: go to definition / back / forward, like Zed.
@@ -68,8 +92,48 @@ map("n", "<leader>th", function()
   }
 end, { desc = "theme picker" })
 
+-- Space t c: code theme picker, the syntax colors for everything but Swift
+-- (the rest stays the theme above). Each theme shows on your code as you move
+-- to it; Enter saves it for the current mode (light or dark), Esc goes back.
+map("n", "<leader>tc", function()
+  local code_syntax = require "configs.code_syntax"
+  local items = {}
+  for _, name in ipairs(require("nvchad.utils").list_themes()) do
+    if not name:match "^xcode" then
+      table.insert(items, { text = name })
+    end
+  end
+  Snacks.picker {
+    title = "Code theme",
+    items = items,
+    format = "text",
+    layout = { preset = "select" },
+    on_change = function(_, item)
+      if item then
+        code_syntax.build(item.text)
+        code_syntax.update_all()
+      end
+    end,
+    confirm = function(picker, item)
+      if item then
+        require("configs.appearance").save_code_pick(item.text)
+      end
+      picker:close()
+    end,
+    on_close = function()
+      vim.schedule(function()
+        code_syntax.build() -- the saved one (the new pick, or back to the old)
+        code_syntax.update_all()
+      end)
+    end,
+  }
+end, { desc = "code theme picker" })
+
 -- Space e: show / hide the file tree (NvChad's only focuses it)
 map("n", "<leader>e", "<cmd>NvimTreeToggle<cr>", { desc = "toggle file tree" })
+
+-- ⌘0 (Ghostty sends ⌥⇧E): show / hide the file tree, like Xcode's navigator
+map("n", "<M-E>", "<cmd>NvimTreeToggle<cr>", { desc = "toggle file tree" })
 
 -- ⌘⇧J (Ghostty sends ⌥⇧R): show the current file in the file tree and focus it, like Xcode
 map("n", "<M-R>", function()
@@ -91,6 +155,28 @@ map("n", "<M-<>", "za", { desc = "toggle fold for the current scope" })
 map("n", "<M-S>", function() require("configs.swift_symbols").project() end, { desc = "open quickly (symbols)" })
 map("n", "<leader>fs", function() require("configs.swift_symbols").project() end, { desc = "find symbol in project" })
 map("n", "<leader>fd", function() require("configs.swift_symbols").file() end, { desc = "find symbol in this file" })
+
+-- ⌘⇧Y (Ghostty sends ⌥⇧Y): show / hide a terminal below the editor, like
+-- Xcode's debug area. Works from inside the terminal too, so it hides itself.
+map({ "n", "t" }, "<M-Y>", function()
+  require("nvchad.term").toggle { pos = "sp", id = "bottomTerm" }
+end, { desc = "toggle terminal below" })
+
+-- ⌃I (Ghostty sends ⌥⇧I): format the selected lines, or the current line with
+-- nothing selected, like Xcode's Re-Indent. Uses the file's formatter
+-- (configs/conform.lua); ones without range support (rustfmt) format the
+-- file and conform keeps only the changes inside the range.
+map({ "n", "v" }, "<M-I>", function()
+  local range
+  if vim.fn.mode() == "n" then
+    local row = vim.api.nvim_win_get_cursor(0)[1]
+    range = { start = { row, 0 }, ["end"] = { row, #vim.api.nvim_get_current_line() } }
+  end
+  require("conform").format { lsp_format = "fallback", range = range }
+end, { desc = "format selection / line" })
+
+-- ⌘A (Ghostty sends ⌥⇧A): select the whole file, so ⌃I formats all of it
+map({ "n", "v", "i" }, "<M-A>", "<Esc>ggVG", { desc = "select all" })
 
 -- Ctrl+E: split side by side (same as Ctrl+E in tmux outside nvim)
 map("n", "<C-e>", "<cmd>vsplit<cr>", { desc = "split window side by side" })

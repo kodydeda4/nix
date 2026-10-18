@@ -128,7 +128,48 @@ local function width(str)
   return api.nvim_eval_statusline(str, {}).width
 end
 
+-- With the ⌘⇧Y terminal open below the editor, the bar moves up between them,
+-- like Xcode's debug area: per-window status lines with none on the last row
+-- (laststatus=0) means only the window above the terminal gets one. Back to
+-- the single bottom bar (laststatus=3) once the terminal closes.
+local function term_below_editor()
+  for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
+    if vim.bo[api.nvim_win_get_buf(win)].buftype == "terminal" and api.nvim_win_get_config(win).relative == "" then
+      local has_above = api.nvim_win_call(win, function()
+        return vim.fn.winnr "k" ~= vim.fn.winnr()
+      end)
+      if has_above then
+        return true
+      end
+    end
+  end
+  return false
+end
+api.nvim_create_autocmd({ "WinNew", "WinClosed", "BufWinEnter", "TermOpen", "TabEnter" }, {
+  callback = function()
+    vim.schedule(function()
+      local want = term_below_editor() and 0 or 3
+      if vim.o.laststatus ~= want then
+        vim.o.laststatus = want
+      end
+    end)
+  end,
+})
+
+-- the bar above the terminal: the tree-closed layout, as wide as its window
+local function above_terminal()
+  local win = vim.g.statusline_winid or api.nvim_get_current_win()
+  local left = to_editor("%#XcodeEditor#" .. mode_and_progress())
+  local right = to_editor(branch() .. "%#XcodeEditor#  " .. diagnostics())
+  local gap = math.max(api.nvim_win_get_width(win) - width(left .. right), 1)
+  return left .. to_editor "%#XcodeEditor#" .. string.rep(" ", gap) .. right
+end
+
 return function()
+  if vim.o.laststatus ~= 3 then
+    return above_terminal()
+  end
+
   -- in the tree: describe the previous window (the file you came from)
   if vim.bo[api.nvim_get_current_buf()].filetype == "NvimTree" then
     local prev = vim.fn.win_getid(vim.fn.winnr "#")

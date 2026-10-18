@@ -208,28 +208,43 @@ return {
     end,
   },
 
-  -- ...and in the completion menu
+  -- ...and in the completion menu, blink.cmp (NvChad's setup, replacing nvim-cmp)
+  { import = "nvchad.blink.lazyspec" },
   {
-    "hrsh7th/nvim-cmp",
+    "saghen/blink.cmp",
     opts = function(_, opts)
-      local cmp = require "cmp"
-      opts.mapping["<C-j>"] = cmp.mapping.select_next_item()
-      opts.mapping["<C-k>"] = cmp.mapping.select_prev_item()
+      opts.keymap["<C-j>"] = { "select_next", "fallback" }
+      opts.keymap["<C-k>"] = { "select_prev", "fallback" }
       -- arrows move through the suggestions while they're open, the cursor otherwise
-      opts.mapping["<Down>"] = cmp.mapping(function(fallback)
-        if cmp.visible() then
-          cmp.select_next_item()
-        else
-          fallback()
-        end
-      end, { "i", "s" })
-      opts.mapping["<Up>"] = cmp.mapping(function(fallback)
-        if cmp.visible() then
-          cmp.select_prev_item()
-        else
-          fallback()
-        end
-      end, { "i", "s" })
+      opts.keymap["<Down>"] = { "select_next", "fallback" }
+      opts.keymap["<Up>"] = { "select_prev", "fallback" }
+
+      -- icon, then the name: no kind name on the right, which got cut off in
+      -- narrow windows (the icon's color already says what it is)
+      opts.completion.menu.draw.columns = { { "kind_icon" }, { "label" } }
+
+      -- the docs: beside the menu when there are 50 columns free there,
+      -- otherwise above / below it (blink's default) instead of squeezed into a
+      -- sliver, and room for a readable paragraph or signature
+      opts.completion.documentation.window = {
+        border = "single",
+        max_width = 80,
+        max_height = 30,
+      }
+
+      -- Rust: snippets above rust-analyzer's items, so typing a Dioxus hook's
+      -- full name offers its example first (configs/dioxus_snippets.lua)
+      opts.sources.providers = opts.sources.providers or {}
+      opts.sources.providers.snippets = {
+        transform_items = function(_, items)
+          if vim.bo.filetype == "rust" then
+            for _, item in ipairs(items) do
+              item.score_offset = (item.score_offset or 0) + 100
+            end
+          end
+          return items
+        end,
+      }
       return opts
     end,
   },
@@ -285,9 +300,6 @@ return {
       require "configs.lspconfig"
     end,
   },
-
-  -- test new blink
-  -- { import = "nvchad.blink.lazyspec" },
 
   -- Xcode in nvim: build / run / test / debug on simulators and devices.
   -- <leader>i… ("iOS"; <leader>x is NvChad's close-buffer), plus ⌃T / ⌃G for
@@ -357,13 +369,15 @@ return {
   },
 
   -- snippets: NvChad's setup, plus the espanso Swift snippets, expanded as
-  -- you type (configs/espanso_snippets.lua)
+  -- you type (configs/espanso_snippets.lua), and Dioxus hook examples in the
+  -- completion menu (configs/dioxus_snippets.lua)
   {
     "L3MON4D3/LuaSnip",
     config = function(_, opts)
       require("luasnip").config.set_config(opts)
       require "nvchad.configs.luasnip"
       require "configs.espanso_snippets"
+      require "configs.dioxus_snippets"
     end,
   },
 

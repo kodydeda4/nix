@@ -195,10 +195,13 @@ On the GDM login screen, the gear icon picks the session:
   [Noctalia](https://docs.noctalia.dev) (`dotfiles/noctalia/`) as the bar,
   launcher (Cmd+Space), notifications and lock screen. Same tiling keys as
   GNOME, plus:
-  - Meh+letter opens/focuses/hides an app (T Ghostty, C Brave, X Zed, A Claude, …)
+  - Meh+letter opens/focuses/hides an app (T Ghostty, C Zen, X Zed, A Claude, …)
   - Meh+arrows focus, Meh+1-9 workspaces, Meh+F float/tile (Super is left
     to Ghostty, where it acts as ⌥ like the Mac)
   - Meh+0 zen mode (hides bar + dock, drops gaps)
+  - Super+drag moves a window (Super+right-drag resizes); drop it on a screen
+    edge to snap it like Rectangle: left/right half, top = maximize, corners =
+    quarters
   - Cmd+Q force-quits the whole app (`hypr/kill-app.sh`, also used by GNOME)
   - **Game mode** (gamepad button on the bar, `hypr/gamemode.sh`): turns off
     keyd's modifier remaps so Ctrl/Alt/Super act as labeled. It starts two
@@ -258,7 +261,7 @@ the wallpaper) and `dotfiles/noctalia/zz-gamemode-state.toml`.
    - [ ] `repos` to clone the rest of `~/Developer/personal` (after the SSH keys work).
    - [ ] Rust and nvim: same as the Mac's dev tooling steps.
 
-Not on the ThinkPad (yet): Zen (not in nixpkgs; Brave is installed), Raycast
+Not on the ThinkPad (yet): Raycast
 (Noctalia's launcher / GNOME search instead), espanso, Karabiner's
 Brave-profile shortcuts, Figma, and the music software.
 
@@ -303,7 +306,7 @@ can approve. Do them once per Mac.
 **Dev tooling**
 - [ ] Point the command line tools at Xcode (after Xcode installs):
       `sudo xcode-select -s /Applications/Xcode.app && sudo xcodebuild -runFirstLaunch`
-- [ ] Rust: `rustup default stable && rustup target add wasm32-unknown-unknown`
+- [ ] Rust: `rustup default stable && rustup target add wasm32-unknown-unknown && rustup component add rust-analyzer`
 - [ ] nvim: just open it once; lazy.nvim installs the plugins from `lazy-lock.json`.
 - [ ] `repos` clones the rest of `~/Developer/personal`. The links in
       `~/Music/Music/guitar-pro-tabs/` and `~/Pictures/wallpapers` point at

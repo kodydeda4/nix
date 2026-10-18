@@ -66,8 +66,23 @@ keybind = cmd+shift+j=text:\x1bR
 # normally read ⌃M as Enter; Enter itself is unaffected.
 keybind = ctrl+m=text:\x1bm
 
+# ⌘A -> send ⌥⇧A: nvim selects the whole file. (Replaces Ghostty's own
+# select-all of the terminal's text.)
+keybind = cmd+a=text:\x1bA
+
+# ⌃I -> send ⌥⇧I: nvim formats the selection (or the current line), like Xcode's Re-Indent. (Terminals
+# read ⌃I as Tab; the Tab key itself is unaffected.)
+keybind = ctrl+i=text:\x1bI
+
 # ⌘⇧O -> send ⌥⇧S: nvim's symbol search, like Xcode's Open Quickly
 keybind = cmd+shift+o=text:\x1bS
+
+# ⌘0 -> send ⌥⇧E: nvim shows / hides the file tree, like Xcode's navigator.
+# (Replaces Ghostty's default reset-font-size shortcut.)
+keybind = cmd+digit_0=text:\x1bE
+
+# ⌘⇧Y -> send ⌥⇧Y: nvim shows / hides a terminal below the editor, like Xcode's debug area
+keybind = cmd+shift+y=text:\x1bY
 
 # ⌘> / ⌘< -> send ⌥> / ⌥<: nvim folds / unfolds the whole file / the current scope.
 # (⌘< replaces Ghostty's default reload-config shortcut; config reloads still

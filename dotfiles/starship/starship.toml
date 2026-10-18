@@ -1,10 +1,21 @@
 # Starship prompt. Linked to ~/.config/starship.toml by home.nix.
 
-# One-line prompt: no newline before the prompt symbol or between prompts.
+# Two-line prompt: info on the first line, prompt symbol on the second.
+# No blank line between prompts.
 add_newline = false
 
-[line_break]
-disabled = true
+# OS icon first, then every other module in Starship's default order.
+format = "$os$all"
+
+# Icon for the current OS (NixOS here, Apple logo on macOS). Disabled by default.
+[os]
+disabled = false
+style = "bold blue"
+
+# Nerd Font logos instead of the default emoji.
+[os.symbols]
+NixOS = " "
+Macos = " "
 
 # GitHub account for the current repo, from `github.user` in
 # dotfiles/git/<account>.config. Only shown inside a git repo.

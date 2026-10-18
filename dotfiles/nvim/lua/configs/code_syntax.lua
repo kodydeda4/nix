@@ -15,32 +15,60 @@ end
 local SYNTAX = { "syntax", "treesitter", "semantic_tokens" }
 -- syntax groups that live in base46's "defaults" next to the UI ones
 local DEFAULT_SYNTAX = { "Comment", "Debug", "Exception", "Macro" }
+-- popups about the code (completion menu, its docs, signature help, LSP
+-- hover) take the other theme's colors too when opened from a non-Swift file:
+-- these groups of it on top of its syntax ones
+local POPUP = { "blink" }
+local DEFAULT_POPUP = { "NormalFloat", "FloatBorder", "Pmenu", "PmenuSel", "PmenuSbar", "PmenuThumb" }
+-- blink's popups, by their buffer's filetype (LSP hover is found by the
+-- w:lsp_floating_bufnr Neovim gives it)
+local CODE_POPUPS = { ["blink-cmp-menu"] = true, ["blink-cmp-documentation"] = true, ["blink-cmp-signature"] = true }
 
 local function fresh(name)
   package.loaded["base46.integrations." .. name] = nil
   return require("base46").get_integration(name)
 end
 
--- the syntax highlight groups of base46 theme `name`, without loading it
+-- the syntax highlight groups of base46 theme `name`, without loading it,
+-- and the groups its code popups use
 local function syntax_of(name)
   local opts = require("nvconfig").base46
   local saved = opts.theme
   opts.theme = name -- base46 reads the theme from here
-  local ok, result = pcall(function()
-    local hl = {}
+  local ok, result, popup = pcall(function()
+    local hl, popup = {}, {}
     for _, int in ipairs(SYNTAX) do
       hl = vim.tbl_extend("force", hl, fresh(int))
+    end
+    for _, int in ipairs(POPUP) do
+      popup = vim.tbl_extend("force", popup, fresh(int))
     end
     local defaults = fresh "defaults"
     for _, group in ipairs(DEFAULT_SYNTAX) do
       hl[group] = defaults[group]
     end
-    hl.__text = defaults.Normal and defaults.Normal.fg
-    return hl
+    for _, group in ipairs(DEFAULT_POPUP) do
+      popup[group] = defaults[group]
+    end
+
+    -- the same calmer look configs/xcode_theme.lua gives the Xcode theme's
+    -- menu: the selected row in the selection color with normal text, the
+    -- letters you typed brighter and bold (instead of black on bright blue,
+    -- and blue letters), grey outlines
+    local text, bg = defaults.Normal.fg, defaults.Normal.bg
+    local mix = require("base46.colors").mix
+    popup.PmenuSel = { fg = text, bg = defaults.Visual.bg }
+    popup.BlinkCmpLabel = { fg = mix(bg, text, 75) }
+    popup.BlinkCmpLabelMatch = { fg = text, bold = true }
+    popup.BlinkCmpSignatureHelpActiveParameter = { fg = text, bold = true }
+    popup.FloatBorder = popup.BlinkCmpDocBorder
+
+    hl.__text = text
+    return hl, popup
   end)
   opts.theme = saved
   -- leave base46's modules as the current theme built them
-  for _, int in ipairs(SYNTAX) do
+  for _, int in ipairs(vim.list_extend(vim.list_extend({}, SYNTAX), POPUP)) do
     package.loaded["base46.integrations." .. int] = nil
   end
   package.loaded["base46.integrations.defaults"] = nil
@@ -48,7 +76,7 @@ local function syntax_of(name)
     vim.notify("code_syntax: " .. tostring(result), vim.log.levels.WARN)
     return nil
   end
-  return result
+  return result, popup
 end
 
 -- the Xcode theme colors groups the other theme doesn't know (Swift-specific
@@ -91,6 +119,10 @@ end
 M.ns = 0
 M.xcode_ns = 0
 local ours = {}
+-- the other theme's syntax + popup groups, and the popup namespaces built
+-- from them (one per 'winhighlight', which they replace)
+local popup_hl
+local popup_ns = {}
 
 local function new_ns(label, hl)
   -- a new namespace each build, so groups from an older one don't linger
@@ -102,7 +134,9 @@ local function new_ns(label, hl)
   return ns
 end
 
-function M.build()
+-- `preview`: use this theme instead of chadrc's (Space t c, while picking)
+function M.build(preview)
+  popup_hl, popup_ns = nil, {}
   local polish = (current_theme() or {}).polish_hl or {}
   local editor = (polish.defaults or {}).XcodeEditor
   if not editor then
@@ -113,20 +147,70 @@ function M.build()
 
   package.loaded.chadrc = nil
   local themes = require("chadrc").base46
-  local name = themes["code_theme_" .. vim.o.background]
-  local hl = name and syntax_of(name)
+  local name = preview or themes["code_theme_" .. vim.o.background]
+  local hl, popup
+  if name then
+    hl, popup = syntax_of(name)
+  end
   if not hl then
     M.ns = M.xcode_ns -- no other theme: Xcode colors everywhere
     return
   end
   fill_gaps(hl)
+  popup_hl = vim.tbl_extend("force", hl, popup)
   hl.Normal = editor
   hl.NormalNC = editor
   M.ns = new_ns(name, hl)
 end
 
--- regular file windows: Swift gets M.xcode_ns, anything else M.ns. The file
--- tree, pickers, floats... are left as they are (nvim-tree and 'winhighlight'
+-- a group of popup_hl as a plain spec, following links (in popup_hl first,
+-- then the global groups)
+local function resolve(group, depth)
+  local spec = popup_hl[group]
+  if not spec then
+    return vim.api.nvim_get_hl(0, { name = group, link = false })
+  end
+  if spec.link and (depth or 0) < 10 then
+    local own = vim.deepcopy(spec)
+    own.link = nil
+    return vim.tbl_extend("force", resolve(spec.link, (depth or 0) + 1), own)
+  end
+  return spec
+end
+
+-- the namespace for a code popup with this 'winhighlight': the other theme's
+-- groups, plus the popup's own remaps (Normal:BlinkCmpMenu...) done in them,
+-- since a window namespace replaces 'winhighlight'
+local function popup_ns_for(whl)
+  if not popup_ns[whl] then
+    local hl = vim.deepcopy(popup_hl)
+    hl.Normal = resolve "NormalFloat"
+    for from, to in whl:gmatch "([^,:]+):([^,]+)" do
+      hl[from] = to == "None" and {} or resolve(to)
+    end
+    for group, spec in pairs(hl) do
+      if spec.link then
+        hl[group] = resolve(group)
+      end
+    end
+    popup_ns[whl] = new_ns("popup", hl)
+  end
+  return popup_ns[whl]
+end
+
+-- the file a code popup is about: the current one for blink's (they never
+-- take the cursor), the one LSP hover was asked from; nil for other windows
+local function popup_source(win)
+  if CODE_POPUPS[vim.bo[vim.api.nvim_win_get_buf(win)].filetype] then
+    return vim.api.nvim_get_current_buf()
+  end
+  local buf = vim.w[win].lsp_floating_bufnr
+  return buf and vim.api.nvim_buf_is_valid(buf) and buf or nil
+end
+
+-- regular file windows: Swift gets M.xcode_ns, anything else M.ns. Code
+-- popups opened from a non-Swift file get a popup namespace. The file tree,
+-- pickers, other floats... are left as they are (nvim-tree and 'winhighlight'
 -- set up their own namespaces).
 local function update(win)
   if not vim.api.nvim_win_is_valid(win) or M.xcode_ns == 0 then
@@ -135,8 +219,14 @@ local function update(win)
   local current = vim.api.nvim_get_hl_ns { winid = win }
   local buf = vim.api.nvim_win_get_buf(win)
   local file = vim.bo[buf].buftype == "" and vim.api.nvim_win_get_config(win).relative == ""
+  local source = not file and popup_hl and popup_source(win)
   if file then
     local want = vim.bo[buf].filetype == "swift" and M.xcode_ns or M.ns
+    if want ~= current then
+      vim.api.nvim_win_set_hl_ns(win, want)
+    end
+  elseif source and vim.bo[source].filetype ~= "swift" then
+    local want = popup_ns_for(vim.wo[win].winhighlight)
     if want ~= current then
       vim.api.nvim_win_set_hl_ns(win, want)
     end

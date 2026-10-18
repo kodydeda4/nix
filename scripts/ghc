@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#=====================================================================================
+# ghc — clone a GitHub repo, picked with fzf
+#
+# First pick an owner (a user or org) from the ones already cloned under
+# ~/Developer, then pick one of their repos (from gh) and it's cloned into the
+# current folder. Clones over the same SSH host as that owner's existing clones,
+# so work accounts (git@github-foresightcares:...) use the right key.
+#
+# Usage:
+#   ghc                 pick an owner, then a repo
+#   ghc <owner>         skip the first list and go straight to <owner>'s repos
+#=====================================================================================
+
+set -euo pipefail
+
+ROOT="$HOME/Developer"
+
+# "owner<TAB>host" for every clone's origin under ~/Developer, one line per owner
+# (git@host:owner/repo.git or https://host/owner/repo.git)
+owners() {
+	find "$ROOT" -maxdepth 6 -name .git -prune 2>/dev/null | while read -r git; do
+		git -C "${git%/.git}" remote get-url origin 2>/dev/null || true
+	done | sed -nE 's#^(git@([^:]+):|https://([^/]+)/)([^/]+)/.*#\4\t\2\3#p' | sort -u -t$'\t' -k1,1
+}
+
+list="$(owners)"
+
+if [[ $# -gt 0 ]]; then
+	owner="$1"
+else
+	owner="$(cut -f1 <<<"$list" | { fzf --prompt 'owner> ' --print-query || true; } | tail -1)"
+fi
+[[ -n "$owner" ]] || exit 0
+
+# SSH host this owner's repos are cloned over (github.com if none are cloned yet)
+host="$(awk -F'\t' -v o="$owner" '$1 == o { print $2 }' <<<"$list")"
+host="${host:-github.com}"
+
+repo="$(gh repo list "$owner" --limit 1000 --json name -q '.[].name' |
+	fzf --prompt "$owner/" --preview "gh repo view $owner/{}")"
+[[ -n "$repo" ]] || exit 0
+
+git clone "git@$host:$owner/$repo.git"

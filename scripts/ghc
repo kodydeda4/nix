@@ -37,8 +37,18 @@ fi
 host="$(awk -F'\t' -v o="$owner" '$1 == o { print $2 }' <<<"$list")"
 host="${host:-github.com}"
 
-repo="$(gh repo list "$owner" --limit 1000 --json name -q '.[].name' |
-	fzf --prompt "$owner/" --preview "gh repo view $owner/{}")"
+# The owner's repos as seen by every gh account (so private repos show up whichever
+# account is active), most recently pushed first
+logins="$(gh auth status --json hosts --jq '.hosts["github.com"][].login' | tr '\n' ' ')"
+repos() {
+	for login in $logins; do
+		GH_TOKEN="$(gh auth token --user "$login")" \
+			gh repo list "$owner" --limit 1000 --json name,pushedAt --jq '.[] | "\(.pushedAt)\t\(.name)"' 2>/dev/null || true
+	done | sort -r | awk -F'\t' '!seen[$2]++ { print $2 }'
+}
+
+preview="for u in $logins; do GH_TOKEN=\$(gh auth token --user \$u) gh repo view $owner/{} 2>/dev/null && break; done"
+repo="$(repos | fzf --prompt "$owner/" --preview "$preview")"
 [[ -n "$repo" ]] || exit 0
 
 git clone "git@$host:$owner/$repo.git"

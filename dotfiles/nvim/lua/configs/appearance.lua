@@ -70,6 +70,12 @@ function M.save_pick(theme)
   save("theme_" .. (M.mode or vim.o.background), theme)
 end
 
+-- Space t c: the picked theme becomes the current mode's code theme (syntax
+-- colors for everything but Swift; configs/code_syntax.lua)
+function M.save_code_pick(theme)
+  save("code_theme_" .. (M.mode or vim.o.background), theme)
+end
+
 check()
 local timer = vim.uv.new_timer()
 timer:start(2000, 2000, check)

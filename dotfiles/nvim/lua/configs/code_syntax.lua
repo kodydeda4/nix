@@ -134,7 +134,8 @@ local function new_ns(label, hl)
   return ns
 end
 
-function M.build()
+-- `preview`: use this theme instead of chadrc's (Space t c, while picking)
+function M.build(preview)
   popup_hl, popup_ns = nil, {}
   local polish = (current_theme() or {}).polish_hl or {}
   local editor = (polish.defaults or {}).XcodeEditor
@@ -146,7 +147,7 @@ function M.build()
 
   package.loaded.chadrc = nil
   local themes = require("chadrc").base46
-  local name = themes["code_theme_" .. vim.o.background]
+  local name = preview or themes["code_theme_" .. vim.o.background]
   local hl, popup
   if name then
     hl, popup = syntax_of(name)

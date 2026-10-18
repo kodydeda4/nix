@@ -91,3 +91,11 @@ directory = "~/Pictures/wallpapers"
 [plugins]
 # Wallhaven: browse wallhaven.cc and set a wallpaper (Meh+W in Hyprland).
 enabled = ["noctalia/wallhaven"]
+
+# Lock screen: the display turns off after 3 seconds without input there, and
+# back on with any key or mouse move. (Unlocked: after 11 minutes, Noctalia's
+# default for this behavior.)
+[idle.behavior.screen-off]
+enabled = true
+timeout = 660
+locked_timeout = 3

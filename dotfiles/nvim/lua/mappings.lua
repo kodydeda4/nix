@@ -92,6 +92,43 @@ map("n", "<leader>th", function()
   }
 end, { desc = "theme picker" })
 
+-- Space t c: code theme picker, the syntax colors for everything but Swift
+-- (the rest stays the theme above). Each theme shows on your code as you move
+-- to it; Enter saves it for the current mode (light or dark), Esc goes back.
+map("n", "<leader>tc", function()
+  local code_syntax = require "configs.code_syntax"
+  local items = {}
+  for _, name in ipairs(require("nvchad.utils").list_themes()) do
+    if not name:match "^xcode" then
+      table.insert(items, { text = name })
+    end
+  end
+  Snacks.picker {
+    title = "Code theme",
+    items = items,
+    format = "text",
+    layout = { preset = "select" },
+    on_change = function(_, item)
+      if item then
+        code_syntax.build(item.text)
+        code_syntax.update_all()
+      end
+    end,
+    confirm = function(picker, item)
+      if item then
+        require("configs.appearance").save_code_pick(item.text)
+      end
+      picker:close()
+    end,
+    on_close = function()
+      vim.schedule(function()
+        code_syntax.build() -- the saved one (the new pick, or back to the old)
+        code_syntax.update_all()
+      end)
+    end,
+  }
+end, { desc = "code theme picker" })
+
 -- Space e: show / hide the file tree (NvChad's only focuses it)
 map("n", "<leader>e", "<cmd>NvimTreeToggle<cr>", { desc = "toggle file tree" })
 

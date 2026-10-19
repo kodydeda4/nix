@@ -64,6 +64,18 @@
     xcbeautify # xcodebuild.nvim log formatting
   ];
 
+  # Android SDK + NDK for `dx serve --android` (Dioxus). Versions match what
+  # dx 0.8's Gradle template builds with (compileSdk 34, AGP 8.7 → build-tools
+  # 34.0.0); the SDK is read-only in the store, so Gradle can't fetch extras.
+  androidSdk =
+    (pkgs.androidenv.composeAndroidPackages {
+      platformVersions = ["34"];
+      buildToolsVersions = ["34.0.0"];
+      includeNDK = true;
+      includeEmulator = false;
+      includeSystemImages = false;
+    }).androidsdk;
+
   masApps = {
     "Apple Developer" = 640199958;
     "Final Cut Pro" = 424389933;

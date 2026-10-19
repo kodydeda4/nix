@@ -15,7 +15,18 @@ in {
   # /etc/nix/nix.custom.conf instead of `nix.settings`.
   nix.enable = false;
 
-  environment.systemPackages = packages.mac;
+  environment.systemPackages = packages.mac ++ [packages.androidSdk];
+
+  # Android SDK (see packages.nix): accept Google's SDK license and point
+  # dx / Gradle / cargo at the SDK and NDK in the store.
+  nixpkgs.config.android_sdk.accept_license = true;
+  environment.variables = let
+    sdk = "${packages.androidSdk}/libexec/android-sdk";
+  in {
+    ANDROID_HOME = sdk;
+    ANDROID_SDK_ROOT = sdk;
+    ANDROID_NDK_HOME = "${sdk}/ndk-bundle";
+  };
 
   homebrew = {
     enable = true;

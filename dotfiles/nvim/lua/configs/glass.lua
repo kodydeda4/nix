@@ -46,11 +46,18 @@ local function solid(win)
     end
     return
   end
-  if whl:find "Normal:XcodeEditor" then
+  -- terminals (⌘⇧Y) take Ghostty's own text and background (configs/ghostty_term.lua)
+  local normal = vim.bo[buf].buftype == "terminal" and "GhosttyTerm" or "XcodeEditor"
+  if whl:find("Normal:" .. normal .. ",") or whl:match("Normal:" .. normal .. "$") then
     return
   end
-  local extra = "Normal:XcodeEditor,NormalNC:XcodeEditor"
-  vim.wo[win].winhighlight = whl == "" and extra or (whl .. "," .. extra)
+  local entries = { "Normal:" .. normal, "NormalNC:" .. normal }
+  for entry in whl:gmatch "[^,]+" do
+    if not entry:match "^NormalN?C?:" then
+      entries[#entries + 1] = entry
+    end
+  end
+  vim.wo[win].winhighlight = table.concat(entries, ",")
 end
 
 local function solid_all()

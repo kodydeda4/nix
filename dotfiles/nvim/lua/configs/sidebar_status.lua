@@ -2,7 +2,8 @@
 --   under the file tree: the repo name, then the git branch
 --   under the editor, on its solid background: the vim mode, plus the
 --     language server's progress while it's busy ("Indexing…"), on the left;
---     error / warning / hint / info counts on the right edge
+--     error / warning / hint / info counts on the right edge (right-click
+--     one to hide / show that severity in the editor)
 -- Every item shows even when it's zero or idle, so the layout stays put.
 -- With the tree closed, only the editor part shows, across the whole width.
 -- With the cursor in the tree, it describes the last file window you were in.
@@ -70,17 +71,47 @@ local function branch()
   return "%#SidebarBranch# " .. head .. " "
 end
 
--- "✖ 0  ⚠ 0  󰛩 0  󰋼 0", each gray at zero
+-- Right-click a count to hide / show that severity in the editor (underline,
+-- signs, virtual text); a hidden one keeps counting but is crossed out.
+local hidden = {}
+local shown_in = { "underline", "signs", "virtual_text", "virtual_lines" }
+function _G.SidebarDiagnosticClick(severity, _, button)
+  if button ~= "r" then
+    return
+  end
+  hidden[severity] = not hidden[severity] or nil
+  local visible = {}
+  for _, sev in ipairs { 1, 2, 3, 4 } do
+    if not hidden[sev] then
+      visible[#visible + 1] = sev
+    end
+  end
+  local config = vim.diagnostic.config() or {}
+  local update = {}
+  for _, key in ipairs(shown_in) do
+    local value = config[key]
+    if value then
+      value = type(value) == "table" and vim.deepcopy(value) or {}
+      value.severity = #visible < 4 and visible or nil
+      update[key] = value
+    end
+  end
+  vim.diagnostic.config(update)
+  redraw()
+end
+
+-- "✖ 0  ⚠ 0  󰛩 0  󰋼 0", each gray at zero, crossed out while hidden
 local function diagnostics()
   local buf = utils.stbufnr()
   local function count(severity, hl, icon)
     local n = rawget(vim, "lsp") and #vim.diagnostic.get(buf, { severity = severity }) or 0
     -- gray while zero, the severity's color once there's something to see
-    return "%#" .. (n > 0 and hl or "Comment") .. "#" .. icon .. n .. " "
+    local group = hidden[severity] and "Off_Comment" or (n > 0 and hl or "Comment")
+    return "%" .. severity .. "@v:lua.SidebarDiagnosticClick@%#" .. group .. "#" .. icon .. n .. "%X%#Comment# "
   end
   local s = vim.diagnostic.severity
-  return count(s.ERROR, "St_lspError", " ")
-    .. count(s.WARN, "St_lspWarning", " ")
+  return count(s.ERROR, "St_lspError", " ")
+    .. count(s.WARN, "St_lspWarning", " ")
     .. count(s.HINT, "St_lspHints", "󰛩 ")
     .. count(s.INFO, "St_lspInfo", "󰋼 ")
 end
@@ -102,11 +133,14 @@ local made = {}
 local function to_editor(str)
   return (str:gsub("%%#([%w_]+)#", function(group)
     local name = "EdBar_" .. group
-    local hl = api.nvim_get_hl(0, { name = group, link = false })
+    -- "Off_<group>": <group> crossed out
+    local base = group:match "^Off_(.+)" or group
+    local strike = base ~= group or nil
+    local hl = api.nvim_get_hl(0, { name = base, link = false })
     local bg = api.nvim_get_hl(0, { name = "XcodeEditor", link = false }).bg
     local key = tostring(hl.fg) .. ":" .. tostring(bg) .. ":" .. tostring(hl.bold)
     if made[name] ~= key then
-      api.nvim_set_hl(0, name, { fg = hl.fg, bg = bg, bold = hl.bold })
+      api.nvim_set_hl(0, name, { fg = hl.fg, bg = bg, bold = hl.bold, strikethrough = strike })
       made[name] = key
     end
     return "%#" .. name .. "#"

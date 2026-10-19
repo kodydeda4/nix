@@ -48,10 +48,19 @@ local function set_mode(mode)
   end
 end
 
--- macOS: AppleInterfaceStyle is "Dark" in dark mode and missing in light mode.
+-- macOS: AppKit's appearance, "NSAppearanceNameDarkAqua" in dark mode and
+-- "NSAppearanceNameAqua" in light mode. (Not `defaults read -g
+-- AppleInterfaceStyle`: it can keep saying "Dark" after switching to light.)
 -- Linux: GNOME's color-scheme is 'prefer-dark' in dark mode (home.nix sets it,
 -- so Hyprland has it too).
-local cmd = vim.fn.has "mac" == 1 and { "defaults", "read", "-g", "AppleInterfaceStyle" }
+local cmd = vim.fn.has "mac" == 1
+    and {
+      "osascript",
+      "-l",
+      "JavaScript",
+      "-e",
+      'ObjC.import("AppKit"); $.NSApplication.sharedApplication.effectiveAppearance.name.js',
+    }
   or { "gsettings", "get", "org.gnome.desktop.interface", "color-scheme" }
 
 local function check()

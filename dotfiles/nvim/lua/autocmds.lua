@@ -36,6 +36,8 @@ vim.api.nvim_create_autocmd("VimEnter", {
   end,
 })
 
+-- terminals inside nvim (⌘⇧Y) use Ghostty's colors, not the theme's
+require "configs.ghostty_term"
 -- translucent file tree over a solid editor, like Xcode's sidebar
 require "configs.glass"
 -- padding on the tree's right side, like on its left

@@ -92,6 +92,7 @@ local function loadApps()
   loading = true
   noctalia.runAsync({ "hyprctl", "clients", "-j" }, function(result)
     loading = false
+    noctalia.writeFile("/tmp/claude-1000/clients.log", "exit=" .. tostring(result.exitCode) .. " timedOut=" .. tostring(result.timedOut) .. " len=" .. #(result.stdout or "") .. " err=" .. tostring(result.stderr) .. "\n") -- DEBUG
     local ok, clients = pcall(noctalia.json.decode, result.stdout or "")
     if not ok or type(clients) ~= "table" then
       apps = {}
@@ -196,8 +197,9 @@ local function tile(app, index)
     align = "center",
     justify = "center",
     radius = 12,
-    fill = if isSelected then "primary/0.18" else "on_surface/0.04",
-    border = if isSelected then "primary" else "on_surface/0.08",
+    -- solid, not see-through: on the grid's solid background (render)
+    fill = if isSelected then "primary/0.22" else "surface_variant",
+    border = if isSelected then "primary" else "outline/0.25",
     borderWidth = if isSelected then 2 else 1,
     onClick = function()
       pick(index)
@@ -243,7 +245,9 @@ render = function()
     table.insert(rows, ui.row({ key = `row_{row - firstRow}`, flexGrow = 1, gap = GAP, align = "stretch" }, cells))
   end
 
-  panel.render(ui.column({ flexGrow = 1, gap = GAP, align = "stretch" }, rows))
+  -- a solid background: the panel itself is glass (shell.panel in the config),
+  -- which let whatever was behind show through the grid
+  panel.render(ui.column({ flexGrow = 1, gap = GAP, align = "stretch", fill = "surface", radius = 12 }, rows))
 end
 
 -- ── lifecycle ──────────────────────────────────────────────────────────────

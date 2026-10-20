@@ -23,8 +23,6 @@ mru = true
 current_workspace_only = false
 show_caption = false # just the icons: no window titles
 show_count = false
-# (Cmd+H / Cmd+L in the switcher: keyd sends them as Alt+Shift+Tab / Alt+Tab,
-# hosts/nixos)
 
 # Switching light / dark from Noctalia switches the apps too (GNOME's
 # color-scheme); the other way round is dotfiles/hypr/follow-appearance.sh

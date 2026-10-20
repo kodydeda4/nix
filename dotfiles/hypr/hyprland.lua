@@ -151,7 +151,7 @@ hl.bind(CMD .. " + space", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher")
 -- again) to move; let go of Cmd to switch, Esc cancels. A panel only gets
 -- messages while it's open, so the first press opens it and later ones tell it
 -- to move to the next app. keyd turns Cmd+Tab into Alt+Tab with Alt held until
--- Cmd is let go (and Cmd+L / Cmd+H into Alt+Tab / Alt+Shift+Tab, hosts/nixos),
+-- Cmd is let go (and Cmd+h/j/k/l into Alt+h/j/k/l, hosts/nixos),
 -- so the switcher sees Alt let go when Cmd is. (A release bind here didn't
 -- fire: Hyprland skips it when Tab was pressed in between.) The Cmd (Ctrl)
 -- forms catch Cmd+Tab arriving as-is or with both held. Shift+Tab isn't bound

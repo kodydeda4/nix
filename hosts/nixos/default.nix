@@ -130,9 +130,8 @@
       };
       "appswitch:A" = {
         tab = "A-tab";
-        # vim keys while Cmd is still held: L = next (like Tab), H = previous
-        l = "A-tab";
-        h = "A-S-tab";
+        # (other keys come out as Alt+key while Cmd is held: the app switcher's
+        # vim keys, dotfiles/noctalia/plugins/app-switcher)
       };
       # (not "cmd+shift": Nix sorts sections, and keyd needs cmd defined first)
       "shift+cmd" = {

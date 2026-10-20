@@ -137,13 +137,27 @@ end
 
 -- ── actions ────────────────────────────────────────────────────────────────
 
+-- wrap: "list" goes around the whole list (past the last app to the first),
+-- "row" around the selected row (past its last app to its first), "column"
+-- around its column (past the bottom app to the top one), nil stops
+-- at the ends
 local function move(delta, wrap)
   if #apps == 0 then
     return
   end
   local target = selected + delta
-  if wrap then
+  if wrap == "list" then
     target = ((target - 1) % #apps) + 1
+  elseif wrap == "row" then
+    local first = math.floor((selected - 1) / COLUMNS) * COLUMNS + 1
+    local count = math.min(COLUMNS, #apps - first + 1)
+    target = first + ((selected - first + delta) % count)
+  elseif wrap == "column" then
+    -- delta is ±COLUMNS: a row down / up, around the selected app's column
+    local column = (selected - 1) % COLUMNS
+    local rows = math.floor((#apps - 1 - column) / COLUMNS) + 1
+    local row = math.floor((selected - 1) / COLUMNS)
+    target = ((row + delta / COLUMNS) % rows) * COLUMNS + column + 1
   else
     target = math.clamp(target, 1, #apps)
   end
@@ -178,10 +192,10 @@ local function tile(app, index)
   return ui.column({
     key = `app_{app.class}`,
     flexGrow = 1,
-    gap = 8,
+    gap = 6,
     align = "center",
     justify = "center",
-    radius = 14,
+    radius = 12,
     fill = if isSelected then "primary/0.18" else "on_surface/0.04",
     border = if isSelected then "primary" else "on_surface/0.08",
     borderWidth = if isSelected then 2 else 1,
@@ -192,7 +206,7 @@ local function tile(app, index)
     icon,
     ui.label({
       text = app.name,
-      fontSize = 17,
+      fontSize = 14,
       fontWeight = if isSelected then "bold" else "medium",
       color = "on_surface",
       maxLines = 1,
@@ -244,11 +258,13 @@ function onClose()
   isOpen = false
 end
 
+-- { step, wrap } (see move): h / l go around the selected row (l on its last
+-- app goes to its first), j / k around its column (j on the bottom goes to the top)
 local KEYS = {
-  h = -1, left = -1, ["alt+h"] = -1,
-  l = 1, right = 1, ["alt+l"] = 1,
-  j = COLUMNS, down = COLUMNS, ["alt+j"] = COLUMNS,
-  k = -COLUMNS, up = -COLUMNS, ["alt+k"] = -COLUMNS,
+  h = { -1, "row" }, left = { -1, "row" }, ["alt+h"] = { -1, "row" },
+  l = { 1, "row" }, right = { 1, "row" }, ["alt+l"] = { 1, "row" },
+  j = { COLUMNS, "column" }, down = { COLUMNS, "column" }, ["alt+j"] = { COLUMNS, "column" },
+  k = { -COLUMNS, "column" }, up = { -COLUMNS, "column" }, ["alt+k"] = { -COLUMNS, "column" },
 }
 
 function onKey(chord, pressed)
@@ -260,11 +276,11 @@ function onKey(chord, pressed)
     return
   end
   if KEYS[chord] then
-    move(KEYS[chord], false)
+    move(KEYS[chord][1], KEYS[chord][2])
   elseif chord == "tab" then
-    move(1, true)
+    move(1, "list")
   elseif chord == "shift+tab" or chord == "alt+shift+tab" then
-    move(-1, true)
+    move(-1, "list")
   elseif chord == "return" or chord == "kp_enter" or chord == "space" then
     pick(selected)
   end
@@ -275,11 +291,11 @@ end
 function onIpc(event, _payload)
   if event == "next" then
     if isOpen then
-      move(1, true)
+      move(1, "list")
     else
       noctalia.togglePanel(PANEL_ID)
     end
   elseif event == "previous" and isOpen then
-    move(-1, true)
+    move(-1, "list")
   end
 end

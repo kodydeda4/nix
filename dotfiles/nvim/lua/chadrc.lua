@@ -7,7 +7,7 @@ local M = {}
 
 M.base46 = {
 	-- the theme in use right now; it follows macOS light / dark mode (configs/appearance.lua)
-	theme = "xcode_dark",
+	theme = "xcode_light",
 	-- what light and dark mode use; Space t h saves your pick to the current mode's
 	theme_dark = "xcode_dark",
 	theme_light = "xcode_light",

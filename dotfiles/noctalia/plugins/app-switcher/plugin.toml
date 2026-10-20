@@ -18,8 +18,8 @@ id = "switcher"
 entry = "panel.luau"
 # 4 x 2 tiles at a time (the grid moves a row as the selection leaves it); the
 # rest of the screen stays clear above and below
-width = 1100
-height = 520
+width = 690
+height = 370
 placement = "floating"
 position = "center"
 keyboard_focus = "exclusive"
@@ -28,8 +28,8 @@ capture_keys = [
   "h", "j", "k", "l",
   "left", "down", "up", "right",
   "tab", "shift+tab",
-  # Cmd still held: keyd sends Cmd+key as Alt+key (Cmd+Tab and Cmd+L arrive
-  # through Hyprland's Alt+Tab bind instead)
+  # Cmd still held: keyd sends Cmd+key as Alt+key (Cmd+Tab arrives through
+  # Hyprland's Alt+Tab bind instead)
   "alt+h", "alt+j", "alt+k", "alt+l", "alt+shift+tab",
   "return", "kp_enter", "space",
   # letting go of Cmd (keyd holds Alt while Cmd is down): switch

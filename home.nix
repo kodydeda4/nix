@@ -134,22 +134,28 @@ in {
   # at start, and logging in to GNOME deletes it (autostart entry below).
   # Hyprland's own corners are off in dotfiles/hypr.
   # Also a darker dark mode for libadwaita (GNOME) apps: near-black instead of
-  # Adwaita's default dark grays.
+  # Adwaita's default dark grays. Only in dark mode: applied always, light mode
+  # got dark text on these dark backgrounds. (Media query + CSS variables:
+  # GTK 4.16 / libadwaita 1.6 and up.)
   xdg.configFile."gtk-4.0/gtk.css" = lib.mkIf isLinux {
     text = ''
       @import url("hyprland.css");
 
-      @define-color window_bg_color #121212;
-      @define-color view_bg_color #0d0d0d;
-      @define-color headerbar_bg_color #161616;
-      @define-color headerbar_backdrop_color #121212;
-      @define-color sidebar_bg_color #161616;
-      @define-color sidebar_backdrop_color #121212;
-      @define-color secondary_sidebar_bg_color #121212;
-      @define-color card_bg_color #1c1c1c;
-      @define-color dialog_bg_color #181818;
-      @define-color popover_bg_color #1c1c1c;
-      @define-color thumbnail_bg_color #1c1c1c;
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --window-bg-color: #121212;
+          --view-bg-color: #0d0d0d;
+          --headerbar-bg-color: #161616;
+          --headerbar-backdrop-color: #121212;
+          --sidebar-bg-color: #161616;
+          --sidebar-backdrop-color: #121212;
+          --secondary-sidebar-bg-color: #121212;
+          --card-bg-color: #1c1c1c;
+          --dialog-bg-color: #181818;
+          --popover-bg-color: #1c1c1c;
+          --thumbnail-bg-color: #1c1c1c;
+        }
+      }
     '';
   };
   # Adwaita cursor (GNOME's) for apps outside GNOME too, e.g. in Hyprland:

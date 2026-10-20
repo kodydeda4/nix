@@ -111,6 +111,15 @@ hl.config({
 	},
 	decoration = {
 		rounding = 0, -- square window corners
+		-- frosted glass like the Mac's menu bar and dock (and behind Ghostty's
+		-- translucent background): stronger than Hyprland's default blur, with a
+		-- touch of color and grain
+		blur = {
+			size = 8,
+			passes = 4,
+			vibrancy = 0.2,
+			noise = 0.02,
+		},
 	},
 	animations = {
 		enabled = false, -- windows and workspaces switch instantly
@@ -259,6 +268,17 @@ hl.window_rule({
 })
 hl.bind(MEH .. " + F", hl.dsp.window.float({ action = "toggle" }))
 
+-- Noctalia's dock and panels (launcher, Cmd+Tab switcher, control
+-- center...) are translucent (dotfiles/noctalia): blur what's behind them,
+-- like the Mac, instead of showing it plainly. ignore_alpha: not the clear
+-- parts around them (shadows, corners).
+hl.layer_rule({
+	name = "blur-noctalia",
+	match = { namespace = "^noctalia-(dock|panel)" },
+	blur = true,
+	ignore_alpha = 0.1,
+})
+
 -- Magnet-style snapping, same keys as GNOME (tile@kody). Each rect is
 -- { x, y, width, height } as fractions of the screen minus Noctalia's bar.
 -- Noctalia's dock (Super+Alt shows/hides it). Its space is kept free here
@@ -267,7 +287,7 @@ hl.bind(MEH .. " + F", hl.dsp.window.float({ action = "toggle" }))
 -- Whether it's hidden lives in a file so it survives config reloads, and
 -- resets at log-in (Noctalia's dock is shown then too, see hyprland.start).
 local DOCK_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-dock-hidden"
-local DOCK_SPACE = 76 -- px the dock takes at the bottom (its exclusive zone)
+local DOCK_SPACE = 74 -- px the dock takes at the bottom (its exclusive zone, plus its 6px gap above the edge)
 local dock_space = DOCK_SPACE -- what's kept free right now (0 when hidden or zen)
 
 local function dock_hidden()

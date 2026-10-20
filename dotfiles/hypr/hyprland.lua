@@ -77,6 +77,9 @@ hl.on("monitor.added", function()
 	if lid_closed() then
 		laptop_screen(false)
 	end
+	-- the new monitor's menu bar fade (menubar-wallpaper.sh); after a moment,
+	-- once Noctalia has its wallpaper and bar up
+	hl.exec_cmd("sleep 3; bash " .. os.getenv("HOME") .. "/.config/hypr/menubar-wallpaper.sh")
 end)
 laptop_screen(not lid_closed())
 
@@ -92,6 +95,8 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("for v in 3 4; do ln -sf ~/.config/hypr/gtk.css ~/.config/gtk-$v.0/hyprland.css; done")
 	-- Noctalia's light / dark mode follows GNOME's (the one apps use)
 	hl.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/hypr/follow-appearance.sh")
+	-- the menu bar's blur fading into the wallpaper (menubar-wallpaper.sh)
+	hl.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/hypr/menubar-wallpaper.sh")
 end)
 
 -- Same cursor as GNOME (Adwaita, 24px). Without a theme set, Hyprland and each

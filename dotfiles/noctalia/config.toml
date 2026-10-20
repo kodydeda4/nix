@@ -29,6 +29,9 @@ show_count = false
 # running in the background.
 [hooks]
 theme_mode_changed = "bash ~/.config/hypr/follow-appearance.sh from-noctalia"
+# a newly picked wallpaper gets the menu bar's fading blur (the bar itself is
+# transparent, below): dotfiles/hypr/menubar-wallpaper.sh
+wallpaper_changed = "bash ~/.config/hypr/menubar-wallpaper.sh"
 
 [bar.default]
 # Full-width bar flush with the screen edges, like the Mac's menu bar

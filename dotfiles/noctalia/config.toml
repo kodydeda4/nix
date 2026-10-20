@@ -52,6 +52,14 @@ start = ["workspaces"]
 # or control-center button; the control center opens by clicking the clock.)
 end = ["tray", "gamemode", "notifications", "clipboard", "bluetooth", "brightness", "volume", "network", "battery", "session"]
 
+# The 4K ASUS monitor: everything in the bar 30% bigger (its items looked tiny
+# there). Matched by model, so it works on any port; the laptop screen keeps
+# the sizes above.
+[bar.default.monitor.asus_4k]
+match = "XG32UCWG"
+scale = 1.3
+thickness = 44
+
 # Game mode button: plain Ctrl, Alt and Super while on (keyd's modifier
 # remaps off); see dotfiles/hypr/gamemode.sh. It lights up while on: gamemode.sh
 # writes that look to zz-gamemode-state.toml next to this file.

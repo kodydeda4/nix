@@ -15,6 +15,15 @@ directory = "~/Pictures/Screenshots" # default is ~/Pictures
 [shell.panel]
 transparency_mode = "glass" # translucent launcher, control center, panels
 
+# Cmd+Tab switcher (bound in dotfiles/hypr), like the Mac's: a strip of app
+# icons, most recently used first, so a quick Cmd+Tab goes to the last app
+[shell.window_switcher]
+style = "compact"
+mru = true
+current_workspace_only = false
+# (Cmd+H / Cmd+L in the switcher: keyd sends them as Alt+Shift+Tab / Alt+Tab,
+# hosts/nixos)
+
 [bar.default]
 # Full-width bar flush with the screen edges, like the Mac's menu bar
 margin_ends = 0

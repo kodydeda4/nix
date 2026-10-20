@@ -252,6 +252,16 @@ in {
       icon = "weather-clear-night-symbolic";
       exec = "bash ${config.home.homeDirectory}/.config/hypr/toggle-appearance.sh";
     };
+    # Replaces GNOME Clocks' own entry (same name): in Hyprland it opens Clocks
+    # or brings its window forward, even when it's hidden or behind others,
+    # which the usual way of opening it didn't (open-clocks.sh).
+    "org.gnome.clocks" = {
+      name = "Clocks";
+      comment = "Clocks for world times, plus alarms, stopwatch and a timer";
+      icon = "org.gnome.clocks";
+      exec = "bash ${config.home.homeDirectory}/.config/hypr/open-clocks.sh";
+      categories = ["GNOME" "GTK" "Utility" "Clock"];
+    };
   };
 
   # Ghostty on Linux: keyd makes Cmd send Ctrl and the Ctrl-labeled key send

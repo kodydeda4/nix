@@ -130,6 +130,9 @@
       };
       "appswitch:A" = {
         tab = "A-tab";
+        # vim keys while Cmd is still held: L = next (like Tab), H = previous
+        l = "A-tab";
+        h = "A-S-tab";
       };
       # (not "cmd+shift": Nix sorts sections, and keyd needs cmd defined first)
       "shift+cmd" = {

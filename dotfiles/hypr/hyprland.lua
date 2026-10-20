@@ -144,8 +144,15 @@ hl.gesture({
 
 -- Cmd+Space: Noctalia's launcher (Spotlight/Raycast)
 hl.bind(CMD .. " + space", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
--- Cmd+Tab (keyd sends Alt+Tab): next window
-hl.bind("ALT + Tab", hl.dsp.window.cycle_next())
+-- Cmd+Tab: Noctalia's window switcher, like the Mac's. Hold Cmd, tap Tab or L
+-- (Shift+Tab or H goes back) and let go to switch; a quick Cmd+Tab goes
+-- straight back to the previous window. keyd normally turns Cmd+Tab into
+-- Alt+Tab with Alt held as long as Cmd is (and Cmd+L / Cmd+H into Alt+Tab /
+-- Alt+Shift+Tab, hosts/nixos); the Cmd (Ctrl) forms catch it arriving as-is or
+-- with both held. Shift+Tab isn't bound here, so it reaches the open switcher.
+for _, mods in ipairs({ "ALT", CMD, CMD .. " + ALT" }) do
+	hl.bind(mods .. " + Tab", hl.dsp.exec_cmd("noctalia msg window-switcher hold"))
+end
 
 -- Cmd+` / Cmd+Shift+`: next/previous window of the focused app, like the Mac.
 local function cycle_app_windows(step)
@@ -192,6 +199,20 @@ hl.bind(CMD .. " + SHIFT + grave", cycle_app_windows(-1))
 hl.bind(CMD .. " + SHIFT + 4", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
 hl.bind(CMD .. " + H", hl.dsp.window.move({ workspace = "special:hidden", follow = false }))
 hl.bind(CMD .. " + SHIFT + H", hl.dsp.workspace.toggle_special("hidden"))
+
+-- An app hidden with Cmd+H that asks to come forward (a timer or alarm going
+-- off, a notification clicked): bring it back to the current workspace and
+-- focus it.
+hl.on("window.urgent", function(w)
+	if not (w and w.address and w.workspace and w.workspace.name == "special:hidden") then
+		return
+	end
+	local ws = hl.get_active_workspace()
+	local sel = "address:" .. w.address
+	hl.dispatch(hl.dsp.window.move({ workspace = ws and ws.id or 1, window = sel }))
+	hl.dispatch(hl.dsp.focus({ window = sel }))
+	hl.dispatch(hl.dsp.window.bring_to_top())
+end)
 -- Cmd+Q force-kills the focused app (SIGKILL, no prompts, no "minimize to
 -- tray"): its whole process tree, via kill-app.sh next to this file.
 -- Cmd+W / Cmd+N are left to apps (they see Ctrl+W/N).
@@ -668,6 +689,11 @@ hl.bind(MEH .. " + N", app({ "obsidian", "md.obsidian.Obsidian" }, "obsidian"))
 hl.bind(MEH .. " + A", app({ "com.anthropic.Claude", "Claude" }, "claude-desktop"))
 hl.bind(MEH .. " + R", app({ "org.gnome.Nautilus", "nautilus" }, "nautilus"))
 hl.bind(MEH .. " + D", app({ "discord" }, "discord"))
+
+-- also `hyprctl eval 'open_clocks()'`: the launcher's Clocks entry (home.nix).
+-- Clocks keeps running with its window closed or hidden, and opening it again
+-- the usual way didn't bring the window forward.
+_G.open_clocks = app({ "org.gnome.clocks" }, "gnome-clocks")
 
 -- Meh+W: Noctalia's Wallhaven browser (plugin enabled in dotfiles/noctalia)
 hl.bind(MEH .. " + W", hl.dsp.exec_cmd("noctalia msg panel-toggle noctalia/wallhaven:browser"))

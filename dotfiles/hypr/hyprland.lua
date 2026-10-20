@@ -109,7 +109,7 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.config({
 	general = {
 		gaps_in = 12, -- (zen mode, Meh+0, sets these and the border to 0)
-		gaps_out = 24,
+		gaps_out = { top = 8, right = 24, bottom = 24, left = 24 }, -- less under the menu bar (BAR_GAP, below)
 		border_size = 2,
 		layout = "dwindle",
 		resize_on_border = true, -- drag a window's edge to resize it, like the Mac
@@ -321,6 +321,9 @@ end
 -- between two windows side by side. Zen mode (Meh+0) sets it to 0.
 local GAP_NORMAL = 24
 local GAP = GAP_NORMAL
+-- Under the menu bar the gap is smaller: the bar's own height already sets the
+-- windows apart from it. (GAP again when the bar's hidden.)
+local BAR_GAP = 8
 
 local RECTS = {
 	left_half = { 0, 0, 1 / 2, 1 },
@@ -341,6 +344,11 @@ local RECTS = {
 local function geometry(rect, monitor)
 	local ax, ay, aw, ah = work_area(monitor)
 	ax, ay, aw, ah = ax + GAP / 2, ay + GAP / 2, aw - GAP, ah - GAP
+	if ay > (monitor or hl.get_active_monitor()).y + GAP / 2 then
+		-- the bar's on top: start BAR_GAP below it, not GAP
+		local d = math.max(GAP - BAR_GAP, 0)
+		ay, ah = ay - d, ah + d
+	end
 	local x, y, w, h = rect[1], rect[2], rect[3], rect[4]
 	return math.floor(ax + x * aw + GAP / 2),
 		math.floor(ay + y * ah + GAP / 2),
@@ -442,7 +450,12 @@ local function apply_decorations()
 	hl.config({
 		general = {
 			gaps_in = no_gaps and 0 or 12,
-			gaps_out = no_gaps and 0 or 24,
+			gaps_out = no_gaps and 0 or {
+				top = flag_set("bar-hidden") and GAP_NORMAL or BAR_GAP, -- less under the menu bar
+				right = 24,
+				bottom = 24,
+				left = 24,
+			},
 			border_size = (zen_shown or flag_set("borders-off")) and 0 or 2,
 		},
 		decoration = { shadow = { enabled = not (zen_shown or flag_set("shadows-off")) } },

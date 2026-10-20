@@ -75,12 +75,14 @@ tooltip = "Game mode: off"
 left = "exec bash ~/.config/hypr/gamemode.sh toggle"
 
 [widget.workspaces]
-# Plain dots for workspaces 1-5 (kept alive in dotfiles/hypr); the selected
-# one is highlighted in the wallpaper color
+# Small dots for workspaces 1-5 (kept alive in dotfiles/hypr), like the page
+# dots on macOS / iOS: the current one in the bar's text color, the rest dimmer
 show_labels = false
-active_pill_size = 1.0
+show_icons = false
+pill_scale = 0.7 # thinner than Noctalia's pills (1.0)
+active_pill_size = 1.0 # round, not stretched into a pill
 inactive_pill_size = 1.0
-focused_color = "primary"
+focused_color = "on_surface"
 occupied_color = "on_surface_variant"
 empty_color = "outline" # lighter than surface_variant, still dimmer than occupied
 

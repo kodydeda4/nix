@@ -117,13 +117,14 @@ hl.config({
 	decoration = {
 		rounding = 0, -- square window corners
 		-- frosted glass like the Mac's menu bar and dock (and behind Ghostty's
-		-- translucent background): stronger than Hyprland's default blur, with a
-		-- touch of color and grain
+		-- translucent background): a soft, Gaussian-looking blur about the Mac's
+		-- width (radius ~size * 2^passes: 5 and 3 is ~40px; 8 and 4 smeared
+		-- ~128px into dark mush), with a touch of color and grain
 		blur = {
-			size = 8,
-			passes = 4,
+			size = 1,
+			passes = 2,
 			vibrancy = 0.2,
-			noise = 0.02,
+			noise = 0.08,
 		},
 	},
 	animations = {
@@ -172,9 +173,12 @@ hl.bind(CMD .. " + space", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher")
 -- here, so it reaches the open switcher.
 local SWITCHER = "kody/app-switcher:switcher"
 for _, mods in ipairs({ "ALT", CMD, CMD .. " + ALT" }) do
-	hl.bind(mods .. " + Tab", hl.dsp.exec_cmd(
-		"noctalia msg plugin " .. SWITCHER .. " all next >/dev/null 2>&1 || noctalia msg panel-open " .. SWITCHER
-	))
+	hl.bind(
+		mods .. " + Tab",
+		hl.dsp.exec_cmd(
+			"noctalia msg plugin " .. SWITCHER .. " all next >/dev/null 2>&1 || noctalia msg panel-open " .. SWITCHER
+		)
+	)
 end
 
 -- Cmd+` / Cmd+Shift+`: next/previous window of the focused app, like the Mac.

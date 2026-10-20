@@ -44,7 +44,7 @@
   };
 
   # Fonts like the Mac: SF Pro for the UI, SF Mono for code, Apple emoji
-  # everywhere. (GNOME's own font settings are in home.nix; Ghostty keeps Meslo.)
+  # everywhere. (GNOME's own font settings are in home.nix.)
   fonts.packages = let
     apple-fonts = inputs.apple-fonts.packages.${pkgs.stdenv.hostPlatform.system};
     # Apple Color Emoji converted for Linux (github.com/samuelngs/apple-emoji-ttf)
@@ -57,16 +57,27 @@
   in [apple-fonts.sf-pro apple-fonts.sf-mono apple-emoji];
   fonts.fontconfig = {
     defaultFonts = {
-      sansSerif = ["SF Pro"];
+      sansSerif = ["SF Pro Text"];
       monospace = ["SF Mono"];
       emoji = ["Apple Color Emoji"];
     };
     # Apps that ask for Noto Color Emoji by name (Chromium/Brave, GNOME)
     # get Apple's instead.
+    # SF Pro: only the fixed-style files (SF Pro Text / Display). The variable
+    # SF-Pro.ttf also holds Compressed / Condensed / Expanded widths, and
+    # Electron apps (Obsidian, Discord...) ask for a weight only, so bold text
+    # could come out squashed. "SF Pro" (GNOME's font setting) means SF Pro Text.
     localConf = ''
       <?xml version="1.0"?>
       <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
       <fontconfig>
+        <selectfont>
+          <rejectfont><glob>*/SF-Pro.ttf</glob></rejectfont>
+        </selectfont>
+        <alias binding="same">
+          <family>SF Pro</family>
+          <prefer><family>SF Pro Text</family></prefer>
+        </alias>
         <match target="pattern">
           <test qual="any" name="family"><string>Noto Color Emoji</string></test>
           <edit name="family" mode="assign" binding="same"><string>Apple Color Emoji</string></edit>

@@ -90,6 +90,8 @@ hl.on("hyprland.start", function()
 	-- Square GTK window corners here only; GNOME removes these links at log-in
 	-- (see home.nix).
 	hl.exec_cmd("for v in 3 4; do ln -sf ~/.config/hypr/gtk.css ~/.config/gtk-$v.0/hyprland.css; done")
+	-- Noctalia's light / dark mode follows GNOME's (the one apps use)
+	hl.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/hypr/follow-appearance.sh")
 end)
 
 -- Same cursor as GNOME (Adwaita, 24px). Without a theme set, Hyprland and each
@@ -144,14 +146,21 @@ hl.gesture({
 
 -- Cmd+Space: Noctalia's launcher (Spotlight/Raycast)
 hl.bind(CMD .. " + space", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
--- Cmd+Tab: Noctalia's window switcher, like the Mac's. Hold Cmd, tap Tab or L
--- (Shift+Tab or H goes back) and let go to switch; a quick Cmd+Tab goes
--- straight back to the previous window. keyd normally turns Cmd+Tab into
--- Alt+Tab with Alt held as long as Cmd is (and Cmd+L / Cmd+H into Alt+Tab /
--- Alt+Shift+Tab, hosts/nixos); the Cmd (Ctrl) forms catch it arriving as-is or
--- with both held. Shift+Tab isn't bound here, so it reaches the open switcher.
+-- Cmd+Tab: my app switcher (dotfiles/noctalia/plugins/app-switcher): one tile
+-- per app in a 4-column grid. Hold Cmd and use h/j/k/l (or Tab, arrows, Cmd+Tab
+-- again) to move; let go of Cmd to switch, Esc cancels. A panel only gets
+-- messages while it's open, so the first press opens it and later ones tell it
+-- to move to the next app. keyd turns Cmd+Tab into Alt+Tab with Alt held until
+-- Cmd is let go (and Cmd+L / Cmd+H into Alt+Tab / Alt+Shift+Tab, hosts/nixos),
+-- so the switcher sees Alt let go when Cmd is. (A release bind here didn't
+-- fire: Hyprland skips it when Tab was pressed in between.) The Cmd (Ctrl)
+-- forms catch Cmd+Tab arriving as-is or with both held. Shift+Tab isn't bound
+-- here, so it reaches the open switcher.
+local SWITCHER = "kody/app-switcher:switcher"
 for _, mods in ipairs({ "ALT", CMD, CMD .. " + ALT" }) do
-	hl.bind(mods .. " + Tab", hl.dsp.exec_cmd("noctalia msg window-switcher hold"))
+	hl.bind(mods .. " + Tab", hl.dsp.exec_cmd(
+		"noctalia msg plugin " .. SWITCHER .. " all next >/dev/null 2>&1 || noctalia msg panel-open " .. SWITCHER
+	))
 end
 
 -- Cmd+` / Cmd+Shift+`: next/previous window of the focused app, like the Mac.
@@ -689,6 +698,22 @@ hl.bind(MEH .. " + N", app({ "obsidian", "md.obsidian.Obsidian" }, "obsidian"))
 hl.bind(MEH .. " + A", app({ "com.anthropic.Claude", "Claude" }, "claude-desktop"))
 hl.bind(MEH .. " + R", app({ "org.gnome.Nautilus", "nautilus" }, "nautilus"))
 hl.bind(MEH .. " + D", app({ "discord" }, "discord"))
+
+-- also `hyprctl eval 'switcher_focus("0x...")'`: the Cmd+Tab app switcher
+-- (dotfiles/noctalia/plugins/app-switcher) picking an app's window, by address.
+-- Brought back first if Cmd+H hid it, and raised (windows float).
+_G.switcher_focus = function(address)
+	local sel = "address:" .. address
+	local bare = address:gsub("^0x", "")
+	for _, w in ipairs(hl.get_windows() or {}) do
+		if tostring(w.address):gsub("^0x", "") == bare and w.workspace and w.workspace.special then
+			local ws = hl.get_active_workspace()
+			hl.dispatch(hl.dsp.window.move({ workspace = ws and ws.id or 1, window = sel }))
+		end
+	end
+	hl.dispatch(hl.dsp.focus({ window = sel }))
+	hl.dispatch(hl.dsp.window.bring_to_top())
+end
 
 -- also `hyprctl eval 'open_clocks()'`: the launcher's Clocks entry (home.nix).
 -- Clocks keeps running with its window closed or hidden, and opening it again

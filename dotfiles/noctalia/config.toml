@@ -21,8 +21,16 @@ transparency_mode = "glass" # translucent launcher, control center, panels
 style = "compact"
 mru = true
 current_workspace_only = false
+show_caption = false # just the icons: no window titles
+show_count = false
 # (Cmd+H / Cmd+L in the switcher: keyd sends them as Alt+Shift+Tab / Alt+Tab,
 # hosts/nixos)
+
+# Switching light / dark from Noctalia switches the apps too (GNOME's
+# color-scheme); the other way round is dotfiles/hypr/follow-appearance.sh
+# running in the background.
+[hooks]
+theme_mode_changed = "bash ~/.config/hypr/follow-appearance.sh from-noctalia"
 
 [bar.default]
 # Full-width bar flush with the screen edges, like the Mac's menu bar
@@ -99,7 +107,27 @@ directory = "~/Pictures/wallpapers"
 
 [plugins]
 # Wallhaven: browse wallhaven.cc and set a wallpaper (Meh+W in Hyprland).
-enabled = ["noctalia/wallhaven"]
+# App Switcher: Cmd+Tab (plugins/app-switcher next to this file).
+enabled = ["noctalia/wallhaven", "kody/app-switcher"]
+
+# Noctalia's two default sources, plus my own plugins in plugins/ here
+[[plugins.source]]
+name = "official"
+kind = "git"
+location = "https://github.com/noctalia-dev/official-plugins"
+enabled = true
+
+[[plugins.source]]
+name = "community"
+kind = "git"
+location = "https://github.com/noctalia-dev/community-plugins"
+enabled = true
+
+[[plugins.source]]
+name = "kody"
+kind = "path"
+location = "~/.config/noctalia/plugins"
+enabled = true
 
 # Lock screen: the display turns off after 3 seconds without input there, and
 # back on with any key or mouse move. (Unlocked: after 11 minutes, Noctalia's

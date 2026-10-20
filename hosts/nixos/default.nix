@@ -224,6 +224,21 @@
     });
   '';
 
+  # nn and the launcher's Nix Reload entry (dotfiles/hypr/nix-reload.sh) rebuild
+  # without asking for a password. (Which means passwordless root, since any
+  # config can be built: fine for a single-user laptop.)
+  security.sudo.extraRules = [
+    {
+      users = ["kody"];
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/nixos-rebuild";
+          options = ["NOPASSWD"];
+        }
+      ];
+    }
+  ];
+
   # Run prebuilt Linux binaries that expect /lib64/ld-linux-x86-64.so.2, like the
   # Claude Code binary Claude Desktop downloads (without this: exit code 127).
   programs.nix-ld.enable = true;

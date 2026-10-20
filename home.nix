@@ -252,6 +252,12 @@ in {
       icon = "weather-clear-night-symbolic";
       exec = "bash ${config.home.homeDirectory}/.config/hypr/toggle-appearance.sh";
     };
+    nix-reload = {
+      name = "Nix Reload";
+      comment = "Apply the nix config (nn), with a notification when it's done";
+      icon = "nix-snowflake";
+      exec = "bash ${config.home.homeDirectory}/.config/hypr/nix-reload.sh";
+    };
     # Replaces GNOME Clocks' own entry (same name): in Hyprland it opens Clocks
     # or brings its window forward, even when it's hidden or behind others,
     # which the usual way of opening it didn't (open-clocks.sh).

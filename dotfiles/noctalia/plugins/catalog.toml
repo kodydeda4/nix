@@ -1,0 +1,15 @@
+# Noctalia plugin catalog for this folder (the "kody" source in ../config.toml):
+# one [[plugin]] row per plugin subdirectory, matching its plugin.toml.
+
+[[plugin]]
+id = "kody/app-switcher"
+name = "App Switcher"
+version = "1.0.0"
+updated_at = 1792540800
+added_at = 1792540800
+author = "kody"
+license = "MIT"
+icon = "app-window"
+description = "A Mac-style app switcher with vim keys."
+plugin_api = 26
+tags = ["hyprland", "productivity"]

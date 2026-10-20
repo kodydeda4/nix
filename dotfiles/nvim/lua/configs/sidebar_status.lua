@@ -2,7 +2,7 @@
 --   under the file tree: the repo name, then the git branch
 --   under the editor, on its solid background: the vim mode, plus the
 --     language server's progress while it's busy ("Indexing…"), on the left;
---     error / warning / hint / info counts on the right edge (right-click
+--     error / warning / hint / info counts on the right edge (click
 --     one to hide / show that severity in the editor)
 -- Every item shows even when it's zero or idle, so the layout stays put.
 -- With the tree closed, only the editor part shows, across the whole width.
@@ -71,12 +71,12 @@ local function branch()
   return "%#SidebarBranch# " .. head .. " "
 end
 
--- Right-click a count to hide / show that severity in the editor (underline,
+-- Click a count (left or right) to hide / show that severity in the editor (underline,
 -- signs, virtual text); a hidden one keeps counting but is crossed out.
 local hidden = {}
 local shown_in = { "underline", "signs", "virtual_text", "virtual_lines" }
 function _G.SidebarDiagnosticClick(severity, _, button)
-  if button ~= "r" then
+  if button ~= "l" and button ~= "r" then
     return
   end
   hidden[severity] = not hidden[severity] or nil

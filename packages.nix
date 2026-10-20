@@ -122,6 +122,7 @@
     github-desktop
     gnomeExtensions.blur-my-shell
     mpv
+    overskride # Bluetooth settings
     papirus-icon-theme
     gcc
     git

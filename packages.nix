@@ -44,6 +44,7 @@
     wasm-bindgen-cli_0_2_129
     yazi
     zoxide
+    awscli2
   ];
 
   fonts = with pkgs; [

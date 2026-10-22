@@ -28,6 +28,14 @@ in {
   # ~/.config/starship.toml -> dotfiles/starship/starship.toml
   xdg.configFile."starship.toml".source = link "starship/starship.toml";
 
+  # direnv + nix-direnv: a repo's `.envrc` (`use flake`) loads its dev shell on
+  # `cd`, cached so it's instant after the first load. The zsh hook is in
+  # dotfiles/zsh/.zshrc (Home Manager doesn't manage that file).
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
   # ~/.config/ghostty -> dotfiles/ghostty
   xdg.configFile."ghostty".source = link "ghostty";
 
@@ -259,7 +267,7 @@ in {
       exec = "bash ${config.home.homeDirectory}/.config/hypr/toggle-appearance.sh";
     };
     nix-reload = {
-      name = "Nix Reload";
+      name = "Nix Rebuild";
       comment = "Apply the nix config (nn), with a notification when it's done";
       icon = "nix-snowflake";
       exec = "bash ${config.home.homeDirectory}/.config/hypr/nix-reload.sh";

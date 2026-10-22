@@ -23,7 +23,7 @@ id=$(notify "Rebuilding…" "Applying the nix config (nn)")
 start=$(date +%s)
 
 # -n: never ask for a password (hosts/nixos lets nixos-rebuild run without one)
-if /run/wrappers/bin/sudo -n "$SW/nixos-rebuild" switch --flake "$REPO#nixos" >"$LOG" 2>&1; then
+if /run/wrappers/bin/sudo -n "$SW/nixos-rebuild" switch --flake "$REPO" >"$LOG" 2>&1; then
 	notify "Done" "Nix config applied in $(($(date +%s) - start))s" "$id" >/dev/null
 else
 	status=$?

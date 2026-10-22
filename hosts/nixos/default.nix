@@ -1,17 +1,17 @@
-# The ThinkPad (NixOS + GNOME). All packages are listed in packages.nix;
-# this file is the Linux-only part: boot, desktop, hardware services, apps.
+# Every NixOS machine (ThinkPad, desktop PC). All packages are listed in
+# packages.nix; this file is the Linux-only part: boot, desktop, hardware
+# services, apps. Per-machine bits (hardware config, hostname, stateVersion)
+# are in hosts/nixos-laptop and hosts/nixos-desktop.
 {
+  config,
   lib,
   pkgs,
   inputs,
   ...
 }: {
-  imports = [./hardware-configuration.nix];
-
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "nixos";
   networking.networkmanager.enable = true;
   # No EDNS0 in resolv.conf: the home router mangles cached EDNS replies (puts
   # the OPT record before the answer), so glibc rejects them and lookups like
@@ -105,6 +105,22 @@
   # Steam via its module, not a plain package: it's a 32-bit app and needs the
   # 32-bit graphics drivers this turns on (without them: "glXChooseVisual failed").
   programs.steam.enable = true;
+  # Steam is an X11 app and Hyprland draws X11 apps at full resolution
+  # (force_zero_scaling, dotfiles/hypr), so Steam scales its own UI from the
+  # X DPI (Xft.dpi; STEAM_FORCE_DESKTOPUI_SCALING is gone from current Steam).
+  # Set to the focused monitor's scale (96 DPI = 1x) each time Steam starts:
+  # it can't change while running, so quit it with Cmd+Q and reopen after
+  # changing the scale. Other X11 apps started afterwards follow it too.
+  # Outside Hyprland (Big Picture in gamescope) it's left alone.
+  programs.steam.package = pkgs.steam.override {
+    extraProfile = ''
+      if [ -n "''${HYPRLAND_INSTANCE_SIGNATURE-}" ]; then
+        dpi=$(${config.programs.hyprland.package}/bin/hyprctl monitors -j 2>/dev/null \
+          | ${pkgs.jq}/bin/jq -r '.[] | select(.focused) | .scale * 96 | round')
+        [ -n "$dpi" ] && echo "Xft.dpi: $dpi" | ${pkgs.xrdb}/bin/xrdb -merge
+      fi
+    '';
+  };
 
   # Caps Lock: tap = Esc, hold = Ctrl+Super+Alt (like the Mac's Karabiner setup).
   # Ctrl and Alt are swapped on both sides.
@@ -262,9 +278,4 @@
     keybindings = true;
     fuzzyCompletion = true;
   };
-
-  # Used for backwards compatibility. Set it to the NixOS version you install
-  # with (the installer's /etc/nixos/configuration.nix shows it) and never
-  # change it afterwards.
-  system.stateVersion = "26.05";
 }

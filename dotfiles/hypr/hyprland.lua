@@ -31,6 +31,16 @@ hl.monitor({
 	scale = 1.25,
 })
 
+-- Display settings app (nwg-displays) saves here, per machine (gitignored).
+-- Loaded after the defaults above so its settings win.
+local monitors_file = os.getenv("HOME") .. "/.config/hypr/monitors.lua"
+if io.open(monitors_file) then
+	local ok, err = pcall(dofile, monitors_file)
+	if not ok then
+		print("monitors.lua: " .. tostring(err))
+	end
+end
+
 -- Lid closed with another monitor plugged in: turn the laptop screen off, so
 -- its workspaces move to the other monitor and the cursor can't wander onto
 -- it. Opening the lid turns it back on. (With nothing else plugged in, closing
@@ -106,6 +116,33 @@ hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_THEME", "Adwaita")
 hl.env("HYPRCURSOR_SIZE", "24")
 
+-- Steam is an X11 app, and Hyprland stretched it to the 4K monitor's 1.25x
+-- scale, which made its text blurry. Xwayland apps now draw at full
+-- resolution (force_zero_scaling, below) and Steam scales its own UI instead,
+-- from Xft.dpi, set to the focused monitor's scale when Steam starts
+-- (programs.steam, hosts/nixos).
+
+-- Animations: quick and Mac-like, about half the length of Hyprland's
+-- defaults. Speed is in tenths of a second (1.5 = 150 ms). Windows pop in
+-- with a fast spring, workspaces slide, menus/launcher fade.
+hl.curve("snap", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1 } } }) -- fast start, soft landing
+hl.curve("easeOutQuint", { type = "bezier", points = { { 0.23, 1 }, { 0.32, 1 } } })
+hl.curve("linear", { type = "bezier", points = { { 0, 0 }, { 1, 1 } } })
+hl.curve("springy", { type = "spring", mass = 1, stiffness = 400, dampening = 32 }) -- quick, barely any bounce
+
+hl.animation({ leaf = "global", enabled = true, speed = 3, bezier = "snap" })
+hl.animation({ leaf = "windows", enabled = true, speed = 2.5, spring = "springy" })
+hl.animation({ leaf = "windowsIn", enabled = true, speed = 2, spring = "springy", style = "popin 90%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.2, bezier = "linear", style = "popin 90%" })
+hl.animation({ leaf = "windowsMove", enabled = true, speed = 2.5, spring = "springy" })
+hl.animation({ leaf = "fade", enabled = true, speed = 1.5, bezier = "snap" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 1, bezier = "linear" })
+hl.animation({ leaf = "layers", enabled = true, speed = 2, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "layersOut", enabled = true, speed = 1, bezier = "linear", style = "fade" })
+hl.animation({ leaf = "workspaces", enabled = true, speed = 2.5, bezier = "snap", style = "slide" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2.5, bezier = "snap", style = "slidevert" })
+hl.animation({ leaf = "border", enabled = true, speed = 3, bezier = "easeOutQuint" })
+
 hl.config({
 	general = {
 		gaps_in = 12, -- (zen mode, Meh+0, sets these and the border to 0)
@@ -115,7 +152,7 @@ hl.config({
 		resize_on_border = true, -- drag a window's edge to resize it, like the Mac
 	},
 	decoration = {
-		rounding = 0, -- square window corners
+		rounding = 8, -- (zen mode, Meh+0, sets it to 0: square corners)
 		-- frosted glass like the Mac's menu bar and dock (and behind Ghostty's
 		-- translucent background): a soft, Gaussian-looking blur about the Mac's
 		-- width (radius ~size * 2^passes: 5 and 3 is ~40px; 8 and 4 smeared
@@ -128,7 +165,7 @@ hl.config({
 		},
 	},
 	animations = {
-		enabled = false, -- windows and workspaces switch instantly
+		enabled = true, -- short and snappy (curves and speeds below)
 	},
 	dwindle = {
 		preserve_split = true,
@@ -136,6 +173,9 @@ hl.config({
 	misc = {
 		force_default_wallpaper = 0,
 		disable_hyprland_logo = true,
+	},
+	xwayland = {
+		force_zero_scaling = true, -- sharp X11 apps (Steam) on the 1.25x monitor
 	},
 	input = {
 		kb_layout = "us",
@@ -392,8 +432,8 @@ local function snapped_rect(win)
 end
 
 -- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, and drops the
--- gaps, window borders and shadows, on the workspace you're on; Meh+0 there
--- again brings them back. Switching workspaces switches zen with it. Snapped
+-- gaps, window borders and rounded corners (shadows stay), on the workspace
+-- you're on; Meh+0 there again brings them back. Switching workspaces switches zen with it. Snapped
 -- windows are re-fitted to the new space. Which workspaces are zen lives in a
 -- file (one name per line) so it survives config reloads (Hyprland reloads on
 -- every save, and whenever Noctalia rewrites the border colors), and resets at
@@ -446,8 +486,8 @@ local function flag_set(name)
 	return f ~= nil
 end
 
--- gaps (and the snap padding, GAP), borders and shadows: off in zen mode or
--- when toggled off
+-- gaps (and the snap padding, GAP) and borders: off in zen mode or when
+-- toggled off. Shadows: only when toggled off. Corners: square in zen mode.
 local function apply_decorations()
 	local no_gaps = zen_shown or flag_set("gaps-off")
 	GAP = no_gaps and 0 or GAP_NORMAL
@@ -462,7 +502,10 @@ local function apply_decorations()
 			},
 			border_size = (zen_shown or flag_set("borders-off")) and 0 or 2,
 		},
-		decoration = { shadow = { enabled = not (zen_shown or flag_set("shadows-off")) } },
+		decoration = {
+			rounding = zen_shown and 0 or 8,
+			shadow = { enabled = not flag_set("shadows-off") },
+		},
 	})
 end
 

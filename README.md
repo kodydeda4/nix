@@ -6,9 +6,15 @@ desktop setup and dotfiles. One rebuild (`nn`) turns a fresh machine into my set
 | Machine | Flake output | Built on | Desktop |
 |---|---|---|---|
 | Mac | `#mac` | [nix-darwin](https://github.com/nix-darwin/nix-darwin) + [nix-homebrew](https://github.com/zhaofengli/nix-homebrew) | macOS |
-| ThinkPad | `#nixos` | NixOS | GNOME **or** Hyprland + Noctalia (pick at login) |
+| ThinkPad | `#nixos-laptop` | NixOS | GNOME **or** Hyprland + Noctalia (pick at login) |
+| Desktop PC | `#nixos-desktop` | NixOS | same as the ThinkPad |
 
-Both use [Home Manager](https://github.com/nix-community/home-manager) for the
+The two NixOS machines share `hosts/nixos`; `hosts/nixos-laptop` and
+`hosts/nixos-desktop` only hold each one's hardware config, hostname and
+`stateVersion`. Flake outputs are named after hostnames, so `nn` builds the
+right one.
+
+All use [Home Manager](https://github.com/nix-community/home-manager) for the
 dotfiles.
 
 ## How it fits together
@@ -19,7 +25,7 @@ There are three layers. Each machine stacks them like this:
                       flake.nix
           (inputs, and which files make each machine)
                  │                         │
-            #mac │                         │ #nixos
+            #mac │                         │ #nixos-laptop / #nixos-desktop
                  ▼                         ▼
    ┌─────────────────────────┐ ┌─────────────────────────┐
    │ 1. SYSTEM (root)        │ │ 1. SYSTEM (root)        │
@@ -104,7 +110,7 @@ Run `scripts` to list them, `scripts <name>` for one's full usage.
 
 | Command | What it does |
 |---|---|
-| `nn` | Apply the config (`darwin-rebuild … #mac` / `nixos-rebuild … #nixos`) |
+| `nn` | Apply the config (`darwin-rebuild … #mac` / `nixos-rebuild`, picked by hostname) |
 | `repos` | Clone any of my repos missing from `~/Developer` (`repos --list` shows which) |
 | `r` | Open yazi; cd to wherever you quit it (`r.zsh`, a shell function) |
 | `fpr` | Run SwiftFormat on my Swift repos |
@@ -148,7 +154,7 @@ it before rebuilding, or Nix won't find it.
 Check a change still builds on the *other* machine without switching to it:
 
 ```bash
-nix eval .#nixosConfigurations.nixos.config.system.build.toplevel.drvPath
+nix eval .#nixosConfigurations.nixos-laptop.config.system.build.toplevel.drvPath
 ```
 
 ```bash
@@ -233,27 +239,24 @@ the wallpaper) and `dotfiles/noctalia/zz-gamemode-state.toml`.
    Afterwards, open a new terminal and use `nn`.
 4. Work through the [manual steps](#manual-steps-for-the-mac-cant-be-automated) below.
 
-## New ThinkPad
+## New Linux machine (ThinkPad / desktop PC)
 
 1. **Install NixOS** from the GNOME graphical ISO (nixos.org/download). Choose
    any desktop in the installer (this config replaces it), and name the user
    **`kody`**.
-2. **Clone this repo** to the exact path:
+2. **Clone, copy in the installer's hardware config and `stateVersion`, and
+   build**, all in one go. Set `HOST` to the machine: `nixos-desktop` or
+   `nixos-laptop` (its folder in `hosts/`, its flake output and its hostname):
    ```bash
-   nix-shell -p git --run 'git clone https://github.com/kodydeda4/nix.git ~/Developer/personal/Developer/nix'
+   HOST=nixos-desktop; nix-shell -p git --run 'git clone https://github.com/kodydeda4/nix.git ~/Developer/personal/Developer/nix' && cd ~/Developer/personal/Developer/nix && cp /etc/nixos/hardware-configuration.nix hosts/$HOST/ && sed -i "s/system.stateVersion = \".*\";/system.stateVersion = \"$(grep -oP 'system.stateVersion = "\K[^"]+' /etc/nixos/configuration.nix)\";/" hosts/$HOST/default.nix && sudo NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake "path:$PWD#$HOST"
    ```
-3. **Use the real hardware config** (disks, kernel modules) in place of the one in the repo:
-   ```bash
-   cp /etc/nixos/hardware-configuration.nix ~/Developer/personal/Developer/nix/hosts/nixos/
-   ```
-   Also set `system.stateVersion` in `hosts/nixos/default.nix` to the value
-   in `/etc/nixos/configuration.nix`. Commit both.
-4. **First build** (adds flakes for this one command; the config turns them on for good):
-   ```bash
-   sudo NIX_CONFIG="experimental-features = nix-command flakes" nixos-rebuild switch --flake ~/Developer/personal/Developer/nix#nixos
-   ```
-   Reboot, log in, open Ghostty, and use `nn` from then on.
-5. ThinkPad manual steps:
+   (`path:` so the build sees the new, not-yet-committed hardware config;
+   `NIX_CONFIG` turns flakes on for this one command, the config turns them
+   on for good.) The machine's hostname becomes `$HOST`. Reboot, log in, open
+   Ghostty, and use `nn` from then on.
+3. **`git add hosts/$HOST`** before the first `nn` (it builds from git, which
+   ignores untracked files), and commit + push once SSH keys work (below).
+4. Manual steps:
    - [ ] SSH keys + `gh auth login` (same as the Mac steps below; `UseKeychain`
          is ignored on Linux, so run `ssh-add` after login if asked for a passphrase).
    - [ ] `sudo tailscale up` and sign in.
@@ -264,6 +267,17 @@ the wallpaper) and `dotfiles/noctalia/zz-gamemode-state.toml`.
 Not on the ThinkPad (yet): Raycast
 (Noctalia's launcher / GNOME search instead), espanso, Karabiner's
 Brave-profile shortcuts, Figma, and the music software.
+
+### Renaming a Linux machine
+
+The hostname is `networking.hostName` in `hosts/<machine>/default.nix`
+(`hostnamectl` changes get undone by the next rebuild). Rename the folder,
+the hostname and its line in `flake.nix`, then switch once by the new name,
+since `nn` looks for a config named after the *current* hostname:
+```bash
+sudo nixos-rebuild switch --flake ~/Developer/personal/Developer/nix#<new-name>
+```
+After that, `nn` works as usual.
 
 ## Manual steps for the Mac (can't be automated)
 
@@ -378,8 +392,8 @@ Don't set your name/email in GitHub Desktop's settings: it writes into
   Reset Package Caches.
 
 **ThinkPad**
-- **`hosts/nixos/hardware-configuration.nix` must be this machine's** (from the
-  installer), or it won't find its disks at boot.
+- **`hosts/<machine>/hardware-configuration.nix` must be that machine's** (from
+  the installer), or it won't find its disks at boot.
 - **Pick "Hyprland (uwsm-managed)"**, not "Hyprland", at login, or apps ignore
   dark mode and screen sharing / file pickers break.
 - **DNS lookups failing** ("Could not resolve hostname github.com"): the home

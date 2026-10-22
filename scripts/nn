@@ -4,7 +4,8 @@
 #
 # Applies the nix config: rebuilds and switches this machine from this repo.
 # On the Mac that's nix-darwin + Home Manager + Homebrew (#mac); on the
-# ThinkPad it's NixOS + Home Manager (#nixos). Asks for your password (sudo).
+# Linux machines it's NixOS + Home Manager (#nixos-laptop, #nixos-desktop).
+# Asks for your password (sudo).
 #
 # Usage:
 #   nn                  rebuild and switch
@@ -19,5 +20,6 @@ NIX_CONFIG_DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 if [[ "$(uname)" == "Darwin" ]]; then
 	exec sudo darwin-rebuild switch --flake "$NIX_CONFIG_DIR#mac" "$@"
 else
-	exec sudo nixos-rebuild switch --flake "$NIX_CONFIG_DIR#nixos" "$@"
+	# no #name: nixos-rebuild picks the config named after this machine's hostname
+	exec sudo nixos-rebuild switch --flake "$NIX_CONFIG_DIR" "$@"
 fi

@@ -85,16 +85,24 @@
       ];
     };
 
-    # ThinkPad (NixOS). Build using:
-    # $ nixos-rebuild build --flake .#nixos
-    nixosConfigurations."nixos" = nixpkgs.lib.nixosSystem {
-      specialArgs = {inherit self inputs;};
-      modules = [
-        shared
-        ./hosts/nixos
-        home-manager.nixosModules.home-manager
-        homeManagerConfig
-      ];
+    # NixOS machines, named after their hostnames (so `nixos-rebuild --flake .`
+    # picks the right one). Build using:
+    # $ nixos-rebuild build --flake .#nixos-laptop
+    nixosConfigurations = let
+      linux = host:
+        nixpkgs.lib.nixosSystem {
+          specialArgs = {inherit self inputs;};
+          modules = [
+            shared
+            ./hosts/nixos
+            host
+            home-manager.nixosModules.home-manager
+            homeManagerConfig
+          ];
+        };
+    in {
+      "nixos-laptop" = linux ./hosts/nixos-laptop;
+      "nixos-desktop" = linux ./hosts/nixos-desktop;
     };
 
     # Expose the package set, including overlays, for convenience.

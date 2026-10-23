@@ -236,6 +236,11 @@ return {
       -- full name offers its example first (configs/dioxus_snippets.lua)
       opts.sources.providers = opts.sources.providers or {}
       opts.sources.providers.snippets = {
+        -- ...but none right after `::` or `.`, where they'd bury the enum
+        -- cases / associated functions / methods rust-analyzer offers
+        should_show_items = function(ctx)
+          return not ctx.line:sub(1, ctx.bounds.start_col - 1):match "[:.]$"
+        end,
         transform_items = function(_, items)
           if vim.bo.filetype == "rust" then
             for _, item in ipairs(items) do

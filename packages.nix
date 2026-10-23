@@ -32,6 +32,7 @@
     nodejs
     prettier
     ripgrep
+    rustlings
     rustup
     shfmt
     smassh

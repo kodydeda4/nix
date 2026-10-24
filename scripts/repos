@@ -17,6 +17,7 @@ set -uo pipefail
 # folder (under ~/Developer) and clone URL. ~/Developer/work/foresightcares is
 # left out on purpose (cloned by hand).
 REPOS=(
+	"personal/Applications/browser                        git@github.com:kodydeda4/browser.git"
 	"personal/Applications/browser-homepage               git@github.com:kodydeda4/browser-homepage.git"
 	"personal/Applications/guitar-pro/guitar-pro          git@github.com:kodydeda4/guitar-pro.git"
 	"personal/Applications/guitar-pro/guitar-pro-rs       git@github.com:kodydeda4/guitar-pro-rs.git"
@@ -24,17 +25,17 @@ REPOS=(
 	"personal/Applications/guitar-pro/guitar-pro-website  git@github.com:kodydeda4/guitar-pro-website.git"
 	"personal/Applications/redfin/redfin                  git@github.com:kodydeda4/redfin.git"
 	"personal/Applications/redfin/redfin-prototypes       git@github.com:kodydeda4/redfin-prototypes.git"
+	"personal/Applications/redfin/redfin-rs               git@github.com:kodydeda4/redfin-rs.git"
 	"personal/Applications/redfin/redfin-swift            git@github.com:kodydeda4/redfin-swift.git"
 	"personal/Applications/redfin/redfin-web              git@github.com:kodydeda4/redfin-web.git"
 	"personal/Applications/website                        git@github.com:kodydeda4/website.git"
 	"personal/Developer/homebrew-tap                      git@github.com:kodydeda4/homebrew-tap.git"
 	"personal/Developer/nix                               git@github.com:kodydeda4/nix.git"
-	"personal/Documents/notes                             git@github.com:kodydeda4/notes.git"
 	"personal/Documents/resume                            git@github.com:kodydeda4/resume.git"
 	"personal/Music/guitar-pro-tabs                       git@github.com:kodydeda4/guitar-pro-tabs.git"
 	"personal/Music/guitar-pro-tabs-kody                  git@github.com:kodydeda4/guitar-pro-tabs-kody.git"
 	"personal/Pictures/wallpapers                         git@github.com:kodydeda4/wallpapers.git"
-	"personal/Study/rust                                  git@github.com:kodydeda4/rust.git"
+	"personal/Study/rust-study                            git@github.com:kodydeda4/rust-study.git"
 )
 
 # Empty folders that should exist anyway (somewhere to clone other people's code).

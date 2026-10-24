@@ -75,12 +75,15 @@ return {
     end,
   },
 
-  -- Swift file icons in Xcode's Swift-logo orange, Package files like Xcode
+  -- Swift file icons in Xcode's Swift-logo orange, Package files like Xcode;
+  -- Rust files get Ferris the crab instead of the R logo
   {
     "nvim-tree/nvim-web-devicons",
     opts = function(_, opts)
       opts.override_by_extension = vim.tbl_extend("force", opts.override_by_extension or {}, {
         swift = { icon = vim.fn.nr2char(0xF06E5), color = "#ea9046", name = "Swift" }, -- 󰛥
+        rs = { icon = vim.fn.nr2char(0xF323), color = "#f77b00", name = "Rs" }, --  (linux-ferris)
+        rlib = { icon = vim.fn.nr2char(0xF323), color = "#f77b00", name = "Rlib" },
       })
       -- Package.swift / Package.resolved like in Xcode's navigator
       opts.override_by_filename = vim.tbl_extend("force", opts.override_by_filename or {}, {
@@ -88,6 +91,20 @@ return {
         ["package.resolved"] = { icon = vim.fn.nr2char(0xF0626), color = "#f25c54", name = "SwiftPackageResolved" }, -- 󰘦 {}
       })
       return opts
+    end,
+    config = function(_, opts)
+      require("nvim-web-devicons").setup(opts)
+      -- the crab in Ferris's orange; a deeper one in light mode so it holds
+      -- up on white. After devicons' own ColorScheme handler, which puts the
+      -- color above back.
+      local function rust_color()
+        local color = vim.o.background == "light" and "#e85d04" or "#f77b00"
+        for _, name in ipairs { "DevIconRs", "DevIconRlib" } do
+          vim.api.nvim_set_hl(0, name, { fg = color })
+        end
+      end
+      rust_color()
+      vim.api.nvim_create_autocmd("ColorScheme", { callback = function() vim.schedule(rust_color) end })
     end,
   },
 

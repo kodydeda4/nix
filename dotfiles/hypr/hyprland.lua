@@ -95,9 +95,9 @@ laptop_screen(not lid_closed())
 
 hl.on("hyprland.start", function()
 	hl.exec_cmd("noctalia")
-	-- Zen mode (Meh+0) resets at log-in, but Noctalia remembers a hidden dock;
-	-- show it again once Noctalia is up.
-	hl.exec_cmd("for i in $(seq 40); do noctalia msg dock-show && break; sleep 0.5; done")
+	-- The dock starts hidden at log-in (Noctalia remembers a shown one); hide
+	-- it once Noctalia is up. The launcher's Toggle Dock entry shows it.
+	hl.exec_cmd("for i in $(seq 40); do noctalia msg dock-hide && break; sleep 0.5; done")
 	-- Game mode (bar button) starts off at log-in
 	hl.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/hypr/gamemode.sh off")
 	-- Square GTK window corners here only; GNOME removes these links at log-in
@@ -330,22 +330,24 @@ hl.layer_rule({
 
 -- Magnet-style snapping, same keys as GNOME (tile@kody). Each rect is
 -- { x, y, width, height } as fractions of the screen minus Noctalia's bar.
--- Noctalia's dock (Super+Alt shows/hides it). Its space is kept free here
--- rather than by Noctalia (reserve_space): Noctalia only gives it back ~2s
--- after hiding, so windows lagged and spamming the key lost track of them.
--- Whether it's hidden lives in a file so it survives config reloads, and
--- resets at log-in (Noctalia's dock is shown then too, see hyprland.start).
-local DOCK_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-dock-hidden"
+-- Noctalia's dock, hidden by default (the launcher's Toggle Dock entry
+-- shows/hides it). Its space is kept free here rather than by Noctalia
+-- (reserve_space): Noctalia only gives it back ~2s after hiding, so windows
+-- lagged and toggling quickly lost track of them. Whether it's shown lives in
+-- a file so it survives config reloads, and resets to hidden at log-in
+-- (Noctalia's dock is hidden then too, see hyprland.start).
+local DOCK_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-dock-shown"
 local DOCK_SPACE = 74 -- px the dock takes at the bottom (its exclusive zone, plus its 6px gap above the edge)
-local dock_space = DOCK_SPACE -- what's kept free right now (0 when hidden or zen)
 
 local function dock_hidden()
 	local f = io.open(DOCK_FILE, "r")
 	if f then
 		f:close()
 	end
-	return f ~= nil
+	return f == nil
 end
+
+local dock_space = dock_hidden() and 0 or DOCK_SPACE -- what's kept free right now (0 when hidden or zen)
 
 local function work_area(monitor)
 	local m = monitor or hl.get_active_monitor()
@@ -611,13 +613,10 @@ end
 hl.bind(MEH .. " + 0", toggle_zen)
 hl.bind(MEH .. " + 6", toggle_zen)
 
--- Cmd+Super (tap one while holding the other, nothing else): show/hide
--- Noctalia's dock, like the Mac's ⌥⌘D. Snapped windows grow into its space
--- or move clear of it right away. Does nothing in zen mode (the dock's
--- already hidden there). keyd turns the tap into F18 (XF86Launch9), sent
--- after it has let go of both modifiers (hosts/nixos); binding the modifier
--- keys' release here instead missed presses, since keyd taps Ctrl when Super
--- is let go.
+-- Show/hide Noctalia's dock. No key for it: run the launcher's Toggle Dock
+-- entry (home.nix), i.e. `hyprctl eval 'toggle_dock()'`. Snapped windows grow
+-- into its space or move clear of it right away. Does nothing in zen mode
+-- (the dock's already hidden there).
 local function toggle_dock()
 	if zen_shown then
 		return
@@ -625,20 +624,18 @@ local function toggle_dock()
 	refit_snapped(function()
 		local hide = not dock_hidden()
 		if hide then
+			os.remove(DOCK_FILE)
+		else
 			local f = io.open(DOCK_FILE, "w")
 			if f then
 				f:close()
 			end
-		else
-			os.remove(DOCK_FILE)
 		end
 		dock_space = hide and 0 or DOCK_SPACE
 		-- show/hide rather than toggle, so Noctalia can't drift out of step
 		hl.exec_cmd("noctalia msg " .. (hide and "dock-hide" or "dock-show"))
 	end)
 end
-hl.bind("XF86Launch9", toggle_dock)
--- also `hyprctl eval 'toggle_dock()'`: the launcher's Toggle Dock entry (home.nix)
 _G.toggle_dock = toggle_dock
 
 hl.on("workspace.active", function()

@@ -46,6 +46,11 @@ background_opacity = 0.0
 compositor_blur = false
 shadow = false
 border_width = 0.0
+# Same white text and icons in light and dark mode: the bar sits on the
+# wallpaper, not on a themed surface. (A widget's own `color` still wins, e.g.
+# the game mode button while on.)
+color = "#ffffff"
+icon_color = "#ffffff"
 widget_spacing = 14 # room between the items, like the Mac's (default 6)
 # Left side: just the workspace dots. (Launcher: Cmd+Space. Wallhaven: right
 # click the clock, or Meh+W.)
@@ -76,15 +81,16 @@ left = "exec bash ~/.config/hypr/gamemode.sh toggle"
 
 [widget.workspaces]
 # Small dots for workspaces 1-5 (kept alive in dotfiles/hypr), like the page
-# dots on macOS / iOS: the current one in the bar's text color, the rest dimmer
+# dots on macOS / iOS: the current one in the bar's white, the rest dimmer
+# (fixed, not theme colors, so they don't change with light / dark either)
 show_labels = false
 show_icons = false
 pill_scale = 0.7 # thinner than Noctalia's pills (1.0)
 active_pill_size = 1.0 # round, not stretched into a pill
 inactive_pill_size = 1.0
-focused_color = "on_surface"
-occupied_color = "on_surface_variant"
-empty_color = "outline" # lighter than surface_variant, still dimmer than occupied
+focused_color = "#ffffff"
+occupied_color = "#ffffffb3" # 70% white
+empty_color = "#ffffff66" # 40% white
 
 [widget.clock]
 # 12-hour clock in the bar
@@ -98,7 +104,7 @@ right = "panel-toggle noctalia/wallhaven:browser" # Wallhaven browser
 enabled = true
 show_dots = true # dot under every open app, like the Mac
 show_instance_count = false # just the dot, no window count
-reserve_space = false # Hyprland keeps its space free instead (dotfiles/hypr, Super+Alt)
+reserve_space = false # Hyprland keeps its space free instead (dotfiles/hypr, launcher's Toggle Dock)
 # Frosted glass like the Mac's dock: translucent over a blur (Hyprland's,
 # dotfiles/hypr), rounded all round, floating just above the screen edge, a
 # thin outline and no heavy shadow (it looked muddy in light mode)
@@ -163,5 +169,6 @@ enabled = true
 # default for this behavior.)
 [idle.behavior.screen-off]
 enabled = true
+action = "screen_off" # needed: this table replaces Noctalia's default one, it isn't merged into it
 timeout = 660
 locked_timeout = 3

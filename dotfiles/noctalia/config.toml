@@ -14,6 +14,17 @@ directory = "~/Pictures/Screenshots" # default is ~/Pictures
 
 [shell.panel]
 transparency_mode = "glass" # translucent launcher, control center, panels
+# Panels opened from the bar (control center, clipboard, power menu, wallpaper)
+# drop down under the item clicked, like the Mac's menus, not mid-screen.
+# Floating, not attached to the bar: an attached panel takes the bar's
+# background, which is fully transparent (below), so it had none.
+control_center_placement = "floating"
+session_placement = "floating"
+wallpaper_placement = "floating"
+open_near_click_control_center = true
+open_near_click_clipboard = true
+open_near_click_session = true
+open_near_click_wallpaper = true
 
 # Cmd+Tab switcher (bound in dotfiles/hypr), like the Mac's: a strip of app
 # icons, most recently used first, so a quick Cmd+Tab goes to the last app
@@ -55,10 +66,13 @@ widget_spacing = 14 # room between the items, like the Mac's (default 6)
 # Left side: just the workspace dots. (Launcher: Cmd+Space. Wallhaven: right
 # click the clock, or Meh+W.)
 start = ["workspaces"]
-# Right side, read right to left: power, battery, wifi, volume, brightness,
-# bluetooth, clipboard, notifications, then app tray icons. (No "now playing"
-# or control-center button; the control center opens by clicking the clock.)
-end = ["tray", "gamemode", "notifications", "clipboard", "bluetooth", "brightness", "volume", "network", "battery", "session"]
+# Nothing in the middle: the clock sits at the far right, like the Mac's
+center = []
+# Right side, read right to left: time, date, battery, wifi, volume,
+# bluetooth, clipboard, notifications, game mode, then power, brightness and
+# app tray icons. (No "now playing" or control-center button; the control
+# center opens by clicking the clock.)
+end = ["tray", "brightness", "session", "gamemode", "notifications", "clipboard", "bluetooth", "volume", "network", "battery", "date", "clock"]
 
 # The 4K ASUS monitor: everything in the bar 30% bigger (its items looked tiny
 # there). Matched by model, so it works on any port; the laptop screen keeps
@@ -93,12 +107,45 @@ occupied_color = "#ffffffb3" # 70% white
 empty_color = "#ffffff66" # 40% white
 
 [widget.clock]
-# 12-hour clock in the bar
+# 12-hour time at the far right of the bar, like the Mac's: "9:41 PM"
 format = "{:%-I:%M %p}"
 
 [widget.clock.actions]
 left = "panel-toggle control-center home" # what right click did (default left: calendar)
 right = "panel-toggle noctalia/wallhaven:browser" # Wallhaven browser
+
+# Battery, wifi and volume as just their icons, like the Mac's (no percentage
+# or network name next to them)
+[widget.battery]
+show_label = false
+
+[widget.network]
+show_label = false
+
+[widget.volume]
+show_label = false
+
+# The date, just left of the time: "Sun Oct 25". A second clock widget;
+# either click opens the calendar (with my Google events, [calendar] below).
+[widget.date]
+type = "clock"
+format = "{:%a %b %-d}"
+
+[widget.date.actions]
+left = "panel-toggle control-center calendar"
+right = "panel-toggle control-center calendar"
+
+# Events from my Google calendar (the same one GNOME Calendar shows) in the
+# control center's calendar, plus reminders before they start. Signed in
+# once from Settings -> Calendar -> Accounts -> Google -> Save and Connect;
+# the token is kept in GNOME Keyring, not here.
+[calendar]
+enabled = true
+event_time_format = "%-I:%M %p" # 12-hour, like the clock
+
+[calendar.account.google]
+type = "google"
+name = "Google"
 
 [dock]
 enabled = true
@@ -144,6 +191,13 @@ directory = "~/Pictures/wallpapers"
 # Wallhaven: browse wallhaven.cc and set a wallpaper (Meh+W in Hyprland).
 # App Switcher: Cmd+Tab (plugins/app-switcher next to this file).
 enabled = ["noctalia/wallhaven", "kody/app-switcher"]
+
+# The Wallhaven browser floats with its own background and drops down near
+# where it was opened from, like the control center (see [shell.panel])
+[plugin_settings."noctalia/wallhaven"]
+browser_placement = "floating"
+browser_position = "auto"
+browser_open_near_click = true
 
 # Noctalia's two default sources, plus my own plugins in plugins/ here
 [[plugins.source]]

@@ -8,5 +8,7 @@ dotfiles/hypr/workspaces.lua
 dotfiles/hypr/workspaces.conf
 # Written by dotfiles/hypr/gamemode.sh (game mode button's on/off look)
 dotfiles/noctalia/zz-gamemode-state.toml
+# Written by dotfiles/hypr/hyprland.lua (tile size button's look)
+dotfiles/noctalia/zz-tile-scale-state.toml
 # Nix build output symlink (darwin-rebuild / nixos-rebuild build)
 result

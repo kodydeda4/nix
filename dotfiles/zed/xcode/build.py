@@ -73,8 +73,12 @@ def theme(name, kind, c, syntax):
     # bracket pair at the cursor (Zed keeps the brackets' own text color)
     gold = "#b8860b59" if kind == "light" else "#ffd60a73"
     chrome = u["darker_black"]
+    # Zed's own see-through amounts for an expanded diff hunk: fill, hollow
+    # background, hollow border
+    hunk = (0.16, 0.08, 0.48) if kind == "light" else (0.12, 0.06, 0.36)
 
     a = lambda hex_, alpha: hex_ + alpha
+    see_through = lambda hex_, o: hex_ + f"{round(o * 255):02x}"
     style = {
         "background": chrome, "surface.background": chrome,
         "elevated_surface.background": u["statusline_bg"],
@@ -132,6 +136,15 @@ def theme(name, kind, c, syntax):
         "created": c["project_member"], "modified": warning, "deleted": c["string"],
         "conflict": c["preprocessor"], "ignored": u["grey_fg"], "hidden": u["grey_fg"],
         "predictive": u["grey_fg2"], "unreachable": c["comment"],
+        # git: changed lines in the gutter and scrollbar, and files' git status,
+        # in the cursor's blue, like Xcode's change bar. Expanded diffs keep
+        # green / red (Zed would tint them from these), else removed and added
+        # lines look the same
+        "version_control.added": cursor, "version_control.modified": cursor,
+        "version_control.deleted": cursor,
+        **{f"editor.diff_hunk.{status}.{part}": see_through(color, o)
+           for status, color in (("added", c["project_member"]), ("deleted", c["string"]))
+           for part, o in zip(("background", "hollow_background", "hollow_border"), hunk)},
         "players": [{"cursor": cursor, "background": cursor, "selection": c["selection"]}],
         "syntax": syntax,
     }

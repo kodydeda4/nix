@@ -524,5 +524,14 @@
       "y": "project_panel::Copy",
       "p": "project_panel::Paste"
     }
+  },
+  {
+    // Ctrl+J / Ctrl+K: down / up in autocomplete and code actions, like
+    // nvim-cmp. Last in the file so it beats the tab switching above.
+    "context": "Editor && (showing_completions || showing_code_actions)",
+    "bindings": {
+      "ctrl-j": "editor::ContextMenuNext",
+      "ctrl-k": "editor::ContextMenuPrevious"
+    }
   }
 ]

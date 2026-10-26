@@ -1,0 +1,484 @@
+{
+ "groups": {
+  "@attribute.builtin.swift": {
+   "fg": "xc_attribute"
+  },
+  "@attribute.macro.swift": {
+   "fg": "xc_text"
+  },
+  "@attribute.project.swift": {
+   "fg": "xc_text"
+  },
+  "@attribute.sendable.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@attribute.swift": {
+   "fg": "xc_text"
+  },
+  "@attribute.type.swift": {
+   "fg": "xc_text"
+  },
+  "@boolean.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@character.special.swift": {
+   "fg": "xc_number"
+  },
+  "@comment.documentation.swift": {
+   "fg": "xc_comment"
+  },
+  "@comment.swift": {
+   "fg": "xc_comment"
+  },
+  "@constant.builtin.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@constant.macro.swift": {
+   "fg": "xc_preprocessor"
+  },
+  "@constructor.swift": {
+   "fg": "xc_text"
+  },
+  "@function.call.swift": {
+   "fg": "xc_text"
+  },
+  "@function.macro.swift": {
+   "fg": "xc_text"
+  },
+  "@function.method.swift": {
+   "fg": "xc_other_declaration"
+  },
+  "@keyword.conditional.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.conditional.ternary.swift": {
+   "fg": "xc_text"
+  },
+  "@keyword.coroutine.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.directive.swift": {
+   "fg": "xc_preprocessor"
+  },
+  "@keyword.exception.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.function.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.import.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.modifier.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.operator.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.repeat.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.return.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@keyword.type.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@label.argument.swift": {
+   "fg": "xc_text"
+  },
+  "@label.swift": {
+   "fg": "xc_text"
+  },
+  "@label.trailing.swift": {
+   "fg": "xc_member"
+  },
+  "@lsp.mod.deprecated.swift": {
+   "strike": true
+  },
+  "@lsp.type.class": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.class.swift": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.comment": {
+   "fg": "xc_comment"
+  },
+  "@lsp.type.comment.swift": {
+   "fg": "xc_comment"
+  },
+  "@lsp.type.decorator": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.decorator.swift": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.enum": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.enum.swift": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.enumMember": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.enumMember.swift": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.event": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.event.swift": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.function": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.function.swift": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.interface": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.interface.swift": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.keyword": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@lsp.type.keyword.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@lsp.type.macro": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.macro.swift": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.method": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.method.swift": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.modifier": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.modifier.swift": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.namespace": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.namespace.swift": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.number": {
+   "fg": "xc_number"
+  },
+  "@lsp.type.number.swift": {
+   "fg": "xc_number"
+  },
+  "@lsp.type.operator": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.operator.swift": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.parameter": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.parameter.swift": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.property": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.property.swift": {
+   "fg": "xc_project_member"
+  },
+  "@lsp.type.regexp": {
+   "fg": "xc_string"
+  },
+  "@lsp.type.regexp.swift": {
+   "fg": "xc_string"
+  },
+  "@lsp.type.string": {
+   "fg": "xc_string"
+  },
+  "@lsp.type.string.swift": {
+   "fg": "xc_string"
+  },
+  "@lsp.type.struct": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.struct.swift": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.type": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.type.swift": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.typeParameter": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.typeParameter.swift": {
+   "fg": "xc_project_type"
+  },
+  "@lsp.type.variable": {
+   "fg": "xc_text"
+  },
+  "@lsp.type.variable.swift": {
+   "fg": "xc_text"
+  },
+  "@lsp.typemod.class.defaultLibrary": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.class.defaultLibrary.swift": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.enum.defaultLibrary": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.enum.defaultLibrary.swift": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.enumMember.defaultLibrary": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.enumMember.defaultLibrary.swift": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.function.defaultLibrary": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.function.defaultLibrary.swift": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.interface.defaultLibrary": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.interface.defaultLibrary.swift": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.macro.defaultLibrary": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.macro.defaultLibrary.swift": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.method.defaultLibrary": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.method.defaultLibrary.swift": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.operator.defaultLibrary": {
+   "fg": "xc_text"
+  },
+  "@lsp.typemod.operator.defaultLibrary.swift": {
+   "fg": "xc_text"
+  },
+  "@lsp.typemod.property.defaultLibrary": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.property.defaultLibrary.swift": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.struct.defaultLibrary": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.struct.defaultLibrary.swift": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.type.defaultLibrary": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.type.defaultLibrary.swift": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.typeParameter.defaultLibrary": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.typeParameter.defaultLibrary.swift": {
+   "fg": "xc_type"
+  },
+  "@lsp.typemod.variable.defaultLibrary": {
+   "fg": "xc_member"
+  },
+  "@lsp.typemod.variable.defaultLibrary.swift": {
+   "fg": "xc_member"
+  },
+  "@number.float.swift": {
+   "fg": "xc_number"
+  },
+  "@number.swift": {
+   "fg": "xc_number"
+  },
+  "@operator": {
+   "fg": "xc_text"
+  },
+  "@operator.swift": {
+   "fg": "xc_text"
+  },
+  "@punctuation.bracket.swift": {
+   "fg": "xc_text"
+  },
+  "@punctuation.delimiter.swift": {
+   "fg": "xc_text"
+  },
+  "@punctuation.special.swift": {
+   "fg": "xc_text"
+  },
+  "@string.escape.swift": {
+   "fg": "xc_string"
+  },
+  "@string.regexp.swift": {
+   "fg": "xc_string"
+  },
+  "@string.swift": {
+   "fg": "xc_string"
+  },
+  "@type.definition.swift": {
+   "fg": "xc_type_declaration"
+  },
+  "@type.swift": {
+   "fg": "xc_text"
+  },
+  "@variable": {
+   "fg": "xc_text"
+  },
+  "@variable.builtin.swift": {
+   "bold": true,
+   "fg": "xc_keyword"
+  },
+  "@variable.member.definition.swift": {
+   "fg": "xc_other_declaration"
+  },
+  "@variable.member.implicit.swift": {
+   "fg": "xc_text"
+  },
+  "@variable.member.keypath.swift": {
+   "fg": "xc_text"
+  },
+  "@variable.member.swift": {
+   "fg": "xc_text"
+  },
+  "@variable.parameter.definition.swift": {
+   "fg": "xc_other_declaration"
+  },
+  "@variable.parameter.swift": {
+   "fg": "xc_text"
+  },
+  "@variable.swift": {
+   "fg": "xc_text"
+  },
+  "SwiftMark": {
+   "bold": true,
+   "fg": "xc_comment"
+  }
+ },
+ "modifiers": [
+  "bold",
+  "strike"
+ ],
+ "parser": "/Users/kody/.local/share/nvim/site/parser/swift.so",
+ "query_files": [
+  "/Users/kody/.local/share/nvim/site/queries/swift/highlights.scm",
+  "/Users/kody/.config/nvim/after/queries/swift/highlights.scm"
+ ],
+ "sourcekit_legend": {
+  "tokenModifiers": [
+   "declaration",
+   "definition",
+   "readonly",
+   "static",
+   "deprecated",
+   "abstract",
+   "async",
+   "modification",
+   "documentation",
+   "defaultLibrary",
+   "deduced",
+   "virtual",
+   "dependentName",
+   "usedAsMutableReference",
+   "usedAsMutablePointer",
+   "constructorOrDestructor",
+   "userDefined",
+   "functionScope",
+   "classScope",
+   "fileScope",
+   "globalScope",
+   "parameterLabel"
+  ],
+  "tokenTypes": [
+   "namespace",
+   "type",
+   "class",
+   "enum",
+   "interface",
+   "struct",
+   "typeParameter",
+   "parameter",
+   "variable",
+   "property",
+   "enumMember",
+   "event",
+   "function",
+   "method",
+   "macro",
+   "keyword",
+   "modifier",
+   "comment",
+   "string",
+   "number",
+   "regexp",
+   "operator",
+   "decorator",
+   "bracket",
+   "label",
+   "concept",
+   "unknown",
+   "identifier"
+  ]
+ },
+ "text_type": "xc_text",
+ "types": [
+  "xc_attribute",
+  "xc_comment",
+  "xc_keyword",
+  "xc_member",
+  "xc_number",
+  "xc_other_declaration",
+  "xc_preprocessor",
+  "xc_project_member",
+  "xc_project_type",
+  "xc_string",
+  "xc_text",
+  "xc_type",
+  "xc_type_declaration"
+ ]
+}

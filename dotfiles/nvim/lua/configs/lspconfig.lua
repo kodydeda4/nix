@@ -145,6 +145,39 @@ local function is_local(buf, row, col, name)
   return false
 end
 
+-- Is the `typeParameter` token `name` at row/col a real generic parameter,
+-- declared in an enclosing <...> or named in an enclosing where clause
+-- (extension Binding where Value == Bool)? sourcekit sends type aliases
+-- (IdentifiedArrayOf, ReducerOf) as typeParameter too.
+local generic_query
+local function is_generic_parameter(buf, row, col, name)
+  local ok, scope = pcall(vim.treesitter.get_node, { bufnr = buf, pos = { row, col }, lang = "swift" })
+  if not ok or not scope then
+    return true
+  end
+  generic_query = generic_query
+    or vim.treesitter.query.parse(
+      "swift",
+      [[
+      (type_parameters (type_parameter (type_identifier) @name))
+      (type_constraints (type_constraint (_ constrained_type: (identifier (simple_identifier) @name))))
+    ]]
+    )
+  while scope do
+    for child in scope:iter_children() do
+      if child:type() == "type_parameters" or child:type() == "type_constraints" then
+        for _, decl in generic_query:iter_captures(child, buf) do
+          if vim.treesitter.get_node_text(decl, buf) == name then
+            return true
+          end
+        end
+      end
+    end
+    scope = scope:parent()
+  end
+  return false
+end
+
 local label_ns = vim.api.nvim_create_namespace "xcode_argument_labels"
 
 -- nvim 0.12 bug: on the first line of a closed fold only the first token gets
@@ -201,9 +234,12 @@ vim.api.nvim_create_autocmd("LspTokenUpdate", {
     end
 
     -- generic parameters are plain in Xcode, wherever they're declared:
-    -- <Content: View> here, or Binding's Value in `extension Binding where Value == Bool`
+    -- <Content: View> here, or Binding's Value in `extension Binding where Value == Bool`;
+    -- type aliases sourcekit also sends as typeParameter keep their type color
     if token.type == "typeParameter" then
-      paint(token.start_col, token.end_col, "@variable")
+      if is_generic_parameter(buf, token.line, token.start_col, text) then
+        paint(token.start_col, token.end_col, "@variable")
+      end
       return
     end
 

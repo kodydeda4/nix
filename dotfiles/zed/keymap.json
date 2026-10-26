@@ -20,11 +20,6 @@
   },
   {
     "bindings": {
-      "cmd-shift-o": "editor::OpenFile"
-    }
-  },
-  {
-    "bindings": {
       "ctrl-)": [
         "zed::ResetBufferFontSize",
         {
@@ -339,12 +334,6 @@
   },
   {
     "context": "VimControl && !menu",
-    "unbind": {
-      "g d": "editor::GoToDefinition"
-    }
-  },
-  {
-    "context": "VimControl && !menu",
     "bindings": {
       "ctrl-cmd-h": "pane::GoBack"
     }
@@ -361,15 +350,90 @@
     }
   },
   {
+    // ⇧⌘O: Open Quickly like Xcode (Zed's file finder). Bound in both contexts
+    // so it beats the editor's own ⇧⌘O (the outline). Recent projects are on ⌃⌘O.
     "context": "Workspace",
     "bindings": {
-      "cmd-shift-o": "projects::OpenRecent"
+      "cmd-shift-o": "file_finder::Toggle"
+    }
+  },
+  {
+    "context": "Editor && mode == full",
+    "bindings": {
+      "cmd-shift-o": "file_finder::Toggle"
+    }
+  },
+  {
+    // Ctrl+E: the file again side by side, like :vsplit in nvim (replaces
+    // vim's scroll down)
+    "context": "Editor && vim_mode == normal",
+    "bindings": {
+      "ctrl-e": "pane::SplitRight"
+    }
+  },
+  {
+    // Space shortcuts from nvim: l g lazygit (tasks.json), t h theme picker
+    // (saves the pick for the current light / dark mode), f m format, f f find
+    // files, f w find words across the project (Telescope's in nvim)
+    "context": "Editor && vim_mode == normal",
+    "bindings": {
+      "space l g": ["task::Spawn", { "task_name": "lazygit" }],
+      "space t h": "theme_selector::Toggle",
+      "space f m": "editor::Format",
+      "space f f": "file_finder::Toggle",
+      "space f w": "pane::DeploySearch"
+    }
+  },
+  {
+    // Ctrl+J / Ctrl+K: down / up in pickers (themes, files, commands...),
+    // like nvim's theme picker
+    "context": "Picker > Editor",
+    "bindings": {
+      "ctrl-j": "menu::SelectNext",
+      "ctrl-k": "menu::SelectPrevious"
+    }
+  },
+  {
+    // Ctrl+H / Ctrl+L: the pane on the left / right, like nvim's window
+    // moves; the file tree too, so Ctrl+L gets back to the editor from it
+    "context": "(Editor && vim_mode == normal) || (ProjectPanel && not_editing)",
+    "bindings": {
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight"
+    }
+  },
+  {
+    // ⇧⌘J: Reveal in Project Navigator like Xcode: selects the current file
+    // in the project panel (opening it) and moves focus there. Bound in both
+    // contexts so it beats Linux's editor ⌃⇧J (join lines).
+    "context": "Workspace",
+    "bindings": {
+      "cmd-shift-j": "pane::RevealInProjectPanel"
+    }
+  },
+  {
+    "context": "Editor && mode == full",
+    "bindings": {
+      "cmd-shift-j": "pane::RevealInProjectPanel"
     }
   },
   {
     "context": "Workspace",
     "unbind": {
       "ctrl-r": "projects::OpenRecent"
+    }
+  },
+  {
+    // ⌃⌘O: Open Recent (moved off ⌥⌘O)
+    "context": "Workspace",
+    "bindings": {
+      "ctrl-cmd-o": ["projects::OpenRecent", { "create_new_window": false }]
+    }
+  },
+  {
+    "context": "Workspace",
+    "unbind": {
+      "alt-cmd-o": ["projects::OpenRecent", { "create_new_window": false }]
     }
   },
   {
@@ -409,6 +473,56 @@
     "bindings": {
       "ctrl-j": "pane::ActivateNextItem",
       "ctrl-k": "pane::ActivatePreviousItem"
+    }
+  },
+  {
+    // ⌘W closes the tab (and, with none left, the window: settings.json)
+    // everywhere, like the Mac. On Linux ⌘W is Ctrl+W, which vim mode takes
+    // for its window commands (Ctrl+W H/J/K/L...), insert mode for deleting a
+    // word and the terminal for the shell's.
+    "context": "VimControl && !menu || !Editor && !Terminal || vim_mode == insert || Terminal",
+    "bindings": {
+      "cmd-w": ["pane::CloseActiveItem", { "close_pinned": false }]
+    }
+  },
+  {
+    // ⌘O opens a folder (or file), like the Mac. On Linux ⌘O is Ctrl+O:
+    // Zed's Linux default there opens files only, and vim mode takes it for
+    // jumping back (normal mode) and one normal-mode command (insert mode).
+    // No context: Zed ranks context-free bindings as the innermost view, so
+    // only another one (loaded later, like this) beats Linux's Open Files.
+    "bindings": {
+      "cmd-o": "workspace::Open"
+    }
+  },
+  {
+    // ⌃D / ⌃U: half a page down / up, vim's (Zed's default on the Mac; on
+    // Linux this puts them back on the Ctrl key)
+    "context": "VimControl && !menu",
+    "bindings": {
+      "ctrl-d": "vim::ScrollDown",
+      "ctrl-u": "vim::ScrollUp"
+    }
+  },
+  {
+    // ⌃W in the terminal is the shell's delete-word (Zed's default on the
+    // Mac; on Linux this puts it back on the Ctrl key)
+    "context": "Terminal",
+    "bindings": {
+      "ctrl-w": ["terminal::SendKeystroke", "ctrl-w"]
+    }
+  },
+  {
+    // The file tree like nvim-tree: a adds a file, r renames, d moves to the
+    // Trash (Zed asks first, as it has no u to undo it), y copies, p pastes.
+    // Replaces Zed vim mode's netrw-style d (new folder) and p (open).
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
+      "a": "project_panel::NewFile",
+      "r": "project_panel::Rename",
+      "d": "project_panel::Trash",
+      "y": "project_panel::Copy",
+      "p": "project_panel::Paste"
     }
   }
 ]

@@ -145,6 +145,7 @@
     nwg-displays # display settings (scale, resolution, layout) for Hyprland
     overskride # Bluetooth settings
     papirus-icon-theme
+    python3 # Zed's formatters (dotfiles/zed/format); the Mac has its own
     gcc
     git
     gnumake

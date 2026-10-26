@@ -298,6 +298,15 @@ hl.bind(CMD .. " + Q", function()
 		hl.exec_cmd("bash " .. KILL_APP .. " " .. w.pid)
 	end
 end)
+-- Claude: Cmd+0 toggles the sidebar (its Cmd+B), like the Mac's Karabiner
+-- rule. Only bound while Claude is focused, so other apps keep their Cmd+0.
+local CLAUDE = { ["com.anthropic.claude"] = true, claude = true }
+local claude_sidebar = hl.bind(CMD .. " + 0", hl.dsp.send_shortcut({ mods = CMD, key = "B" }))
+local function claude_focused(w)
+	claude_sidebar:set_enabled(w ~= nil and CLAUDE[(w.class or ""):lower()] == true)
+end
+claude_focused(hl.get_active_window())
+hl.on("window.active", claude_focused)
 -- Ctrl+Cmd+Q: lock screen, like the Mac (the Ctrl-labeled key sends Alt).
 hl.bind(CMD .. " + ALT + Q", hl.dsp.exec_cmd("noctalia msg session lock"))
 -- Ctrl+Alt+Delete: Noctalia's session menu (log out, reboot, shut down, ...).

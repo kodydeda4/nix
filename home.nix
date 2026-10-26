@@ -43,7 +43,27 @@ in {
   home.file.".hushlogin".text = "";
 
   # ~/.config/zed -> dotfiles/zed (folder link: Zed rewrites settings.json on save)
-  xdg.configFile."zed".source = link "zed";
+  xdg.configFile."zed" = lib.mkIf isDarwin {source = link "zed";};
+
+  # Linux: the same files linked one by one (Zed follows the settings.json link
+  # when it saves), except keymap.json, which is the Mac's with every key moved
+  # to where keyd puts it: ⌘ -> Ctrl, ⌃ -> Alt, ⌥ -> Super (see
+  # dotfiles/zed/linux-keymap). Edit keymap.json, then rebuild.
+  xdg.configFile."zed/keymap.json" = lib.mkIf isLinux {
+    source = pkgs.runCommand "zed-keymap.json" {} ''
+      ${pkgs.python3}/bin/python3 ${./dotfiles/zed/linux-keymap} < ${./dotfiles/zed/keymap.json} > $out
+    '';
+  };
+  xdg.configFile."zed/settings.json" = lib.mkIf isLinux {source = link "zed/settings.json";};
+  xdg.configFile."zed/tasks.json" = lib.mkIf isLinux {source = link "zed/tasks.json";};
+  xdg.configFile."zed/themes" = lib.mkIf isLinux {source = link "zed/themes";};
+  xdg.configFile."zed/format" = lib.mkIf isLinux {source = link "zed/format";};
+  xdg.configFile."zed/xcode" = lib.mkIf isLinux {source = link "zed/xcode";};
+  # ~/.config/zed used to be a link to the whole folder: remove it first, or
+  # Home Manager would put the links above inside dotfiles/zed itself.
+  home.activation.zedConfigFolder = lib.mkIf isLinux (lib.hm.dag.entryBefore ["checkLinkTargets"] ''
+    if [ -L "${config.xdg.configHome}/zed" ]; then run rm "${config.xdg.configHome}/zed"; fi
+  '');
 
   # ~/.config/nvim -> dotfiles/nvim (NvChad; lazy.nvim writes lazy-lock.json here)
   xdg.configFile."nvim".source = link "nvim";

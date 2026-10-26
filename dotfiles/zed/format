@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""Formatters for Zed (settings.json: languages.*.formatter), the same as
+nvim's conform.lua: each tool gets the buffer on stdin and prints it
+formatted, indented with tabs (2 wide) like nvim (nix: alejandra has no tab
+option).
+
+  format <tool> <path of the file being formatted>  < source  > formatted
+"""
+
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+tool, path = sys.argv[1], Path(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2] else None
+source = sys.stdin.buffer.read()
+# the file's folder (tools find their config from there); Zed's for a new file
+dirname = path.parent if path and path.parent.is_dir() else Path.cwd()
+filename = str(path or dirname / "untitled")
+
+
+def up(name):
+    """The nearest `name` in the file's folder or a folder above it."""
+    for d in [dirname, *dirname.parents]:
+        if (d / name).exists():
+            return d / name
+    return None
+
+
+def run(cmd, data=source):
+    out = subprocess.run(cmd, input=data, capture_output=True, cwd=dirname)
+    if out.returncode != 0:
+        sys.stderr.buffer.write(out.stderr)
+        sys.exit(out.returncode)
+    return out.stdout
+
+
+def swiftformat():
+    # a repo's .swiftformat wins; files without one fall back to nvim's
+    # swiftformat-default (tabs)
+    cmd = ["swiftformat", "stdin", "--stdinpath", filename, "--quiet"]
+    if not up(".swiftformat"):
+        cmd += ["--config", str(Path.home() / ".config/nvim/swiftformat-default")]
+    return run(cmd)
+
+
+def prettier():
+    # a project's own prettier (node_modules) when present
+    command = up("node_modules/.bin/prettier") or "prettier"
+    return run([str(command), "--use-tabs", "--tab-width", "2", "--stdin-filepath", filename])
+
+
+def rustfmt():
+    edition = "2021"
+    cargo = up("Cargo.toml")
+    if cargo:
+        m = re.search(r'^\s*edition\s*=\s*"(\d+)"', cargo.read_text(), re.M)
+        edition = m[1] if m else edition
+    return run(["rustfmt", "--config", "hard_tabs=true,tab_spaces=2", "--emit=stdout", f"--edition={edition}"])
+
+
+def dx_rsx():
+    # Dioxus rsx! { ... } blocks, which rustfmt leaves alone: `dx fmt`, only in
+    # files that use rsx!. From stdin it always indents with 4 spaces, so each
+    # 4 leading columns become a tab afterwards, on the lines it rewrote
+    # (lines it passed through untouched, like multi-line strings, keep their
+    # spaces).
+    text = source.decode()
+    if not shutil.which("dx") or "rsx!" not in text:
+        return source
+    lines = text[:-1].split("\n") if text.endswith("\n") else text.split("\n")
+    out = run(["dx", "fmt", "-f", "-"], ("\n".join(lines) + "\n").encode()).decode()
+    unchanged = set(lines)
+    formatted = out[:-1].split("\n") if out.endswith("\n") else out.split("\n")
+    for i, line in enumerate(formatted):
+        if line not in unchanged:
+            indent, rest = re.match(r"([ \t]*)(.*)", line, re.S).groups()
+            cols = 0
+            for c in indent:
+                cols = cols - cols % 4 + 4 if c == "\t" else cols + 1
+            formatted[i] = "\t" * (cols // 4) + " " * (cols % 4) + rest
+    return ("\n".join(formatted) + "\n").encode()
+
+
+tools = {
+    "swiftformat": swiftformat,
+    "prettier": prettier,
+    "rustfmt": rustfmt,
+    "dx_rsx": dx_rsx,
+    "alejandra": lambda: run(["alejandra", "--quiet"]),
+    "stylua": lambda: run(["stylua", "--indent-type", "Tabs", "--indent-width", "2",
+                           "--search-parent-directories", "--respect-ignores",
+                           "--stdin-filepath", filename, "-"]),
+    # tabs: nvim has expandtab off, so conform passes no -i
+    "shfmt": lambda: run(["shfmt", "-filename", filename]),
+}
+sys.stdout.buffer.write(tools[tool]())

@@ -1,0 +1,19 @@
+#!/bin/sh
+# Swift indentation for Zed (see indents.scm): rerun after the Swift
+# extension updates, then restart Zed.
+set -e
+here=$(cd "$(dirname "$0")" && pwd)
+swift="$HOME/Library/Application Support/Zed/extensions/installed/swift/languages/swift"
+cp "$here/indents.scm" "$swift/indents.scm"
+config="$swift/config.toml"
+# drop a previous run's lines, then add them
+sed -i '' '/^# zed-swift-indent/,$d' "$config"
+cat >>"$config" <<'TOML'
+# zed-swift-indent (~/.config/zed/swift-indent/apply)
+# after "case .foo:" / "default:", the next line goes one deeper
+increase_indent_pattern = "^\\s*((@unknown\\s+)?default|case\\b.*):\\s*(//.*)?$"
+# typing case / default puts the line back level with its switch
+decrease_indent_patterns = [
+  { pattern = "^\\s*(@unknown\\s+default|default\\s*:|case\\b)", valid_after = ["switch"] },
+]
+TOML

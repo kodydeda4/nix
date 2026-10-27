@@ -10,7 +10,9 @@
 #   themes/kodys.json  Kody's Theme Dark + Light: Xcode's UI and Swift colors,
 #                      other languages in One Dark OLED's (themes/) or One
 #                      Light's (xcode/one-light-syntax.json, from Zed's source),
-#                      each also as a (Blur) variant over macOS's window blur
+#                      each also as a (Blur) variant over macOS's window blur;
+#                      Dark's UI is One Dark - Darkened's instead
+#                      (xcode/one-dark-darkened.json, the Zed extension's)
 #   xcode/groups.json  for sourcekit.lua: each nvim Swift highlight group's
 #                      color (as a token type) and bold / strikethrough
 #   settings.json      semantic_token_rules: those token types -> the theme
@@ -274,8 +276,9 @@ def one_syntax(mode):
 # it too; the file tree, tab bar and editor are drawn over the window's
 # background, so the tree and unfocused tabs are see-through (else near
 # solid) and the editor only a tint. Popovers and menus stay solid.
-# The editor's tint is near solid in both, so code sits on its own color and
-# only the bars, file tree and tab bar show the blur
+# The editor's tint is near solid, so code sits on its own color and only the
+# bars, file tree and tab bar show the blur; dark's editor is Dark OLED's:
+# solid, with its current line
 BLUR_ALPHA = {"dark": "e0", "light": "e6"}
 TINT_ALPHA = {"dark": "f2", "light": "f2"}
 # light's window color: white, as what shows through (a dark desktop) only
@@ -294,6 +297,8 @@ BLURRED = ["background", "surface.background", "panel.background",
            "editor.background", "editor.gutter.background",
            "editor.subheader.background", "editor.active_line.background",
            "editor.highlighted_line.background", "terminal.background"]
+SOLID_EDITOR = ["editor.background", "editor.gutter.background", "toolbar.background",
+                "tab.active_background"]
 
 
 def blurred(t):
@@ -308,12 +313,35 @@ def blurred(t):
             style[k] = recolor + blur
         elif len(style[k]) == 7:
             style[k] += tint
+    if t["appearance"] == "dark":
+        style.update({k: t["style"][k] for k in SOLID_EDITOR})
+        style["editor.active_line.background"] = style["editor.highlighted_line.background"] = OLED_LINE
     # the file tree's sticky folders: rows scroll under them, so they need a
     # fill, the window's (left unset, Zed's default is a solid darker band)
     style["panel.overlay_background"] = recolor + blur
     style["panel.overlay_hover"] = style["element.hover"]
     style.update(BLUR_BORDERS.get(t["appearance"], {}))
     return {**t, "name": t["name"] + " (Blur)", "style": style}
+
+
+# Kody's Theme Dark itself: all of One Dark - Darkened's UI (bars, panels,
+# tabs, borders, text, the editor's surfaces, the terminal's background). What
+# isn't UI stays: the code's colors, the cursor and selection, git's blue,
+# diffs, the gold brackets, and the colors for errors, warnings, git status.
+# Ours it doesn't set (indent guides, pane dividers) go back to Zed's default.
+OWN = ("syntax", "players", "editor.foreground", "editor.diff_hunk.",
+       "editor.document_highlight.", "search.match_background", "version_control.",
+       "terminal.ansi.", "terminal.foreground", "terminal.bright_foreground",
+       "terminal.dim_foreground", "error", "warning", "info", "hint", "success",
+       "created", "modified", "deleted", "renamed", "conflict", "ignored", "hidden",
+       "predictive", "unreachable")
+
+
+def one_dark_darkened(t):
+    ui = json.loads((here / "one-dark-darkened.json").read_text())["themes"][0]["style"]
+    style = {k: v for k, v in t["style"].items() if k in ui or k.startswith(OWN)}
+    style.update({k: v for k, v in ui.items() if not k.startswith(OWN)})
+    return {**t, "style": style}
 
 
 # Dark OLED: the dark theme with what the (Blur) variant blurs (the window
@@ -338,13 +366,13 @@ def oled(t):
     return {**t, "name": t["name"] + " OLED", "style": dict(s, **oled)}
 
 
-kodys = [theme("Kody's Theme Dark", "dark", palettes["dark"], one_syntax("dark")),
-         theme("Kody's Theme Light", "light", palettes["light"], one_syntax("light"))]
+dark = theme("Kody's Theme Dark", "dark", palettes["dark"], one_syntax("dark"))
+light = theme("Kody's Theme Light", "light", palettes["light"], one_syntax("light"))
 (zed / "themes" / "kodys.json").write_text(json.dumps({
     "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
     "name": "Kody's Theme",
     "author": "Kody Deda",
-    "themes": kodys + [blurred(t) for t in kodys] + [oled(kodys[0])],
+    "themes": [one_dark_darkened(dark), light, blurred(dark), blurred(light), oled(dark)],
 }, indent=2) + "\n")
 
 # semantic_token_rules: each type in its color, with each combination of

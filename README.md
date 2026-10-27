@@ -125,7 +125,7 @@ Run `scripts` to list them, `scripts <name>` for one's full usage.
 |---|---|
 | `nn` | Rebuild and switch this machine |
 | `nix fmt` | Format all `.nix` files (alejandra) |
-| `nix flake update` | Update nixpkgs, Home Manager, etc., then `nn` |
+| `nix flake update` | Update nixpkgs, Home Manager, etc., then `nn` (not Zed: see `nixpkgs-zed` in flake.nix) |
 | `brew update` | Refresh Homebrew's cask list (auto-update is off, see Gotchas) |
 | `src` | Reload `~/.zshrc` in the current shell |
 

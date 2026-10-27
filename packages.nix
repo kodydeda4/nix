@@ -12,9 +12,10 @@
     slack
     # Zed reparses every macro body as Rust, and rsx! (Dioxus) isn't, so its
     # highlighting came out broken: built with an RSX language for it instead
-    # (dotfiles/zed/rsx). Not from the cache, so a Zed update is a long build;
-    # Zed's own tests are skipped, as they'd only add to it.
-    (zed-editor.overrideAttrs (old: {
+    # (dotfiles/zed/rsx). Not from the cache, so a Zed update is a long build:
+    # it comes from its own pinned nixpkgs (flake.nix: nixpkgs-zed), and Zed's
+    # own tests are skipped, as they'd only add to it.
+    (inputs.nixpkgs-zed.legacyPackages.${pkgs.stdenv.hostPlatform.system}.zed-editor.overrideAttrs (old: {
       patches = (old.patches or []) ++ [./dotfiles/zed/rsx/zed.patch];
       postPatch =
         (old.postPatch or "")

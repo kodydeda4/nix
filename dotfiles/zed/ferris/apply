@@ -1,0 +1,20 @@
+#!/bin/sh
+# Ferris the crab for Rust files in Zed's icon themes, like nvim
+# (nvim/lua/plugins/init.lua): Nerd Fonts' linux-ferris glyph (U+F323, from
+# MesloLGS Nerd Font) in Ferris's orange, a deeper one for light themes. For
+# Colored Zed Icons and Material Icon Theme, whichever are installed: rerun
+# after they update, then restart Zed.
+set -e
+here=$(cd "$(dirname "$0")" && pwd)
+case $(uname) in
+Darwin) installed="$HOME/Library/Application Support/Zed/extensions/installed" ;;
+*) installed="${XDG_DATA_HOME:-$HOME/.local/share}/zed/extensions/installed" ;;
+esac
+colored="$installed/colored-zed-icons-theme/icons"
+if [ -d "$colored" ]; then
+	cp "$here/ferris-dark.svg" "$colored/dark/rust_dark.svg"
+	cp "$here/ferris-light.svg" "$colored/light/rust_light.svg"
+fi
+material="$installed/material-icon-theme/icons"
+# one icon for light and dark themes
+if [ -d "$material" ]; then cp "$here/ferris-dark.svg" "$material/rust.svg"; fi

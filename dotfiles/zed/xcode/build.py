@@ -344,6 +344,28 @@ def one_dark_darkened(t):
     return {**t, "style": style}
 
 
+# ...over macOS's window blur, like the (Blur) variants: their see-through
+# window and dividers, the editor solid. The window's color is lifted this far
+# (%) from their near black toward One Dark - Darkened's gray: all the way is
+# too light, none too dark
+LIFT = 40
+
+
+def blur_in_place(t):
+    style = dict(t["style"], **{"background.appearance": "blurred"})
+    window = mix(WINDOW[t["appearance"]], style["background"][:7], LIFT)
+    alpha = BLUR_ALPHA[t["appearance"]]
+    for k in ["background", "surface.background", "status_bar.background",
+              "title_bar.background", "title_bar.inactive_background",
+              "panel.overlay_background"]:
+        style[k] = window + alpha
+    for k in OVER_BACKGROUND:
+        style[k] = window + "00"
+    style["panel.overlay_hover"] = style["element.hover"]
+    style.update(BLUR_BORDERS.get(t["appearance"], {}))
+    return {**t, "style": style}
+
+
 # Dark OLED: the dark theme with what the (Blur) variant blurs (the window
 # color: title and status bars, file tree, tab bar) solid black instead. The
 # editor and terminal keep their own near-black, the current line just a
@@ -372,7 +394,7 @@ light = theme("Kody's Theme Light", "light", palettes["light"], one_syntax("ligh
     "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
     "name": "Kody's Theme",
     "author": "Kody Deda",
-    "themes": [one_dark_darkened(dark), light, blurred(dark), blurred(light), oled(dark)],
+    "themes": [blur_in_place(one_dark_darkened(dark)), light, blurred(dark), blurred(light), oled(dark)],
 }, indent=2) + "\n")
 
 # semantic_token_rules: each type in its color, with each combination of

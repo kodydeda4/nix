@@ -96,17 +96,60 @@ claim_active() {
 # Run it in the background (background jobs ignore ⌃C) and wait: the INT trap
 # then exits right away, and cleanup() stops it with TERM, which it obeys at once.
 #
-# The output goes to a log; only errors (with their context) are printed, and
-# warnings are just counted.
+# The output goes to a log; while it runs, a terminal gets one status line with
+# the current step, and after it only errors (with their context) are printed,
+# and warnings are just counted.
 xcb() {
-	local pid status=0 log="$STATE_DIR/last-build.log"
+	local pid progress_pid="" status=0 log="$STATE_DIR/last-build.log"
 	mkdir -p "$STATE_DIR"
 	xcodebuild "$@" >"$log" 2>&1 &
 	pid=$!
 	BG_PIDS+=("$pid")
+	if [[ -t 1 ]]; then
+		# stderr: bash's "Terminated" notice when a stop kills its sleep
+		progress "$log" "$pid" 2>/dev/null &
+		progress_pid=$!
+		BG_PIDS+=("$progress_pid")
+	fi
 	wait "$pid" || status=$?
+	if [[ -n $progress_pid ]]; then
+		kill "$progress_pid" 2>/dev/null || true
+		wait "$progress_pid" 2>/dev/null || true
+		printf '\r\033[K'
+	fi
 	summarize "$log"
 	return "$status"
+}
+
+# redraw one line with the elapsed time and the step xcodebuild is on, e.g.
+# "[1:23] SwiftCompile ResidentFormView.swift (ResidentFormFeature)", until it exits
+progress() {
+	local log=$1 pid=$2 start=$SECONDS line cols elapsed
+	cols=$(tput cols 2>/dev/null || echo 100)
+	trap 'exit 0' TERM
+	while kill -0 "$pid" 2>/dev/null; do
+		# step headers are the unindented "Action args… (in target 'T' from project 'P')"
+		# lines; only look at the end of the log, it gets big
+		line=$(tail -c 65536 "$log" 2>/dev/null | grep -E '^[A-Z][A-Za-z]+( |$)' | tail -1 | awk '
+			# no target (e.g. "Resolve Package Graph"): show it as is
+			!/\(in target / { printf "%s", $0; next }
+			{
+				match($0, /\(in target .[^'\'']+/)
+				target = substr($0, RSTART + 12, RLENGTH - 12)
+				sub(/ \(in target .*/, "")
+				gsub(/\\ /, "\001")
+				file = $NF
+				sub(/.*\//, "", file)
+				gsub(/\001/, " ", file)
+				printf "%s", $1
+				if (NF > 1) printf " %s", file
+				printf " (%s)", target
+			}' || true) # no step header yet (grep fails) must not end the loop under set -e
+		elapsed=$((SECONDS - start))
+		line=$(printf '[%d:%02d] %s' $((elapsed / 60)) $((elapsed % 60)) "${line:-Starting xcodebuild…}")
+		printf '\r\033[K%s' "${line:0:cols-1}"
+		sleep 0.5
+	done
 }
 
 # print the errors from an xcodebuild log, and how many (unique) warnings it had
@@ -118,6 +161,9 @@ summarize() {
 		/(^|: )warning: / { if (!warned[$0]++) warnings++; context = 0; next }
 		/(^|: )error: /   { if (!errored[$0]++) { print; context = 1 } else context = 0; next }
 		/^\*\* /          { print; context = 0; next }
+		# the context of an error ends at a blank line, the next step header, or
+		# the command lines of a step (the log is not -quiet, for the progress line)
+		/^$|^[A-Z][A-Za-z]+( |$)|^    (cd |\/|builtin-|export |write-file )/ { context = 0; next }
 		context           { print }
 		END {
 			if (warnings) printf "%d warning%s (all of them: %s)\n", warnings, (warnings == 1 ? "" : "s"), logfile
@@ -235,7 +281,7 @@ build() {
 	echo "Building ${SCHEME} for ${DEST_NAME}…"
 	# a real device needs signing; let Xcode create/refresh the profiles
 	[[ $DEST_KIND == device ]] && XCODEBUILD_FLAGS+=(-allowProvisioningUpdates)
-	xcb "${CONTAINER[@]}" "${XCODEBUILD_FLAGS[@]}" -scheme "$SCHEME" -destination "id=$DEST_ID" -quiet build
+	xcb "${CONTAINER[@]}" "${XCODEBUILD_FLAGS[@]}" -scheme "$SCHEME" -destination "id=$DEST_ID" build
 	echo "Built ${SCHEME}."
 }
 

@@ -10,7 +10,23 @@
     brave
     obsidian
     slack
-    zed-editor
+    # Zed reparses every macro body as Rust, and rsx! (Dioxus) isn't, so its
+    # highlighting came out broken: built with an RSX language for it instead
+    # (dotfiles/zed/rsx). Not from the cache, so a Zed update is a long build;
+    # Zed's own tests are skipped, as they'd only add to it.
+    (zed-editor.overrideAttrs (old: {
+      patches = (old.patches or []) ++ [./dotfiles/zed/rsx/zed.patch];
+      postPatch =
+        (old.postPatch or "")
+        + ''
+          rsx=crates/grammars/src/rsx
+          mkdir $rsx
+          cp ${./dotfiles/zed/rsx}/{config.toml,injections.scm} $rsx/
+          cp crates/grammars/src/rust/{brackets,indents,overrides}.scm $rsx/
+          cat crates/grammars/src/rust/highlights.scm ${./dotfiles/zed/rsx/highlights.scm} > $rsx/highlights.scm
+        '';
+      doCheck = false;
+    }))
     alejandra
     btop
     bun

@@ -1,0 +1,43 @@
+diff --git a/crates/grammars/src/rust/injections.scm b/crates/grammars/src/rust/injections.scm
+index 4d6b67b..042c1bf 100644
+--- a/crates/grammars/src/rust/injections.scm
++++ b/crates/grammars/src/rust/injections.scm
+@@ -10,10 +10,21 @@
+     (scoped_identifier
+       (identifier) @_macro_name .)
+   ]
+-  (#not-any-of? @_macro_name "view" "html" "json")
++  (#not-any-of? @_macro_name "view" "html" "json" "rsx")
+   (token_tree) @injection.content
+   (#set! injection.language "rust"))
+ 
++; Dioxus: rsx! isn't Rust, so the whole macro is its own RSX layer, where every
++; token tree is rsx (rsx/highlights.scm)
++((macro_invocation
++  macro: [
++    (identifier) @_macro_name
++    (scoped_identifier
++      (identifier) @_macro_name .)
++  ]) @injection.content
++  (#eq? @_macro_name "rsx")
++  (#set! injection.language "rsx"))
++
+ ; we need a better way for the leptos extension to declare that
+ ; it wants to inject inside of rust, instead of modifying the rust
+ ; injections to support leptos injections
+diff --git a/crates/languages/src/lib.rs b/crates/languages/src/lib.rs
+index b3993ee..798c26e 100644
+--- a/crates/languages/src/lib.rs
++++ b/crates/languages/src/lib.rs
+@@ -178,6 +178,11 @@ pub fn init(languages: Arc<LanguageRegistry>, fs: Arc<dyn Fs>, node: NodeRuntime
+             semantic_token_rules: Some(rust::semantic_token_rules()),
+             ..Default::default()
+         },
++        LanguageInfo {
++            name: "rsx",
++            adapters: vec![],
++            ..Default::default()
++        },
+         LanguageInfo {
+             name: "tsx",
+             adapters: vec![typescript_lsp_adapter.clone(), vtsls_adapter.clone()],

@@ -276,12 +276,16 @@ def one_syntax(mode):
 # solid) and the editor only a tint. Popovers and menus stay solid.
 # The editor's tint is near solid in both, so code sits on its own color and
 # only the bars, file tree and tab bar show the blur
-BLUR_ALPHA = {"dark": "cc", "light": "e6"}
+BLUR_ALPHA = {"dark": "e0", "light": "e6"}
 TINT_ALPHA = {"dark": "f2", "light": "f2"}
 # light's window color: white, as what shows through (a dark desktop) only
 # darkens it; at e6 that's a light gray tinted by the desktop, like Xcode's
-# sidebar. Its own #f3f2f2 came out too dark, and more opaque hides the blur
-WINDOW = {"light": "#ffffff"}
+# sidebar. Its own #f3f2f2 came out too dark, and more opaque hides the blur.
+# dark's: near black instead of its own gray, with the dividers darkened to
+# match (picked by hand: no one formula gives all three)
+WINDOW = {"light": "#ffffff", "dark": "#040405"}
+BLUR_BORDERS = {"dark": {"border": "#1c1c21", "border.variant": "#151518",
+                         "border.disabled": "#18181c", "pane_group.border": "#1c1c21"}}
 OVER_BACKGROUND = ["panel.background", "tab_bar.background", "tab.inactive_background"]
 BLURRED = ["background", "surface.background", "panel.background",
            "status_bar.background", "title_bar.background",
@@ -308,6 +312,7 @@ def blurred(t):
     # fill, the window's (left unset, Zed's default is a solid darker band)
     style["panel.overlay_background"] = recolor + blur
     style["panel.overlay_hover"] = style["element.hover"]
+    style.update(BLUR_BORDERS.get(t["appearance"], {}))
     return {**t, "name": t["name"] + " (Blur)", "style": style}
 
 

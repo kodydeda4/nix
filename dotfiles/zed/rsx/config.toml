@@ -1,0 +1,21 @@
+# The language of an rsx! macro (Dioxus) in a Rust file: the Rust grammar, with
+# highlights for rsx's token trees. Built into Zed (packages.nix: zed-editor).
+name = "RSX"
+grammar = "rust"
+hidden = true
+line_comments = ["// ", "/// ", "//! "]
+autoclose_before = ";:.,=}])>"
+brackets = [
+    { start = "{", end = "}", close = true, newline = true },
+    { start = "r#\"", end = "\"#", close = true, newline = true, not_in = ["string", "comment"] },
+    { start = "r##\"", end = "\"##", close = true, newline = true, not_in = ["string", "comment"] },
+    { start = "r###\"", end = "\"###", close = true, newline = true, not_in = ["string", "comment"] },
+    { start = "[", end = "]", close = true, newline = true },
+    { start = "(", end = ")", close = true, newline = true },
+    { start = "<", end = ">", close = false, newline = true, not_in = ["string", "comment"] },
+    { start = "\"", end = "\"", close = true, newline = false, not_in = ["string"] },
+    { start = "`", end = "`", close = false, newline = false, not_in = ["string"] },
+    { start = "/*", end = " */", close = true, newline = false, not_in = ["string", "comment"] },
+]
+block_comment = { start = "/*", prefix = "* ", end = "*/", tab_size = 1 }
+documentation_comment = { start = "/*", prefix = "* ", end = "*/", tab_size = 1 }

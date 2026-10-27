@@ -344,28 +344,6 @@ def one_dark_darkened(t):
     return {**t, "style": style}
 
 
-# ...over macOS's window blur, like the (Blur) variants: their see-through
-# window and dividers, the editor solid. The window's color is lifted this far
-# (%) from their near black toward One Dark - Darkened's gray: all the way is
-# too light, none too dark
-LIFT = 40
-
-
-def blur_in_place(t):
-    style = dict(t["style"], **{"background.appearance": "blurred"})
-    window = mix(WINDOW[t["appearance"]], style["background"][:7], LIFT)
-    alpha = BLUR_ALPHA[t["appearance"]]
-    for k in ["background", "surface.background", "status_bar.background",
-              "title_bar.background", "title_bar.inactive_background",
-              "panel.overlay_background"]:
-        style[k] = window + alpha
-    for k in OVER_BACKGROUND:
-        style[k] = window + "00"
-    style["panel.overlay_hover"] = style["element.hover"]
-    style.update(BLUR_BORDERS.get(t["appearance"], {}))
-    return {**t, "style": style}
-
-
 # Dark OLED: the dark theme with what the (Blur) variant blurs (the window
 # color: title and status bars, file tree, tab bar) solid black instead. The
 # editor and terminal keep their own near-black, the current line just a
@@ -388,13 +366,26 @@ def oled(t):
     return {**t, "name": t["name"] + " OLED", "style": dict(s, **oled)}
 
 
+# Kody's Theme Light: the secondary text (muted, gitignored, hidden, disabled)
+# this far (%) from the background to the text, as the dark theme's amounts
+# are too faint on white to read in the file tree
+LIGHT_TEXT = {"text.muted": 72, "icon.muted": 72, "text.placeholder": 62,
+              "icon.placeholder": 62, "text.disabled": 55, "icon.disabled": 55,
+              "ignored": 55, "hidden": 55}
+
+
+def readable_light(t):
+    c = palettes["light"]
+    return {**t, "style": dict(t["style"], **{k: mix(c["bg"], c["text"], p) for k, p in LIGHT_TEXT.items()})}
+
+
 dark = theme("Kody's Theme Dark", "dark", palettes["dark"], one_syntax("dark"))
-light = theme("Kody's Theme Light", "light", palettes["light"], one_syntax("light"))
+light = readable_light(theme("Kody's Theme Light", "light", palettes["light"], one_syntax("light")))
 (zed / "themes" / "kodys.json").write_text(json.dumps({
     "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
     "name": "Kody's Theme",
     "author": "Kody Deda",
-    "themes": [blur_in_place(one_dark_darkened(dark)), light, blurred(dark), blurred(light), oled(dark)],
+    "themes": [one_dark_darkened(dark), light, blurred(dark), blurred(light), oled(dark)],
 }, indent=2) + "\n")
 
 # semantic_token_rules: each type in its color, with each combination of

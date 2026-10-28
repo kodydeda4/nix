@@ -9,6 +9,10 @@ time_format = "{:%-I:%M %p}"
 [shell.animation]
 enabled = false # no animations (Hyprland's are off too)
 
+# No sound effects: notifications, volume changes and the rest are silent
+[audio]
+enable_sounds = false
+
 [shell.screenshot]
 directory = "~/Pictures/Screenshots" # default is ~/Pictures
 

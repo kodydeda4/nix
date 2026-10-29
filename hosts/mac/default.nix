@@ -7,6 +7,12 @@
   ...
 }: let
   packages = import ../../packages.nix {inherit pkgs inputs;};
+  # ⌘0 toggles the sidebar. The menu item's title flips between the two, so
+  # both need the shortcut.
+  sidebarToggle = {
+    "Show Sidebar" = "@0";
+    "Hide Sidebar" = "@0";
+  };
 in {
   system.primaryUser = "kody";
 
@@ -74,7 +80,11 @@ in {
     FXPreferredGroupBy = "Kind";
     # Hide the Tags section in the sidebar.
     ShowRecentTags = false;
+    NSUserKeyEquivalents = sidebarToggle;
   };
+
+  # Photos: ⌘0 toggles the sidebar too. (Mail's is in postActivation below.)
+  system.defaults.CustomUserPreferences."com.apple.Photos".NSUserKeyEquivalents = sidebarToggle;
 
   # Fast key repeat. Units are 15 ms; System Settings' fastest is
   # KeyRepeat = 2 and shortest delay is InitialKeyRepeat = 15.
@@ -118,6 +128,13 @@ in {
       echo "setting Zen as default browser..." >&2
       sudo -u kody ${pkgs.defaultbrowser}/bin/defaultbrowser zen
     fi
+
+    # Mail: ⌘0 toggles the sidebar, like Finder and Photos. Mail's prefs live
+    # in a protected container, so this needs the terminal's Full Disk Access.
+    # CustomUserPreferences can't do it: it writes via `launchctl asuser`,
+    # which doesn't inherit that access.
+    sudo -u kody defaults write com.apple.mail NSUserKeyEquivalents \
+      -dict-add "Show Sidebar" "@0" "Hide Sidebar" "@0"
   '';
 
   # zsh: grey inline suggestions from history (accept with →).

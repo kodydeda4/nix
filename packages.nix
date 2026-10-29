@@ -40,6 +40,7 @@
     firebase-tools
     fzf
     gh
+    herdr
     imagemagick
     git-lfs
     jdk

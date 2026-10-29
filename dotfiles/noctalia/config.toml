@@ -9,6 +9,10 @@ time_format = "{:%-I:%M %p}"
 [shell.animation]
 enabled = false # no animations (Hyprland's are off too)
 
+# No sound effects: notifications, volume changes and the rest are silent
+[audio]
+enable_sounds = false
+
 [shell.screenshot]
 directory = "~/Pictures/Screenshots" # default is ~/Pictures
 
@@ -69,10 +73,10 @@ start = ["workspaces"]
 # Nothing in the middle: the clock sits at the far right, like the Mac's
 center = []
 # Right side, read right to left: time, date, battery, wifi, volume,
-# bluetooth, clipboard, notifications, game mode, then power, brightness and
-# app tray icons. (No "now playing" or control-center button; the control
-# center opens by clicking the clock.)
-end = ["tray", "brightness", "session", "gamemode", "notifications", "clipboard", "bluetooth", "volume", "network", "battery", "date", "clock"]
+# bluetooth, clipboard, notifications, game mode, tile size, then power,
+# brightness and app tray icons. (No "now playing" or control-center button;
+# the control center opens by clicking the clock.)
+end = ["tray", "brightness", "session", "tile_scale", "gamemode", "notifications", "clipboard", "bluetooth", "volume", "network", "battery", "date", "clock"]
 
 # The 4K ASUS monitor: everything in the bar 30% bigger (its items looked tiny
 # there). Matched by model, so it works on any port; the laptop screen keeps
@@ -92,6 +96,18 @@ tooltip = "Game mode: off"
 
 [widget.gamemode.actions]
 left = "exec bash ~/.config/hypr/gamemode.sh toggle"
+
+# Tile size button: switches Hyprland's snap keys (Meh+H/L/Space...) between
+# the whole screen and a centered area 75% wide, 90% tall, for a big monitor. See
+# toggle_tile_scale() in dotfiles/hypr/hyprland.lua; it lights up while narrow
+# (hyprland.lua writes that look to zz-tile-scale-state.toml next to this file).
+[widget.tile_scale]
+type = "custom_button"
+glyph = "viewport-wide"
+tooltip = "Tile size: 100%"
+
+[widget.tile_scale.actions]
+left = "exec hyprctl eval 'toggle_tile_scale()'"
 
 [widget.workspaces]
 # Small dots for workspaces 1-5 (kept alive in dotfiles/hypr), like the page

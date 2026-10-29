@@ -358,6 +358,15 @@ end
 
 local dock_space = dock_hidden() and 0 or DOCK_SPACE -- what's kept free right now (0 when hidden or zen)
 
+-- Tile size, from the bar's tile-size button (toggle_tile_scale(), below):
+-- normally snaps use the whole screen; narrow, they share a centered area
+-- TILE_WIDTH_NARROW of its width and TILE_HEIGHT_NARROW of its height instead
+-- (halves, maximize... all inside it), for a big monitor. Narrow = a flag
+-- file, so it survives config reloads and resets at log-in, like the dock.
+local TILE_SCALE_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-tile-scale-narrow"
+local TILE_WIDTH_NARROW, TILE_HEIGHT_NARROW = 0.75, 0.9
+local tile_narrow = io.open(TILE_SCALE_FILE) ~= nil
+
 local function work_area(monitor)
 	local m = monitor or hl.get_active_monitor()
 	local scale = m.scale or 1
@@ -369,7 +378,10 @@ local function work_area(monitor)
 	local bottom = r.bottom or r[3] or 0
 	local left = r.left or r[4] or 0
 	bottom = bottom + dock_space
-	return m.x + left, m.y + top, w - left - right, h - top - bottom
+	local aw, ah = w - left - right, h - top - bottom
+	local sw, sh = tile_narrow and TILE_WIDTH_NARROW or 1, tile_narrow and TILE_HEIGHT_NARROW or 1
+	local ix, iy = aw * (1 - sw) / 2, ah * (1 - sh) / 2
+	return m.x + left + ix, m.y + top + iy, aw - 2 * ix, ah - 2 * iy
 end
 
 -- Padding (px) around snapped windows: GAP from the screen edges and GAP
@@ -646,6 +658,60 @@ local function toggle_dock()
 	end)
 end
 _G.toggle_dock = toggle_dock
+
+-- The bar's tile-size button: switches snaps between the whole screen and a
+-- centered 75% x 90% (TILE_WIDTH/HEIGHT_NARROW, above), i.e. `hyprctl eval
+-- 'toggle_tile_scale()'`. Snapped windows are re-fitted right away. The
+-- button's look (icon, tooltip, lit up while narrow) goes in
+-- zz-tile-scale-state.toml next to Noctalia's config.toml, like game mode's.
+local TILE_SCALE_TOML = (os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config"))
+	.. "/noctalia/zz-tile-scale-state.toml"
+
+local function write_tile_scale_state()
+	local w, h = math.floor(TILE_WIDTH_NARROW * 100 + 0.5), math.floor(TILE_HEIGHT_NARROW * 100 + 0.5)
+	local want = tile_narrow
+			and string.format(
+				'# Tiles are %d%% wide, %d%% tall (written by dotfiles/hypr/hyprland.lua)\n[widget.tile_scale]\nglyph = "viewport-narrow"\ncapsule = true\ncapsule_fill = "primary"\ncolor = "on_primary"\ntooltip = "Tile size: %d%% x %d%%"\n',
+				w,
+				h,
+				w,
+				h
+			)
+		or "# Tiles are full size (written by dotfiles/hypr/hyprland.lua)\n"
+	-- Only rewrite (and reload Noctalia) when it changed: this also runs on
+	-- every config reload.
+	local f = io.open(TILE_SCALE_TOML, "r")
+	local have = f and f:read("*a")
+	if f then
+		f:close()
+	end
+	if have == want then
+		return
+	end
+	f = io.open(TILE_SCALE_TOML, "w")
+	if f then
+		f:write(want)
+		f:close()
+		hl.exec_cmd("noctalia msg config-reload")
+	end
+end
+
+_G.toggle_tile_scale = function()
+	refit_snapped(function()
+		tile_narrow = not tile_narrow
+		if tile_narrow then
+			local f = io.open(TILE_SCALE_FILE, "w")
+			if f then
+				f:close()
+			end
+		else
+			os.remove(TILE_SCALE_FILE)
+		end
+		write_tile_scale_state()
+	end)
+end
+
+write_tile_scale_state()
 
 hl.on("workspace.active", function()
 	local name = active_workspace_name()

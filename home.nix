@@ -280,6 +280,13 @@ in {
       icon = "weather-overcast-symbolic";
       exec = ''hyprctl eval "toggle_shadows()"'';
     };
+    toggle-compact-tiling = {
+      name = "Toggle Compact Tiling";
+      comment = "Snap windows into a smaller centered area instead of the whole screen";
+      icon = "view-fullscreen-symbolic";
+      # same as the bar's tile size button
+      exec = ''hyprctl eval "toggle_tile_scale()"'';
+    };
     toggle-appearance = {
       name = "Toggle Appearance";
       comment = "Switch between light and dark mode";

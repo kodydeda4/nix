@@ -1,7 +1,10 @@
 {
   pkgs,
   inputs,
-}: {
+}: let
+  zed = import ./pkgs/zed.nix {inherit pkgs inputs;};
+  zen = import ./pkgs/zen.nix {inherit pkgs inputs;};
+in {
   # -------------------------------------------------------------------------
   # shared
   # -------------------------------------------------------------------------
@@ -10,30 +13,14 @@
     brave
     obsidian
     slack
-    # Zed reparses every macro body as Rust, and rsx! (Dioxus) isn't, so its
-    # highlighting came out broken: built with an RSX language for it instead
-    # (dotfiles/zed/rsx). Not from the cache, so a Zed update is a long build:
-    # it comes from its own pinned nixpkgs (flake.nix: nixpkgs-zed), and Zed's
-    # own tests are skipped, as they'd only add to it.
-    (inputs.nixpkgs-zed.legacyPackages.${pkgs.stdenv.hostPlatform.system}.zed-editor.overrideAttrs (old: {
-      patches = (old.patches or []) ++ [./dotfiles/zed/rsx/zed.patch];
-      postPatch =
-        (old.postPatch or "")
-        + ''
-          rsx=crates/grammars/src/rsx
-          mkdir $rsx
-          cp ${./dotfiles/zed/rsx}/{config.toml,injections.scm} $rsx/
-          cp crates/grammars/src/rust/{brackets,indents,overrides}.scm $rsx/
-          cat crates/grammars/src/rust/highlights.scm ${./dotfiles/zed/rsx/highlights.scm} > $rsx/highlights.scm
-        '';
-      doCheck = false;
-    }))
+    zed
     alejandra
     btop
     bun
     cbonsai
     cmatrix
     cowsay
+    delta
     dioxus-cli
     fastfetch
     fd
@@ -81,7 +68,7 @@
     mos
     alt-tab-macos
     mkalias
-    xcbeautify # xcodebuild.nvim log formatting
+    xcbeautify
   ];
 
   # Android SDK + NDK for `dx serve --android` (Dioxus). Versions match what
@@ -135,35 +122,17 @@
 
   linux = with pkgs; [
     inputs.claude-desktop.packages.${pkgs.stdenv.hostPlatform.system}.default
-    # Cmd+, opens Settings (dotfiles/zen/autoconfig.js). The autoconfig goes in
-    # the unwrapped package: Zen's launcher runs the unwrapped binary and Gecko
-    # reads prefs next to it, so wrapFirefox's extraPrefs is never loaded.
-    (let
-      zen = inputs.zen-browser;
-      unwrapped = zen.packages.${pkgs.stdenv.hostPlatform.system}.beta-unwrapped.overrideAttrs (old: {
-        postInstall =
-          (old.postInstall or "")
-          + ''
-            lib=$(echo $out/lib/zen-bin-*)
-            chmod u+w $lib $lib/defaults/pref
-            echo 'pref("general.config.filename", "zen-autoconfig.cfg");' > $lib/defaults/pref/zen-autoconfig.js
-            echo 'pref("general.config.obscure_value", 0);' >> $lib/defaults/pref/zen-autoconfig.js
-            echo 'pref("general.config.sandbox_enabled", false);' >> $lib/defaults/pref/zen-autoconfig.js
-            { echo '// First line must be a comment'; cat ${./dotfiles/zen/autoconfig.js}; } > $lib/zen-autoconfig.cfg
-          '';
-      });
-    in
-      import "${zen}/wrap-zen.nix" pkgs.wrapFirefox unwrapped {icon = "zen-browser";})
+    zen
     discord
     geary
     ghostty
     github-desktop
     gnomeExtensions.blur-my-shell
     mpv
-    nwg-displays # display settings (scale, resolution, layout) for Hyprland
-    overskride # Bluetooth settings
+    nwg-displays
+    overskride
     papirus-icon-theme
-    python3 # Zed's formatters (dotfiles/zed/format); the Mac has its own
+    python3
     gcc
     git
     gnumake

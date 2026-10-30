@@ -1,0 +1,5 @@
+# Diffs go through delta for syntax highlighting (`delta --list-syntax-themes` for others)
+git:
+  diffRenderers:
+    - colorArg: always
+      command: delta --dark --paging=never --syntax-theme=TwoDark

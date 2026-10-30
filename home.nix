@@ -102,6 +102,11 @@ in {
   # (folder link, so new match/config files are picked up without a rebuild)
   home.file."Library/Application Support/espanso" = lib.mkIf isDarwin {source = link "espanso";};
 
+  # Lazygit reads ~/Library/Application Support/lazygit on the Mac, ~/.config/lazygit on
+  # Linux. Only config.yml is linked: lazygit keeps its own state.yml in the same folder.
+  home.file."Library/Application Support/lazygit/config.yml" = lib.mkIf isDarwin {source = link "lazygit/config.yml";};
+  xdg.configFile."lazygit/config.yml" = lib.mkIf isLinux {source = link "lazygit/config.yml";};
+
   #=====================================================================================
   # ThinkPad (Linux) only
   #=====================================================================================

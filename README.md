@@ -69,6 +69,7 @@ nix/
 ├── flake.nix            # inputs, settings shared by both machines, and the two machines
 ├── flake.lock           # pinned versions of everything (`nix flake update` to bump)
 ├── packages.nix         # EVERY package: shared / mac / linux, Homebrew, App Store
+├── pkgs/                # custom builds packages.nix imports (zed.nix: RSX highlighting, zen.nix: Cmd+, settings)
 ├── hosts/
 │   ├── mac/default.nix  # MAC: macOS defaults, Homebrew setup, zsh
 │   └── nixos/
@@ -93,6 +94,7 @@ nix/
 | `zed/` | `~/.config/zed` | both | |
 | `yazi/` | `~/.config/yazi` | both | shortcuts, theme, borders (flavors/plugins are plain copies) |
 | `fastfetch/` | `~/.config/fastfetch` | both | greeting on new terminals |
+| `lazygit/config.yml` | `~/Library/Application Support/lazygit` (Mac), `~/.config/lazygit` (Linux) | both | diffs paged through delta for syntax highlighting |
 | `karabiner/` | `~/.config/karabiner` | Mac | Caps Lock = Esc/Hyper, Hyper+letter app keys (`app-toggle.sh`), Brave-profile shortcuts |
 | `espanso/` | `~/Library/Application Support/espanso` | Mac | text expansion |
 | `xcode/KeyBindings/` | `~/Library/Developer/Xcode/UserData/KeyBindings` | Mac | |

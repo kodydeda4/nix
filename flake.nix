@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    # Zed's own nixpkgs (packages.nix): Zed is compiled here with a patch, so
+    # Zed's own nixpkgs (pkgs/zed.nix): Zed is compiled here with a patch, so
     # it's pinned to a commit `nix flake update` leaves alone. To update Zed,
     # put the commit nixpkgs is locked to (flake.lock) here.
     nixpkgs-zed.url = "github:NixOS/nixpkgs/8edc0c72e3a38faf5434e40d1f19431125fe4b30";

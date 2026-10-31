@@ -462,7 +462,7 @@ end
 -- every save), and resets at log-in.
 --
 -- Zen mode 2, Meh+7, per workspace too: zen mode, plus Ghostty with no
--- background or blur at all and the wallpaper (only the wallpaper) dimmed, so
+-- background, blur or shadow at all and the wallpaper (only the wallpaper) dimmed, so
 -- its text floats over it. Meh+7 again goes back to how it was
 -- (zen mode or not); Meh+0 turns both off. In nvim, Space t b turns the
 -- editor's own background off too. Its workspaces are in a second file.
@@ -582,13 +582,15 @@ end
 -- whenever they were behind Ghostty.) ZEN2_DIM is how dark: 0 to 1.
 local ZEN2_DIM = 0.9
 local WALLPAPER_DIM = os.getenv("HOME") .. "/.config/hypr/wallpaper-dim.py"
--- Ghostty: no blur behind it, and its background goes in GHOSTTY_ZEN, which
+-- Ghostty: no blur behind it, no shadow (over the dimmed wallpaper it reads
+-- as a gray border), and its background goes in GHOSTTY_ZEN, which
 -- Ghostty's config loads last (dotfiles/ghostty/config); SIGUSR2 makes
 -- Ghostty reload its config.
 local zen2_ghostty = hl.window_rule({
 	name = "zen2-ghostty",
 	match = { class = "^com\\.mitchellh\\.ghostty$" },
 	no_blur = true,
+	no_shadow = true,
 	enabled = false,
 })
 local GHOSTTY_ZEN_DIR = os.getenv("HOME") .. "/.local/state/ghostty"

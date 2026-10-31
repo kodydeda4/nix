@@ -1,24 +1,15 @@
 -- The bottom bar:
---   under the file tree: the repo name, then the git branch
---   under the editor, on its solid background: the vim mode, plus the
+--   in the (full-screen) file tree, on its glass: the repo name, then the git
+--     branch
+--   in a file, on the editor's solid background: the vim mode, plus the
 --     language server's progress while it's busy ("Indexing…"), on the left;
---     error / warning / hint / info counts on the right edge (click
---     one to hide / show that severity in the editor)
+--     the git branch and error / warning / hint / info counts on the right
+--     edge (click a count to hide / show that severity in the editor)
 -- Every item shows even when it's zero or idle, so the layout stays put.
--- With the tree closed, only the editor part shows, across the whole width.
--- With the cursor in the tree, it describes the last file window you were in.
 
 local utils = require "nvchad.stl.utils"
 local zen = require "configs.zen"
 local api = vim.api
-
-local function tree_win()
-  for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
-    if vim.bo[api.nvim_win_get_buf(win)].filetype == "NvimTree" then
-      return win
-    end
-  end
-end
 
 -- the current folder's repo and branch, for when the buffer has none of its
 -- own (no file open yet): read in the background, refreshed on the events below
@@ -196,57 +187,31 @@ api.nvim_create_autocmd({ "WinNew", "WinClosed", "BufWinEnter", "TermOpen", "Tab
 api.nvim_create_autocmd("User", { pattern = "HyprZen", callback = update_laststatus })
 vim.schedule(update_laststatus) -- zen mode may be on already
 
--- the bar above the terminal: the tree-closed layout, as wide as its window
-local function above_terminal()
-  local win = vim.g.statusline_winid or api.nvim_get_current_win()
+-- in a file: the vim mode (and LSP progress) on the left; the branch and the
+-- diagnostics on the right edge, `room` columns over
+local function editor_bar(room)
   local left = to_editor("%#XcodeEditor#" .. mode_and_progress())
   local right = to_editor(branch() .. "%#XcodeEditor#  " .. diagnostics())
-  local gap = math.max(api.nvim_win_get_width(win) - width(left .. right), 1)
+  local gap = math.max(room - width(left .. right), 1)
   return left .. to_editor "%#XcodeEditor#" .. string.rep(" ", gap) .. right
+end
+
+-- in the file tree: the repo, then the branch right after it, on the tree's
+-- glass, lined up with the tree's text past its margin
+local function tree_bar(win)
+  local info = vim.fn.getwininfo(win)[1]
+  local indent = string.rep(" ", info and info.textoff or 0)
+  return "%#StatusLine#" .. indent .. repo() .. "  " .. branch():gsub("^(%%#SidebarBranch#) ", "%1") .. "%#StatusLine#"
 end
 
 return function()
   if zen.on then
     return ""
   end
-  if vim.o.laststatus ~= 3 then
-    return above_terminal()
+  local win = vim.g.statusline_winid or api.nvim_get_current_win()
+  if vim.bo[api.nvim_win_get_buf(win)].filetype == "NvimTree" then
+    return tree_bar(win)
   end
-
-  -- in the tree: describe the previous window (the file you came from)
-  if vim.bo[api.nvim_get_current_buf()].filetype == "NvimTree" then
-    local prev = vim.fn.win_getid(vim.fn.winnr "#")
-    if prev ~= 0 then
-      vim.g.statusline_winid = prev
-    end
-  end
-
-  local tree = tree_win()
-  local sidebar_width = tree and api.nvim_win_get_width(tree) or 0
-
-  -- under the tree: the repo, then the branch right after it
-  local sidebar = ""
-  if tree then
-    -- lined up with the tree's text, past its sign column
-    local info = vim.fn.getwininfo(tree)[1]
-    local indent = string.rep(" ", info and info.textoff or 0)
-    local repo_and_branch = repo() .. "  " .. branch():gsub("^(%%#SidebarBranch#) ", "%1")
-    if width(indent .. repo_and_branch) > sidebar_width then
-      repo_and_branch = branch():gsub("^(%%#SidebarBranch#) ", "%1") -- too narrow: the branch wins
-    end
-    local left, right = "%#StatusLine#" .. indent .. repo_and_branch, ""
-    local gap = math.max(sidebar_width - width(left .. right), 0)
-    sidebar = left .. "%#StatusLine#" .. string.rep(" ", gap) .. right
-  end
-
-  -- under the editor: vim mode (and LSP progress) left, diagnostics on the right edge
-  local room = vim.o.columns - sidebar_width
-  local left = to_editor("%#XcodeEditor#" .. mode_and_progress())
-  local right = to_editor(diagnostics())
-  if not tree then
-    -- tree closed: the branch moves here, next to the diagnostics
-    right = to_editor(branch() .. "%#XcodeEditor#  ") .. right
-  end
-  local gap = math.max(room - width(left .. right), 1)
-  return sidebar .. left .. to_editor "%#XcodeEditor#" .. string.rep(" ", gap) .. right
+  -- above the terminal: as wide as its window
+  return editor_bar(vim.o.laststatus == 3 and vim.o.columns or api.nvim_win_get_width(win))
 end

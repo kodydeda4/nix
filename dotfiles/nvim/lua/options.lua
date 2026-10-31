@@ -70,14 +70,14 @@ local function oled_bars()
       else
         new.bg = grey and TAB_BAR_BG or "#000000"
       end
-      -- the status bar: no background of its own. Under the file tree that's
+      -- the status bar: no background of its own. In the file tree that's
       -- the glass; under the editor configs/sidebar_status.lua draws it solid.
       if not name:match "^Tb" then
         new.bg = nil
         new.reverse = nil
       end
       -- the empty rest of the tab bar, above the editor: the editor's solid
-      -- color (only the sidebar is see-through)
+      -- color (only the file tree is see-through)
       local editor = vim.api.nvim_get_hl(0, { name = "XcodeEditor", link = false })
       if name == "TbFill" then
         new.bg = editor.bg

@@ -4,18 +4,20 @@ return {
     lazy = false,
   },
 
-  -- file tree: Enter opens the file in the split you came from, instead of
-  -- asking which window to use (the letter "window picker")
+  -- file tree: full screen, in the editor's own window instead of a sidebar
+  -- (configs/tree_fullscreen.lua). Enter opens the file right there, in place
+  -- of the tree; eject = false lets it (nvim-tree otherwise pushes whatever
+  -- takes the tree's window into a new split).
   {
     "nvim-tree/nvim-tree.lua",
     opts = function(_, opts)
       opts.actions = vim.tbl_deep_extend("force", opts.actions or {}, {
-        open_file = { window_picker = { enable = false } },
+        open_file = { window_picker = { enable = false }, eject = false },
       })
       -- don't unfold the tree to every file you open (search results etc.)
       opts.update_focused_file = { enable = false }
       -- no 2-column sign column on the left of the tree
-      opts.view = vim.tbl_deep_extend("force", opts.view or {}, { width = 50, signcolumn = "no" })
+      opts.view = vim.tbl_deep_extend("force", opts.view or {}, { signcolumn = "no" })
       -- Xcode-style icons for Swift packages and .xcodeproj (configs/xcode_tree.lua)
       opts.renderer = opts.renderer or {}
       opts.renderer.highlight_git = false -- names stay white; git status icons remain
@@ -51,6 +53,11 @@ return {
           end
           undo.delete(paths)
         end
+        -- Enter / o / double-click: open the file in place of the tree (a
+        -- folder unfolds)
+        map("<CR>", api.node.open.replace_tree_buffer, "open in place")
+        map("o", api.node.open.replace_tree_buffer, "open in place")
+        map("<2-LeftMouse>", api.node.open.replace_tree_buffer, "open in place")
         map("<Space>", function()
           api.marks.toggle()
           vim.cmd "normal! j"
@@ -418,9 +425,9 @@ return {
       -- prompts (file tree rename / new file / delete y/n, LSP rename...) as a
       -- popup instead of the command line at the bottom
       input = { enabled = true, expand = false },
-      -- from the file tree: the prompt sits inside the sidebar, right under the
-      -- item being renamed / created in, as wide as the tree; elsewhere (LSP
-      -- rename...) near the top, centered
+      -- from the file tree: the prompt sits right under the item being renamed /
+      -- created in, at most 60 wide; elsewhere (LSP rename...) near the top,
+      -- centered
       styles = {
         input = (function()
           -- where the prompt goes, worked out once from the window it opened from
@@ -432,7 +439,7 @@ return {
                 win.xcode_place = {
                   row = top - 1 + vim.fn.winline(),
                   col = left - 1,
-                  width = vim.api.nvim_win_get_width(cur) - 2,
+                  width = math.min(vim.api.nvim_win_get_width(cur) - 2, 60),
                 }
               else
                 win.xcode_place = { row = 2, col = math.floor((vim.o.columns - 62) / 2), width = 60 }

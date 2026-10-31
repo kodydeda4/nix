@@ -6,9 +6,9 @@ require "configs.appearance"
 -- Swift keeps the Xcode syntax colors; other files get code_theme_dark / _light's
 require "configs.code_syntax"
 
--- Starting without a file (`nvim` or `nvim some/folder`): the file tree opens
--- on the side and the cursor starts in an empty editor (not in the tree, so the
--- leader key works), like opening a project in Xcode.
+-- Starting without a file (`nvim` or `nvim some/folder`): the full-screen file
+-- tree opens (configs/tree_fullscreen.lua), over an empty editor that ⌘0
+-- switches to.
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
     local args = vim.fn.argv()
@@ -26,12 +26,8 @@ vim.api.nvim_create_autocmd("VimEnter", {
       -- missing buffer and aborts opening the file
       vim.t.bufs = vim.tbl_filter(vim.api.nvim_buf_is_valid, vim.t.bufs or {})
     end
-    local editor = vim.api.nvim_get_current_win()
     vim.schedule(function()
-      require("nvim-tree.api").tree.open()
-      if vim.api.nvim_win_is_valid(editor) then
-        vim.api.nvim_set_current_win(editor) -- nvim-tree focuses itself
-      end
+      require("configs.tree_fullscreen").open()
     end)
   end,
 })
@@ -53,7 +49,7 @@ require "configs.swift_marks"
 require "configs.scope_braces"
 
 -- keep splits evenly sized (50/50) when the terminal is resized; windows with
--- a fixed width, like the file tree, keep theirs
+-- a fixed width keep theirs
 vim.api.nvim_create_autocmd("VimResized", {
   callback = function()
     local current = vim.api.nvim_get_current_tabpage()

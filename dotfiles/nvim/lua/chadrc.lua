@@ -43,34 +43,17 @@ M.base46 = {
 
 -- M.nvdash = { load_on_startup = true }
 
--- blank space as wide as the file tree (and the column next to it), so the
--- tab bar starts where the editor does; "" when the tree is closed
-local function tree_offset(hl)
-	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-		if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == "NvimTree" then
-			-- the last column sits over the solid divider next to the tree
-			return "%#" .. hl .. "#" .. string.rep(" ", vim.api.nvim_win_get_width(win)) .. "%#XcodeEditor# "
-		end
-	end
-	return ""
-end
-
 M.ui = {
 	tabufline = {
 		-- always show the tab bar, even with one file open (NvChad hides it
 		-- until there are two)
 		lazyload = false,
 		-- no theme-toggle / close-all buttons on the right ("btns")
-		order = { "treeOffset", "buffers", "tabs" },
+		order = { "buffers", "tabs" },
 		modules = {
-			-- the blank block above the file tree: glass like the tree itself,
-			-- with no divider (NvChad draws it in the tab bar's grey, plus a │)
-			treeOffset = function()
-				return tree_offset "NvimTreeNormal"
-			end,
-
-			-- NvChad's open-file tabs, except that with the cursor in the file
-			-- tree the file you came from still shows as the selected tab
+			-- NvChad's open-file tabs, except that in the (full-screen) file tree
+			-- the file you came from still shows as the selected tab, and the
+			-- rest of the bar is glass like the tree
 			buffers = function()
 				local api = vim.api
 				local style_buf = require("nvchad.tabufline.utils").style_buf
@@ -79,11 +62,11 @@ M.ui = {
 				local selected = api.nvim_get_current_buf()
 				local in_tree = vim.bo[selected].filetype == "NvimTree"
 				if in_tree then
-					local prev = vim.fn.win_getid(vim.fn.winnr "#")
-					selected = prev ~= 0 and api.nvim_win_get_buf(prev) or selected
+					local alt = vim.fn.bufnr "#"
+					selected = alt > 0 and alt or selected
 				end
 
-				local space = vim.o.columns - api.nvim_eval_statusline(tree_offset "NvimTreeNormal", { use_tabline = true }).width
+				local space = vim.o.columns
 				vim.t.bufs = vim.tbl_filter(api.nvim_buf_is_valid, vim.t.bufs or {})
 				local tabs, has_selected = {}, false
 				for i, nr in ipairs(vim.t.bufs) do
@@ -114,7 +97,7 @@ M.ui = {
 					end
 					table.insert(tabs, tab)
 				end
-				return table.concat(tabs) .. "%#TbFill#%="
+				return table.concat(tabs) .. (in_tree and "%#NvimTreeNormal#%=" or "%#TbFill#%=")
 			end,
 		},
 	},
@@ -123,8 +106,7 @@ M.ui = {
 	telescope = { style = "bordered" },
 
 	statusline = {
-		-- just mode, git, LSP progress and diagnostics, under the file tree
-		-- (configs/sidebar_status.lua)
+		-- just mode, git, LSP progress and diagnostics (configs/sidebar_status.lua)
 		order = { "sidebar" },
 		modules = {
 			sidebar = function()

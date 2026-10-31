@@ -129,15 +129,18 @@ map("n", "<leader>tc", function()
   }
 end, { desc = "code theme picker" })
 
--- Space e: show / hide the file tree (NvChad's only focuses it)
-map("n", "<leader>e", "<cmd>NvimTreeToggle<cr>", { desc = "toggle file tree" })
+-- Space e / ⌘0 (Ghostty sends ⌥⇧E): switch between the code and the full-screen
+-- file tree, with the current file selected in it (configs/tree_fullscreen.lua)
+map("n", "<leader>e", function()
+  require("configs.tree_fullscreen").toggle()
+end, { desc = "toggle file tree" })
+map("n", "<M-E>", function()
+  require("configs.tree_fullscreen").toggle()
+end, { desc = "toggle file tree" })
 
--- ⌘0 (Ghostty sends ⌥⇧E): show / hide the file tree, like Xcode's navigator
-map("n", "<M-E>", "<cmd>NvimTreeToggle<cr>", { desc = "toggle file tree" })
-
--- ⌘⇧J (Ghostty sends ⌥⇧R): show the current file in the file tree and focus it, like Xcode
+-- ⌘⇧J (Ghostty sends ⌥⇧R): the file tree, with the current file selected, like Xcode
 map("n", "<M-R>", function()
-  require("nvim-tree.api").tree.find_file { open = true, focus = true }
+  require("configs.tree_fullscreen").reveal()
 end, { desc = "reveal file in tree" })
 
 -- ⌘> (Ghostty sends ⌥>): fold / unfold the whole file. Folding keeps top-level

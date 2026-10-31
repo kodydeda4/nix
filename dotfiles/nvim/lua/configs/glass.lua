@@ -1,7 +1,10 @@
--- Xcode-style translucent sidebar: the theme leaves Normal without a background
--- so Ghostty's glass shows through (the file tree), and every other window
--- draws a solid background instead: XcodeEditor for editor windows, the popup
--- background (NormalFloat) for floating windows. Only the sidebar is glass.
+-- Xcode-style translucent file tree: the theme leaves Normal without a
+-- background so Ghostty's glass shows through (the tree, full screen:
+-- configs/tree_fullscreen.lua), and every other window draws a solid
+-- background instead: XcodeEditor for editor windows, the popup background
+-- (NormalFloat) for floating windows. Only the tree is glass.
+
+local M = {}
 
 -- a popup whose background would come from Normal (none, so it'd be see-through)
 -- gets NormalFloat's solid one
@@ -33,32 +36,42 @@ local function solid(win)
   local buf = vim.api.nvim_win_get_buf(win)
   local whl = vim.wo[win].winhighlight
   if vim.bo[buf].filetype == "NvimTree" then
-    -- no divider line: the glass sidebar meeting the solid editor is the edge
-    vim.wo[win].fillchars = "vert: ,eob: "
+    -- (set for the tree only: it takes turns with the code in one window
+    -- (configs/tree_fullscreen.lua), and these mustn't carry over to the
+    -- next file opened there)
+    local function set(name, value)
+      vim.api.nvim_set_option_value(name, value, { win = win, scope = "local" })
+    end
+    -- no divider line or ~ on empty rows
+    set("fillchars", "vert: ,eob: ")
     -- a 1-column left margin, so the tree starts in the same column as tmux's
     -- bar below (" 0 ○ ●"): an empty fold column, drawn in the tree's glass
     -- instead of the fold column's solid color
-    vim.wo[win].foldcolumn = "1"
-    vim.wo[win].statuscolumn = ""
+    set("foldcolumn", "1")
+    set("statuscolumn", "")
     if not whl:find "FoldColumn:NvimTreeNormal" then
       local extra = "FoldColumn:NvimTreeNormal"
-      vim.wo[win].winhighlight = whl == "" and extra or (whl .. "," .. extra)
+      set("winhighlight", whl == "" and extra or (whl .. "," .. extra))
     end
     return
   end
   -- terminals (⌘⇧Y) take Ghostty's own text and background (configs/ghostty_term.lua)
   local normal = vim.bo[buf].buftype == "terminal" and "GhosttyTerm" or "XcodeEditor"
-  if whl:find("Normal:" .. normal .. ",") or whl:match("Normal:" .. normal .. "$") then
+  local has_normal = whl:find("Normal:" .. normal .. ",") or whl:match("Normal:" .. normal .. "$")
+  if has_normal and not whl:find ":NvimTree" then
     return
   end
+  -- (none of the file tree's colors either: nvim-tree leaves them as the
+  -- window's default, so a file opened in the tree's place would get them)
   local entries = { "Normal:" .. normal, "NormalNC:" .. normal }
   for entry in whl:gmatch "[^,]+" do
-    if not entry:match "^NormalN?C?:" then
+    if not entry:match "^NormalN?C?:" and not entry:match ":NvimTree" then
       entries[#entries + 1] = entry
     end
   end
   vim.wo[win].winhighlight = table.concat(entries, ",")
 end
+M.solid = solid
 
 local function solid_all()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
@@ -70,14 +83,15 @@ end
 vim.api.nvim_create_autocmd({ "VimEnter", "WinNew", "WinEnter", "BufWinEnter", "FileType", "CmdlineEnter" }, {
   group = vim.api.nvim_create_augroup("XcodeGlass", { clear = true }),
   callback = function()
+    solid(vim.api.nvim_get_current_win()) -- right away, before it's drawn
     vim.schedule(solid_all)
     vim.defer_fn(solid_all, 30) -- popups that appear right after the event
   end,
 })
 
 -- The tab bar's base, TabLineFill (Neovim links it to a grey), shows wherever
--- nothing else colors the tab bar: the block above the file tree, which stays
--- glass like the tree. Set here rather than only in the theme so it holds even
+-- nothing else colors the tab bar: cleared, so it's glass rather than grey
+-- there. Set here rather than only in the theme so it holds even
 -- while base46 is still on an older compiled cache.
 local function clear_tabline_fill()
   vim.api.nvim_set_hl(0, "TabLineFill", {})
@@ -98,7 +112,7 @@ local function clear_tabline_fill()
     vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder" .. kind, { fg = grey, bg = editor.bg })
     vim.api.nvim_set_hl(0, "NoiceCmdlineIcon" .. kind, { fg = grey })
   end
-  -- the git branch in the status bar under the tree (configs/sidebar_status.lua):
+  -- the git branch in the status bar (configs/sidebar_status.lua):
   -- NvChad's grey, but a darker grey in light mode, where that one is too faint
   if vim.o.background == "light" then
     vim.api.nvim_set_hl(0, "SidebarBranch", { fg = "#6e6e73", bold = true })
@@ -129,3 +143,5 @@ vim.api.nvim_create_autocmd("User", {
     vim.schedule(background.strip)
   end,
 })
+
+return M

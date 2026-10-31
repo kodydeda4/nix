@@ -9,6 +9,7 @@
 -- With the cursor in the tree, it describes the last file window you were in.
 
 local utils = require "nvchad.stl.utils"
+local zen = require "configs.zen"
 local api = vim.api
 
 local function tree_win()
@@ -165,7 +166,9 @@ end
 -- With the ⌘⇧Y terminal open below the editor, the bar moves up between them,
 -- like Xcode's debug area: per-window status lines with none on the last row
 -- (laststatus=0) means only the window above the terminal gets one. Back to
--- the single bottom bar (laststatus=3) once the terminal closes.
+-- the single bottom bar (laststatus=3) once the terminal closes. In Hyprland's
+-- zen mode (configs/zen.lua), no bottom bar at all (laststatus=0), and the one
+-- above the terminal is left blank.
 local function term_below_editor()
   for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
     if vim.bo[api.nvim_win_get_buf(win)].buftype == "terminal" and api.nvim_win_get_config(win).relative == "" then
@@ -179,16 +182,19 @@ local function term_below_editor()
   end
   return false
 end
+local function update_laststatus()
+  local want = (zen.on or term_below_editor()) and 0 or 3
+  if vim.o.laststatus ~= want then
+    vim.o.laststatus = want
+  end
+end
 api.nvim_create_autocmd({ "WinNew", "WinClosed", "BufWinEnter", "TermOpen", "TabEnter" }, {
   callback = function()
-    vim.schedule(function()
-      local want = term_below_editor() and 0 or 3
-      if vim.o.laststatus ~= want then
-        vim.o.laststatus = want
-      end
-    end)
+    vim.schedule(update_laststatus)
   end,
 })
+api.nvim_create_autocmd("User", { pattern = "HyprZen", callback = update_laststatus })
+vim.schedule(update_laststatus) -- zen mode may be on already
 
 -- the bar above the terminal: the tree-closed layout, as wide as its window
 local function above_terminal()
@@ -200,6 +206,9 @@ local function above_terminal()
 end
 
 return function()
+  if zen.on then
+    return ""
+  end
   if vim.o.laststatus ~= 3 then
     return above_terminal()
   end

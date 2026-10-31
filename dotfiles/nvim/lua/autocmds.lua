@@ -36,6 +36,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
   end,
 })
 
+-- Hyprland's zen mode hides the tab bar, line numbers and bottom bar
+require "configs.zen"
+
 -- terminals inside nvim (⌘⇧Y) use Ghostty's colors, not the theme's
 require "configs.ghostty_term"
 -- translucent file tree over a solid editor, like Xcode's sidebar

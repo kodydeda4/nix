@@ -454,7 +454,8 @@ local function snapped_rect(win)
 	end
 end
 
--- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, and drops the
+-- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, tmux's status
+-- bar, and nvim's bars and line numbers (dotfiles/nvim/lua/configs/zen.lua), and drops the
 -- gaps, window borders and rounded corners (shadows stay), on the workspace
 -- you're on; Meh+0 there again brings them back. Switching workspaces switches zen with it. Snapped
 -- windows are re-fitted to the new space. Which workspaces are zen lives in a
@@ -567,6 +568,17 @@ local function apply_zen(on, show_bar)
 	zen_shown = on
 	dock_space = (on or dock_hidden()) and 0 or DOCK_SPACE
 	apply_decorations()
+	-- tmux and nvim: the flag file is what nvim watches, and what tmux.conf
+	-- checks when tmux starts or reloads; this sets tmux if it's already running
+	if on then
+		local f = io.open(flag_file("zen-shown"), "w")
+		if f then
+			f:close()
+		end
+	else
+		os.remove(flag_file("zen-shown"))
+	end
+	hl.exec_cmd("tmux set -g status " .. (on and "off" or "on"))
 	if show_bar ~= false then
 		hl.exec_cmd(
 			on and "noctalia msg bar-hide; noctalia msg dock-hide"

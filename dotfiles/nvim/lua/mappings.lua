@@ -203,6 +203,13 @@ map("n", "<leader>ti", function()
   end
 end, { desc = "toggle indent lines" })
 
+-- Space t n: show / hide the line numbers, in every file (configs/zen.lua,
+-- which also hides them in Hyprland's zen mode). Instead of NvChad's Space n.
+pcall(vim.keymap.del, "n", "<leader>n")
+map("n", "<leader>tn", function()
+  require("configs.zen").toggle_numbers()
+end, { desc = "toggle line numbers" })
+
 -- Space t b: the background on / off, so the code floats over whatever's
 -- behind Ghostty (Hyprland's zen mode 2, Meh+7, makes that the dimmed
 -- wallpaper), remembered across restarts (configs/background.lua)

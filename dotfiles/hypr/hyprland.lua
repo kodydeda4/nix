@@ -147,7 +147,7 @@ hl.config({
 	general = {
 		gaps_in = 12, -- (zen mode, Meh+0, sets these and the border to 0)
 		gaps_out = { top = 8, right = 24, bottom = 24, left = 24 }, -- less under the menu bar (BAR_GAP, below)
-		border_size = 2,
+		border_size = 1, -- thin, like the Mac's (colors: BORDER COLORS, below)
 		layout = "dwindle",
 		resize_on_border = true, -- drag a window's edge to resize it, like the Mac
 	},
@@ -459,8 +459,7 @@ end
 -- you're on; Meh+0 there again brings them back. Switching workspaces switches zen with it. Snapped
 -- windows are re-fitted to the new space. Which workspaces are zen lives in a
 -- file (one name per line) so it survives config reloads (Hyprland reloads on
--- every save, and whenever Noctalia rewrites the border colors), and resets at
--- log-in.
+-- every save), and resets at log-in.
 local ZEN_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen-workspaces"
 
 local function zen_workspaces()
@@ -523,7 +522,7 @@ local function apply_decorations()
 				bottom = 24,
 				left = 24,
 			},
-			border_size = (zen_shown or flag_set("borders-off")) and 0 or 2,
+			border_size = (zen_shown or flag_set("borders-off")) and 0 or 1,
 		},
 		decoration = {
 			rounding = zen_shown and 0 or 8,
@@ -892,33 +891,27 @@ hl.bind("XF86AudioMute", hl.dsp.exec_cmd("noctalia msg volume-mute"), fn)
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("noctalia msg brightness-up"), fn)
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("noctalia msg brightness-down"), fn)
 
--------------------------------
----- WALLPAPER BORDER COLORS ----
--------------------------------
+-----------------------
+---- BORDER COLORS ----
+-----------------------
 
--- Noctalia's "hyprland" template (enabled in dotfiles/noctalia) writes the
--- wallpaper's palette to noctalia.lua next to this file, and rewrites it when
--- the wallpaper changes: focused window = primary color, others = surface.
--- pcall so Hyprland still starts before Noctalia has written it the first time.
--- (Noctalia looks for the line `require("noctalia").apply_theme()` and appends
--- it if missing; this comment keeps it from doing that.)
-local has_noctalia, noctalia = pcall(require, "noctalia")
-if has_noctalia then
-	noctalia.apply_theme()
+-- Thin gray window borders like the Mac's: light gray on dark mode's windows,
+-- darker gray on light mode's, the focused window's a shade stronger. Picked
+-- from GNOME's color-scheme (the light / dark mode apps and Noctalia follow);
+-- follow-appearance.sh calls apply_border_colors() whenever it changes.
+local BORDER_COLORS = {
+	dark = { active = "rgb(5e5e5e)", inactive = "rgb(404040)" },
+	light = { active = "rgb(a8a8a8)", inactive = "rgb(cccccc)" },
+}
 
-	-- Tone the focused-window border down: mix the wallpaper color with the
-	-- dark surface color. BORDER_BRIGHTNESS 1 = full color, 0 = surface color.
-	local BORDER_BRIGHTNESS = 0.55
-	local function hex(c)
-		return c:match("%x%x%x%x%x%x")
+-- `hyprctl eval 'apply_border_colors()'`
+_G.apply_border_colors = function()
+	local p = io.popen("gsettings get org.gnome.desktop.interface color-scheme")
+	local scheme = p and p:read("*a") or ""
+	if p then
+		p:close()
 	end
-	local p, s = hex(noctalia.colors.primary or ""), hex(noctalia.colors.surface or "")
-	if p and s then
-		local mixed = ""
-		for i = 1, 5, 2 do
-			local a, b = tonumber(p:sub(i, i + 1), 16), tonumber(s:sub(i, i + 1), 16)
-			mixed = mixed .. string.format("%02x", math.floor(b + (a - b) * BORDER_BRIGHTNESS + 0.5))
-		end
-		hl.config({ general = { col = { active_border = "rgb(" .. mixed .. ")" } } })
-	end
+	local c = BORDER_COLORS[scheme:find("dark", 1, true) and "dark" or "light"]
+	hl.config({ general = { col = { active_border = c.active, inactive_border = c.inactive } } })
 end
+apply_border_colors()

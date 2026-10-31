@@ -195,10 +195,6 @@ pinned = [
   "slack",
 ]
 
-[theme.templates]
-# Window borders in Hyprland take their colors from the wallpaper
-builtin_ids = ["hyprland"]
-
 [wallpaper]
 # Wallpaper picker folder; the Wallhaven plugin downloads here too (default ~/Pictures)
 directory = "~/Pictures/wallpapers"

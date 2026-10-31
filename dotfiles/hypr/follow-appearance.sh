@@ -40,4 +40,6 @@ to_noctalia
 
 gsettings monitor org.gnome.desktop.interface color-scheme | while read -r _; do
 	to_noctalia
+	# window borders' gray (hyprland.lua)
+	hyprctl eval 'apply_border_colors()' >/dev/null
 done

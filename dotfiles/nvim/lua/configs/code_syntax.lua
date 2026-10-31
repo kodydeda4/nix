@@ -143,6 +143,9 @@ function M.build(preview)
     M.ns, M.xcode_ns = 0, 0 -- not an Xcode theme: leave windows alone
     return
   end
+  if require("configs.background").off then
+    editor = { fg = editor.fg } -- Space t b: see-through (configs/background.lua)
+  end
   M.xcode_ns = new_ns("xcode", { Normal = editor, NormalNC = editor })
 
   package.loaded.chadrc = nil

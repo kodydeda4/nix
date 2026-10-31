@@ -29,7 +29,8 @@ local function update(buf)
         local kind = child:type()
         if not open and pairs_[kind] then
           open = child
-        elseif open and kind == pairs_[open:type()] then
+        -- skip braces the parser invented to recover from a syntax error
+        elseif open and not child:missing() and kind == pairs_[open:type()] then
           close = child
         end
       end
@@ -37,7 +38,7 @@ local function update(buf)
     if open and close then
       for _, brace in ipairs { open, close } do
         local row, col = brace:range()
-        vim.api.nvim_buf_set_extmark(buf, ns, row, col, { end_col = col + 1, hl_group = "ScopeBrace", priority = 200 })
+        vim.api.nvim_buf_set_extmark(buf, ns, row, col, { end_col = col + 1, hl_group = "ScopeBrace", priority = 200, strict = false })
       end
       return
     end

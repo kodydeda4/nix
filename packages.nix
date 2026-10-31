@@ -138,5 +138,6 @@ in {
     git
     gnumake
     unzip
+    wl-clipboard
   ];
 }

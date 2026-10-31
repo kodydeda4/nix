@@ -75,6 +75,9 @@ if [[ "$OSTYPE" == darwin* ]]; then
 	alias ip-address="ipconfig getifaddr en0"
 else
 	alias ip-address="hostname -I | cut -d' ' -f1"
+	# the Mac's clipboard commands, on Wayland (wl-clipboard, packages.nix)
+	alias pbcopy="wl-copy"
+	alias pbpaste="wl-paste --no-newline"
 fi
 alias internet-speed-test="speedtest-cli --simple"
 alias bonsai="cbonsai --seed 119 --live"

@@ -101,3 +101,8 @@ keybind = cmd+shift+j=text:\x1bR
 
 # Linux-only extras (ThinkPad), written by home.nix. Missing on the Mac, so skipped.
 config-file = ?../ghostty-linux/config
+
+# Hyprland's zen mode 2 (Meh+7): no background at all, so the text floats over
+# the dimmed wallpaper. Written while it's on (dotfiles/hypr/hyprland.lua),
+# which then has Ghostty reload its config. Loaded last, so it wins.
+config-file = ?../../.local/state/ghostty/zen.conf

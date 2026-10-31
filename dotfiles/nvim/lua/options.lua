@@ -76,8 +76,7 @@ local function oled_bars()
         new.bg = nil
         new.reverse = nil
       end
-      -- the empty rest of the tab bar, above the editor: the editor's solid
-      -- color (only the sidebar is see-through)
+      -- the empty rest of the tab bar, above the editor: the editor's color
       local editor = vim.api.nvim_get_hl(0, { name = "XcodeEditor", link = false })
       if name == "TbFill" then
         new.bg = editor.bg
@@ -90,6 +89,11 @@ local function oled_bars()
           -- the line numbers' grey; lighter still in light mode
           new.fg = light and "#bdbdc2" or vim.api.nvim_get_hl(0, { name = "LineNr", link = false }).fg
         end
+      end
+      -- the current tab: see-through too when the editor is (Space t b,
+      -- mappings.lua); its brighter text still sets it apart
+      if name:match "^TbBufOn" and not editor.bg then
+        new.bg = nil
       end
       vim.api.nvim_set_hl(0, name, new)
     end

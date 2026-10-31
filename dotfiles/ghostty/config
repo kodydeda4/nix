@@ -10,7 +10,7 @@ theme = dark:atom-one-dark-oled.conf, light:atom-one-light-thick.conf
 font-family = SF Mono
 font-size = 16
 # background-opacity = 1
-background-opacity = 0.90
+background-opacity = 0.70
 # background-opacity = 0.5
 # background-blur-radius = 20
 # translucent, blurred background; shows wherever nvim leaves the background
@@ -101,3 +101,7 @@ keybind = cmd+shift+j=text:\x1bR
 
 # Linux-only extras (ThinkPad), written by home.nix. Missing on the Mac, so skipped.
 config-file = ?../ghostty-linux/config
+
+# Hyprland's zen mode (Meh+0): a clear background over the dimmed wallpaper,
+# written there only while zen is on (dotfiles/hypr/hyprland.lua)
+config-file = ?/run/user/1000/ghostty-zen

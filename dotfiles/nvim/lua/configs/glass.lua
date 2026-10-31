@@ -114,3 +114,18 @@ vim.api.nvim_create_autocmd("User", {
     vim.schedule(clear_tabline_fill)
   end,
 })
+
+-- Space t b's background off (configs/background.lua): see-through everywhere.
+-- After the groups above and the terminal's (configs/ghostty_term.lua) are set.
+local background = require "configs.background"
+background.strip()
+vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, { callback = background.strip })
+vim.api.nvim_create_autocmd("OptionSet", { pattern = "background", callback = background.strip })
+vim.api.nvim_create_autocmd("User", {
+  -- and after a plugin loads: its theme colors come with it (the file tree's
+  -- edge, NvimTreeWinSeparator, was left solid)
+  pattern = { "NvThemeReload", "LazyLoad" },
+  callback = function()
+    vim.schedule(background.strip)
+  end,
+})

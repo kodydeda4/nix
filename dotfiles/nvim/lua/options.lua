@@ -91,6 +91,11 @@ local function oled_bars()
           new.fg = light and "#bdbdc2" or vim.api.nvim_get_hl(0, { name = "LineNr", link = false }).fg
         end
       end
+      -- Space t b's background off: the tab bar's see-through too
+      -- (configs/background.lua)
+      if require("configs.background").off then
+        new.bg = nil
+      end
       vim.api.nvim_set_hl(0, name, new)
     end
   end

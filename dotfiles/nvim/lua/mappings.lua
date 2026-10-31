@@ -203,4 +203,11 @@ map("n", "<leader>ti", function()
   end
 end, { desc = "toggle indent lines" })
 
+-- Space t b: the background on / off, so the code floats over whatever's
+-- behind Ghostty (Hyprland's zen mode 2, Meh+7, makes that the dimmed
+-- wallpaper), remembered across restarts (configs/background.lua)
+map("n", "<leader>tb", function()
+  require("configs.background").toggle()
+end, { desc = "toggle background" })
+
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")

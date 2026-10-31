@@ -124,7 +124,7 @@ hl.env("HYPRCURSOR_SIZE", "24")
 
 -- Animations: quick and Mac-like, about half the length of Hyprland's
 -- defaults. Speed is in tenths of a second (1.5 = 150 ms). Windows pop in
--- with a fast spring, workspaces slide, menus/launcher fade.
+-- with a fast spring, workspaces and menus/launcher fade.
 hl.curve("snap", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1 } } }) -- fast start, soft landing
 hl.curve("easeOutQuint", { type = "bezier", points = { { 0.23, 1 }, { 0.32, 1 } } })
 hl.curve("linear", { type = "bezier", points = { { 0, 0 }, { 1, 1 } } })
@@ -139,7 +139,7 @@ hl.animation({ leaf = "fade", enabled = true, speed = 1.5, bezier = "snap" })
 hl.animation({ leaf = "fadeOut", enabled = true, speed = 1, bezier = "linear" })
 hl.animation({ leaf = "layers", enabled = true, speed = 2, bezier = "easeOutQuint", style = "fade" })
 hl.animation({ leaf = "layersOut", enabled = true, speed = 1, bezier = "linear", style = "fade" })
-hl.animation({ leaf = "workspaces", enabled = true, speed = 2.5, bezier = "snap", style = "slide" })
+hl.animation({ leaf = "workspaces", enabled = true, speed = 2.5, bezier = "snap", style = "fade" })
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2.5, bezier = "snap", style = "slidevert" })
 hl.animation({ leaf = "border", enabled = true, speed = 3, bezier = "easeOutQuint" })
 
@@ -460,11 +460,19 @@ end
 -- windows are re-fitted to the new space. Which workspaces are zen lives in a
 -- file (one name per line) so it survives config reloads (Hyprland reloads on
 -- every save), and resets at log-in.
+--
+-- Zen mode 2, Meh+7, per workspace too: zen mode, plus Ghostty with no
+-- background or blur at all and the wallpaper (only the wallpaper) dimmed, so
+-- its text floats over it. Meh+7 again goes back to how it was
+-- (zen mode or not); Meh+0 turns both off. In nvim, Space t b turns the
+-- editor's own background off too. Its workspaces are in a second file.
 local ZEN_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen-workspaces"
+local ZEN2_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen2-workspaces"
 
-local function zen_workspaces()
+-- the workspaces in zen mode (in ZEN_FILE), or the ones listed in `file`
+local function zen_workspaces(file)
 	local set = {}
-	local f = io.open(ZEN_FILE, "r")
+	local f = io.open(file or ZEN_FILE, "r")
 	if f then
 		for name in f:lines() do
 			set[name] = true
@@ -474,8 +482,8 @@ local function zen_workspaces()
 	return set
 end
 
-local function save_zen_workspaces(set)
-	local f = io.open(ZEN_FILE, "w")
+local function save_zen_workspaces(set, file)
+	local f = io.open(file or ZEN_FILE, "w")
 	if not f then
 		return
 	end
@@ -568,6 +576,74 @@ local function apply_zen(on, show_bar)
 	end
 end
 
+-- Zen mode 2's wallpaper: darkened by wallpaper-dim.py next to this file, a
+-- see-through black sheet between the wallpaper and the windows, so other
+-- apps stay as bright as ever. (Hyprland's dim_around darkened them too
+-- whenever they were behind Ghostty.) ZEN2_DIM is how dark: 0 to 1.
+local ZEN2_DIM = 0.9
+local WALLPAPER_DIM = os.getenv("HOME") .. "/.config/hypr/wallpaper-dim.py"
+-- Ghostty: no blur behind it, and its background goes in GHOSTTY_ZEN, which
+-- Ghostty's config loads last (dotfiles/ghostty/config); SIGUSR2 makes
+-- Ghostty reload its config.
+local zen2_ghostty = hl.window_rule({
+	name = "zen2-ghostty",
+	match = { class = "^com\\.mitchellh\\.ghostty$" },
+	no_blur = true,
+	enabled = false,
+})
+local GHOSTTY_ZEN_DIR = os.getenv("HOME") .. "/.local/state/ghostty"
+local GHOSTTY_ZEN = GHOSTTY_ZEN_DIR .. "/zen.conf"
+local GHOSTTY_ZEN_LINES = {
+	"# zen mode 2 (Meh+7) is on: dotfiles/hypr/hyprland.lua",
+	"background-opacity = 0",
+	-- no shadow line along the window's top edge (GTK's top bar casts one on
+	-- the terminal by default)
+	"gtk-toolbar-style = flat",
+}
+
+local zen2_shown -- like zen_shown
+local function apply_zen2(on)
+	if on == zen2_shown then
+		return
+	end
+	zen2_shown = on
+	zen2_ghostty:set_enabled(on)
+	-- (starting it again does nothing if it's already running, e.g. after a
+	-- config reload)
+	hl.exec_cmd("python3 '" .. WALLPAPER_DIM .. "' " .. (on and ZEN2_DIM or "off"))
+	-- Only reload Ghostty when its file changes: this also runs on every config
+	-- reload.
+	local f = io.open(GHOSTTY_ZEN, "r")
+	local have = f and f:read("*a")
+	if f then
+		f:close()
+	end
+	if have == (on and table.concat(GHOSTTY_ZEN_LINES, "\n") .. "\n" or nil) then
+		return
+	end
+	hl.exec_cmd(
+		(
+			on
+				and string.format(
+					"mkdir -p '%s' && printf '%%s\\n' '%s' > '%s'",
+					GHOSTTY_ZEN_DIR,
+					table.concat(GHOSTTY_ZEN_LINES, "' '"),
+					GHOSTTY_ZEN
+				)
+			or string.format("rm -f '%s'", GHOSTTY_ZEN)
+		)
+			-- Nix's wrapper names the process ".ghostty-wrapped" (cut to 15
+			-- characters), not "ghostty"
+			.. "; pkill -USR2 -x '(\\.ghostty-wrappe|ghostty)'"
+	)
+end
+
+-- whether workspace `name` is in zen mode (either level), and in zen mode 2
+local function zen_state(name)
+	local zen2 = zen_workspaces(ZEN2_FILE)[name] == true
+	return zen2 or zen_workspaces()[name] == true, zen2
+end
+
 -- Runs change() (something that changes the free space: gaps, the bar, the
 -- dock) and then re-fits the windows that were snapped before it, on
 -- workspace `name` or, with no name, on every regular workspace. With `delay`
@@ -622,16 +698,36 @@ local function toggle_zen()
 		return
 	end
 	refit_snapped(function()
-		local set = zen_workspaces()
-		local on = not set[name]
+		local set, set2 = zen_workspaces(), zen_workspaces(ZEN2_FILE)
+		local on = not zen_state(name)
 		set[name] = on or nil
+		set2[name] = nil -- turning zen mode off turns zen mode 2 off too
 		save_zen_workspaces(set)
+		save_zen_workspaces(set2, ZEN2_FILE)
 		apply_zen(on)
+		apply_zen2(false)
 	end, name, 300)
 end
 -- Meh+0 or Meh+6 (so there's no workspace 6, below)
 hl.bind(MEH .. " + 0", toggle_zen)
 hl.bind(MEH .. " + 6", toggle_zen)
+
+-- Meh+7 (so there's no workspace 7 either): zen mode 2 on / off. Off goes back
+-- to plain zen mode if the workspace was in it before.
+hl.bind(MEH .. " + 7", function()
+	local name = active_workspace_name()
+	if not name then
+		return
+	end
+	refit_snapped(function()
+		local set2 = zen_workspaces(ZEN2_FILE)
+		set2[name] = not set2[name] or nil
+		save_zen_workspaces(set2, ZEN2_FILE)
+		local on, on2 = zen_state(name)
+		apply_zen(on)
+		apply_zen2(on2)
+	end, name, 300)
+end)
 
 -- Show/hide Noctalia's dock. No key for it: run the launcher's Toggle Dock
 -- entry (home.nix), i.e. `hyprctl eval 'toggle_dock()'`. Snapped windows grow
@@ -715,11 +811,17 @@ write_tile_scale_state()
 hl.on("workspace.active", function()
 	local name = active_workspace_name()
 	if name then
-		apply_zen(zen_workspaces()[name] == true)
+		local on, on2 = zen_state(name)
+		apply_zen(on)
+		apply_zen2(on2)
 	end
 end)
 
-apply_zen(zen_workspaces()[active_workspace_name() or ""] == true, false)
+do
+	local on, on2 = zen_state(active_workspace_name() or "")
+	apply_zen(on, false)
+	apply_zen2(on2)
+end
 
 hl.bind(MEH .. " + H", snap(RECTS.left_half))
 hl.bind(MEH .. " + L", snap(RECTS.right_half))
@@ -739,10 +841,10 @@ for i = 1, 5 do
 	hl.workspace_rule({ workspace = tostring(i), persistent = true })
 end
 
--- Meh+1..9: workspaces; Meh+Shift+1..9: send window there. Not 6: Meh+6 is
--- zen mode (above).
+-- Meh+1..9: workspaces; Meh+Shift+1..9: send window there. Not 6 or 7: Meh+6
+-- is zen mode and Meh+7 zen mode 2 (above).
 for i = 1, 9 do
-	if i ~= 6 then
+	if i ~= 6 and i ~= 7 then
 		hl.bind(MEH .. " + " .. i, hl.dsp.focus({ workspace = i }))
 		hl.bind(MEH .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
 	end

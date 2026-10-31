@@ -104,9 +104,7 @@ end
 local function set_group()
   local colors = M.colors()
   if colors and (colors.foreground or colors.background) then
-    -- Space t b's see-through editor (mappings.lua): terminals too
-    local glass = vim.fn.filereadable(vim.fn.stdpath "state" .. "/editor-glass") == 1
-    vim.api.nvim_set_hl(0, "GhosttyTerm", { fg = colors.foreground, bg = not glass and colors.background or nil })
+    vim.api.nvim_set_hl(0, "GhosttyTerm", { fg = colors.foreground, bg = colors.background })
   else
     vim.api.nvim_set_hl(0, "GhosttyTerm", { link = "XcodeEditor" })
   end

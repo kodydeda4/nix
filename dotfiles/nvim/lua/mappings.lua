@@ -203,26 +203,4 @@ map("n", "<leader>ti", function()
   end
 end, { desc = "toggle indent lines" })
 
--- Space t b: see-through editor background, so Ghostty's glass shows behind the
--- code too, not just the file tree. Remembered across restarts (a flag file
--- configs/xcode_theme.lua and configs/ghostty_term.lua read). Popups, the
--- current line and selections stay solid.
-map("n", "<leader>tb", function()
-  local flag = vim.fn.stdpath "state" .. "/editor-glass"
-  if vim.fn.filereadable(flag) == 1 then
-    vim.fn.delete(flag)
-  else
-    vim.fn.writefile({}, flag)
-  end
-  -- the theme files read the flag when they load: drop the loaded ones so
-  -- base46 rebuilds the theme from them
-  for name in pairs(package.loaded) do
-    if name:match "^themes%." then
-      package.loaded[name] = nil
-    end
-  end
-  require("base46").load_all_highlights()
-  vim.api.nvim_exec_autocmds("ColorScheme", { modeline = false }) -- re-runs options.lua's bar colors
-end, { desc = "toggle transparent background" })
-
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")

@@ -14,9 +14,8 @@ return {
       })
       -- don't unfold the tree to every file you open (search results etc.)
       opts.update_focused_file = { enable = false }
-      -- 35 columns wide (drag its edge to resize); no 2-column sign column on
-      -- the left of the tree
-      opts.view = vim.tbl_deep_extend("force", opts.view or {}, { width = 35, signcolumn = "no" })
+      -- no 2-column sign column on the left of the tree
+      opts.view = vim.tbl_deep_extend("force", opts.view or {}, { width = 50, signcolumn = "no" })
       -- Xcode-style icons for Swift packages and .xcodeproj (configs/xcode_tree.lua)
       opts.renderer = opts.renderer or {}
       opts.renderer.highlight_git = false -- names stay white; git status icons remain

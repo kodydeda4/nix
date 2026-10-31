@@ -171,13 +171,9 @@
       inherit settings;
     };
     # Glove80: Cmd and Super swapped - its Super-labeled key is Cmd (sends
-    # Ctrl) and its Alt-labeled key is Super. Everything else as above. The
-    # Kinesis Advantage360 Pro works the same way.
+    # Ctrl) and its Alt-labeled key is Super. Everything else as above.
     keyboards.glove80 = {
-      ids = [
-        "16c0:27db" # Glove80
-        "29ea:0362" # Kinesis Advantage360 Pro
-      ];
+      ids = ["16c0:27db"];
       settings = lib.recursiveUpdate settings {
         main = {
           leftalt = "layer(meta)";

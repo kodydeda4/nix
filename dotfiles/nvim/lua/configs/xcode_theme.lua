@@ -80,21 +80,17 @@ return function(name, kind, c)
 
   local keyword = { fg = c.keyword, bold = true }
 
-  -- the editor's background: solid, or none with Space t b's see-through
-  -- editor on (a flag file, mappings.lua), so the glass shows behind the code too
-  local editor_bg = vim.fn.filereadable(vim.fn.stdpath "state" .. "/editor-glass") == 1 and "NONE" or c.bg
-
   M.polish_hl = {
     defaults = {
       -- Normal has no background, so Ghostty's glass shows through (the file
       -- tree); editor windows get the solid XcodeEditor instead (configs/glass.lua)
       Normal = { fg = c.text, bg = "NONE" },
-      XcodeEditor = { fg = c.text, bg = editor_bg },
+      XcodeEditor = { fg = c.text, bg = c.bg },
       -- the gutter takes Normal's (empty) background unless given its own
-      LineNr = { fg = c.line_number or shade(25), bg = editor_bg },
-      CursorLineNr = { fg = c.text, bg = editor_bg },
-      SignColumn = { bg = editor_bg },
-      FoldColumn = { bg = editor_bg },
+      LineNr = { fg = c.line_number or shade(25), bg = c.bg },
+      CursorLineNr = { fg = c.text, bg = c.bg },
+      SignColumn = { bg = c.bg },
+      FoldColumn = { bg = c.bg },
       -- no background of its own: empty rows past the end of a buffer take their
       -- window's (the solid editor, or a popup's own, e.g. which-key's)
       EndOfBuffer = { fg = c.bg },
@@ -103,7 +99,7 @@ return function(name, kind, c)
       TabLineFill = { bg = "NONE" },
       CursorLine = { bg = c.current_line },
       Visual = { bg = c.selection },
-      WinSeparator = { fg = c.separator, bg = editor_bg }, -- between splits
+      WinSeparator = { fg = c.separator, bg = c.bg }, -- between splits
       -- folded lines: a faint band (NvChad's grey is too strong)
       Folded = { bg = shade(kind == "light" and 4 or 6) },
       -- selected suggestion in popup menus (completion too): your selection
@@ -129,8 +125,8 @@ return function(name, kind, c)
       NvimTreeEndOfBuffer = { fg = c.bg, bg = "NONE" },
       NvimTreeSignColumn = { fg = c.text, bg = "NONE" },
       -- the column between the tree and the editor (where you drag to resize):
-      -- in the editor's background
-      NvimTreeWinSeparator = { fg = c.bg, bg = editor_bg },
+      -- solid, in the editor's background
+      NvimTreeWinSeparator = { fg = c.bg, bg = c.bg },
     },
 
     -- indent guide lines: fainter than NvChad's, so they don't compete with

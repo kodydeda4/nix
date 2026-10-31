@@ -124,7 +124,7 @@ hl.env("HYPRCURSOR_SIZE", "24")
 
 -- Animations: quick and Mac-like, about half the length of Hyprland's
 -- defaults. Speed is in tenths of a second (1.5 = 150 ms). Windows pop in
--- with a fast spring, workspaces switch instantly, menus/launcher fade.
+-- with a fast spring, workspaces slide, menus/launcher fade.
 hl.curve("snap", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1 } } }) -- fast start, soft landing
 hl.curve("easeOutQuint", { type = "bezier", points = { { 0.23, 1 }, { 0.32, 1 } } })
 hl.curve("linear", { type = "bezier", points = { { 0, 0 }, { 1, 1 } } })
@@ -139,8 +139,7 @@ hl.animation({ leaf = "fade", enabled = true, speed = 1.5, bezier = "snap" })
 hl.animation({ leaf = "fadeOut", enabled = true, speed = 1, bezier = "linear" })
 hl.animation({ leaf = "layers", enabled = true, speed = 2, bezier = "easeOutQuint", style = "fade" })
 hl.animation({ leaf = "layersOut", enabled = true, speed = 1, bezier = "linear", style = "fade" })
--- switching workspaces is instant: no slide (Cmd+H's special workspace, below, still slides)
-hl.animation({ leaf = "workspaces", enabled = false })
+hl.animation({ leaf = "workspaces", enabled = true, speed = 2.5, bezier = "snap", style = "slide" })
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2.5, bezier = "snap", style = "slidevert" })
 hl.animation({ leaf = "border", enabled = true, speed = 3, bezier = "easeOutQuint" })
 
@@ -164,9 +163,6 @@ hl.config({
 			vibrancy = 0.2,
 			noise = 0.08,
 		},
-		-- zen mode's black dim over the wallpaper (update_zen_dim, below): as dark as
-		-- Ghostty's own background (background-opacity 0.70), which it stands in for
-		dim_around = 0.7,
 	},
 	animations = {
 		enabled = true, -- short and snappy (curves and speeds below)
@@ -458,9 +454,8 @@ local function snapped_rect(win)
 	end
 end
 
--- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, drops the
--- gaps, window borders and rounded corners (shadows stay), and dims the
--- wallpaper while Ghostty's background goes clear (below), on the workspace
+-- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, and drops the
+-- gaps, window borders and rounded corners (shadows stay), on the workspace
 -- you're on; Meh+0 there again brings them back. Switching workspaces switches zen with it. Snapped
 -- windows are re-fitted to the new space. Which workspaces are zen lives in a
 -- file (one name per line) so it survives config reloads (Hyprland reloads on
@@ -555,89 +550,6 @@ _G.toggle_shadows = function()
 	toggle_flag("shadows-off")
 end
 
--- Zen mode's dimmed wallpaper: Ghostty's background goes clear and the
--- wallpaper is dimmed black instead (decoration.dim_around), so the text sits
--- on the dimmed wallpaper with no box around it and the window can stay
--- centered. A window with dim_around dims everything behind it, so the
--- bottom-most window on the workspace carries it: just the wallpaper is
--- behind that one, and every app stays undimmed. Windows are listed bottom to
--- top and focusing one raises it, so the dim moves along as you switch.
-local zen_dimmed -- address of the window carrying the dim
-
-local function bottom_window()
-	local name = active_workspace_name()
-	for _, w in ipairs(hl.get_windows() or {}) do
-		local ws = w.workspace
-		if w.mapped and ws and not ws.special and ws.name == name then
-			return w.address
-		end
-	end
-end
-
-local function update_zen_dim()
-	local want = zen_shown and bottom_window() or nil
-	if want == zen_dimmed then
-		return
-	end
-	zen_dimmed = want
-	for _, w in ipairs(hl.get_windows() or {}) do
-		pcall(hl.dispatch, hl.dsp.window.set_prop({
-			window = "address:" .. w.address,
-			prop = "dim_around",
-			value = w.address == want and "true" or "unset",
-		}))
-	end
-end
--- right away, and again just after, once a raised / opened / closed window has
--- settled into the list (before the next frame, so nothing flashes darker)
-local function zen_dim_soon()
-	update_zen_dim()
-	hl.timer(update_zen_dim, { timeout = 1, type = "oneshot" })
-end
-for _, event in ipairs({ "window.open", "window.close", "window.destroy", "window.active", "window.move_to_workspace" }) do
-	hl.on(event, zen_dim_soon)
-end
--- Focus follows the mouse without raising; a click raises the window, with no
--- event of its own, so clicks check too (non_consuming: the click still goes
--- through to the window)
-for _, button in ipairs({ "mouse:272", "mouse:273" }) do
-	hl.bind(button, zen_dim_soon, { non_consuming = true, ignore_mods = true })
-end
-
--- Ghostty's blur and shadow would outline the now-clear window
-local zen_ghostty_rule = hl.window_rule({
-	name = "zen-ghostty",
-	match = { class = "^com\\.mitchellh\\.ghostty$" },
-	enabled = false,
-	no_blur = true,
-	no_shadow = true,
-})
--- Ghostty's clear background: an override its config includes
--- (dotfiles/ghostty/config), there only in zen mode. Ghostty reloads its
--- config on SIGUSR2. (App-wide: Ghostty windows on another monitor go clear too.)
-local GHOSTTY_ZEN_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/ghostty-zen"
-
-local function ghostty_clear(on)
-	local f = io.open(GHOSTTY_ZEN_FILE, "r")
-	if f then
-		f:close()
-	end
-	if on == (f ~= nil) then
-		return
-	end
-	if on then
-		f = io.open(GHOSTTY_ZEN_FILE, "w")
-		if not f then
-			return
-		end
-		f:write("background-opacity = 0\n")
-		f:close()
-	else
-		os.remove(GHOSTTY_ZEN_FILE)
-	end
-	hl.exec_cmd("pkill -USR2 ghostty")
-end
-
 -- show_bar = false at config load: Noctalia isn't up yet at log-in, and on a
 -- reload the bar is already right.
 local function apply_zen(on, show_bar)
@@ -647,9 +559,6 @@ local function apply_zen(on, show_bar)
 	zen_shown = on
 	dock_space = (on or dock_hidden()) and 0 or DOCK_SPACE
 	apply_decorations()
-	update_zen_dim()
-	zen_ghostty_rule:set_enabled(on)
-	ghostty_clear(on)
 	if show_bar ~= false then
 		hl.exec_cmd(
 			on and "noctalia msg bar-hide; noctalia msg dock-hide"
@@ -807,7 +716,6 @@ hl.on("workspace.active", function()
 	local name = active_workspace_name()
 	if name then
 		apply_zen(zen_workspaces()[name] == true)
-		update_zen_dim() -- (another zen workspace: its own bottom window)
 	end
 end)
 

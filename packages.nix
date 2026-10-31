@@ -137,5 +137,6 @@ in {
     git
     gnumake
     unzip
+    wl-clipboard # wl-copy / wl-paste, behind pbcopy / pbpaste (dotfiles/zsh/.zshrc)
   ];
 }

@@ -105,6 +105,7 @@ in {
     "iina"
     "ik-product-manager"
     "karabiner-elements"
+    "macs-fan-control"
     "proxy-audio-device"
     "tailscale-app"
     "zen"

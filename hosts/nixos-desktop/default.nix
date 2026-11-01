@@ -22,7 +22,14 @@
         next=$(cat "${tvState}")
         echo exit > "${tvState}"
         case "$next" in
-          steam) steam-gamescope ;;
+          # Game mode (plain modifiers, hosts/nixos) on while in Big Picture,
+          # off again when Steam quits, wherever it goes next. (Hyprland also
+          # turns it off when it starts.)
+          steam)
+            systemctl start keyd-gamemode-on.service
+            steam-gamescope
+            systemctl start keyd-gamemode-off.service
+            ;;
           desktop) uwsm start -e -D Hyprland hyprland.desktop ;;
           *) exit 0 ;;
         esac

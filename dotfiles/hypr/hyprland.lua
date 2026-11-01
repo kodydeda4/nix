@@ -98,7 +98,8 @@ hl.on("hyprland.start", function()
 	-- The dock starts hidden at log-in (Noctalia remembers a shown one); hide
 	-- it once Noctalia is up. The launcher's Toggle Dock entry shows it.
 	hl.exec_cmd("for i in $(seq 40); do noctalia msg dock-hide && break; sleep 0.5; done")
-	-- Game mode (bar button) starts off at log-in
+	-- Game mode (bar button) starts off at log-in (and coming back from Big
+	-- Picture, which turns it on: hosts/nixos-desktop)
 	hl.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/hypr/gamemode.sh off")
 	-- Square GTK window corners here only; GNOME removes these links at log-in
 	-- (see home.nix).

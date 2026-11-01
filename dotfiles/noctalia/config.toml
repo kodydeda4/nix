@@ -98,7 +98,7 @@ tooltip = "Game mode: off"
 left = "exec bash ~/.config/hypr/gamemode.sh toggle"
 
 # Tile size button: switches Hyprland's snap keys (Meh+H/L/Space...) between
-# the whole screen and a centered area 75% wide, 90% tall, for a big monitor. See
+# the whole screen and a centered area 85% wide, 90% tall, for a big monitor. See
 # toggle_tile_scale() in dotfiles/hypr/hyprland.lua; it lights up while narrow
 # (hyprland.lua writes that look to zz-tile-scale-state.toml next to this file).
 [widget.tile_scale]

@@ -146,7 +146,7 @@ hl.animation({ leaf = "border", enabled = true, speed = 3, bezier = "easeOutQuin
 
 hl.config({
 	general = {
-		gaps_in = 12, -- (zen mode, Meh+0, sets these and the border to 0)
+		gaps_in = 12, -- (zen mode, Meh+0, sets these to 0)
 		gaps_out = { top = 8, right = 24, bottom = 24, left = 24 }, -- less under the menu bar (BAR_GAP, below)
 		border_size = 1, -- thin, like the Mac's (colors: BORDER COLORS, below)
 		layout = "dwindle",
@@ -327,6 +327,13 @@ hl.window_rule({
 })
 hl.bind(MEH .. " + F", hl.dsp.window.float({ action = "toggle" }))
 
+-- Every window gets the thin border (zen mode or not) except Ghostty's.
+hl.window_rule({
+	name = "ghostty-no-border",
+	match = { class = "^com\\.mitchellh\\.ghostty$" },
+	border_size = 0,
+})
+
 -- Noctalia's dock and panels (launcher, Cmd+Tab switcher, control
 -- center...) are translucent (dotfiles/noctalia): blur what's behind them,
 -- like the Mac, instead of showing it plainly. ignore_alpha: not the clear
@@ -365,7 +372,7 @@ local dock_space = dock_hidden() and 0 or DOCK_SPACE -- what's kept free right n
 -- (halves, maximize... all inside it), for a big monitor. Narrow = a flag
 -- file, so it survives config reloads and resets at log-in, like the dock.
 local TILE_SCALE_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-tile-scale-narrow"
-local TILE_WIDTH_NARROW, TILE_HEIGHT_NARROW = 0.75, 0.9
+local TILE_WIDTH_NARROW, TILE_HEIGHT_NARROW = 0.85, 0.9
 local tile_narrow = io.open(TILE_SCALE_FILE) ~= nil
 
 local function work_area(monitor)
@@ -457,7 +464,7 @@ end
 
 -- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, tmux's status
 -- bar, and nvim's bars and line numbers (dotfiles/nvim/lua/configs/zen.lua), and drops the
--- gaps, window borders and rounded corners (shadows stay), on the workspace
+-- gaps and rounded corners (borders and shadows stay), on the workspace
 -- you're on; Meh+0 there again brings them back. Switching workspaces switches zen with it. Snapped
 -- windows are re-fitted to the new space. Which workspaces are zen lives in a
 -- file (one name per line) so it survives config reloads (Hyprland reloads on
@@ -521,8 +528,8 @@ local function flag_set(name)
 end
 
 -- gaps (and the snap padding, GAP): off in zen mode (not zen mode 2) or when
--- toggled off. Borders: off in either zen mode or when toggled off. Shadows:
--- only when toggled off. Corners: square in zen mode (not zen mode 2).
+-- toggled off. Borders and shadows: only when toggled off. Corners: square in
+-- zen mode (not zen mode 2).
 local function apply_decorations()
 	local flat = zen_shown and not zen2_shown
 	local no_gaps = flat or flag_set("gaps-off")
@@ -537,7 +544,7 @@ local function apply_decorations()
 				bottom = 24,
 				left = 24,
 			},
-			border_size = (zen_shown or flag_set("borders-off")) and 0 or 1,
+			border_size = flag_set("borders-off") and 0 or 1,
 		},
 		decoration = {
 			rounding = flat and 0 or 8,
@@ -600,7 +607,7 @@ end
 -- as they are. (Hyprland's dim_around darkened them too whenever they were
 -- behind Ghostty.) ZEN2_DIM is how strong, 0 to 1: the black sheet in dark
 -- mode, and the white one in light mode.
-local ZEN2_DIM = { dark = 0.9, light = 0.98 }
+local ZEN2_DIM = { dark = 0.9, light = 0.95 }
 local WALLPAPER_DIM = os.getenv("HOME") .. "/.config/hypr/wallpaper-dim.py"
 -- Ghostty: no blur behind it, no shadow (over the dimmed wallpaper it reads
 -- as a gray border), and its background goes in GHOSTTY_ZEN, which
@@ -777,7 +784,7 @@ end
 _G.toggle_dock = toggle_dock
 
 -- The bar's tile-size button: switches snaps between the whole screen and a
--- centered 75% x 90% (TILE_WIDTH/HEIGHT_NARROW, above), i.e. `hyprctl eval
+-- centered 85% x 90% (TILE_WIDTH/HEIGHT_NARROW, above), i.e. `hyprctl eval
 -- 'toggle_tile_scale()'`. Snapped windows are re-fitted right away. The
 -- button's look (icon, tooltip, lit up while narrow) goes in
 -- zz-tile-scale-state.toml next to Noctalia's config.toml, like game mode's.

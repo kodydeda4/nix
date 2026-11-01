@@ -157,8 +157,8 @@ end
 -- With the ⌘⇧Y terminal open below the editor, the bar moves up between them,
 -- like Xcode's debug area: per-window status lines with none on the last row
 -- (laststatus=0) means only the window above the terminal gets one. Back to
--- the single bottom bar (laststatus=3) once the terminal closes. In Hyprland's
--- zen mode (configs/zen.lua), no bottom bar at all (laststatus=0), and the one
+-- the single bottom bar (laststatus=3) once the terminal closes. With
+-- minimalism on (configs/zen.lua), no bottom bar at all (laststatus=0), and the one
 -- above the terminal is left blank.
 local function term_below_editor()
   for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
@@ -185,7 +185,7 @@ api.nvim_create_autocmd({ "WinNew", "WinClosed", "BufWinEnter", "TermOpen", "Tab
   end,
 })
 api.nvim_create_autocmd("User", { pattern = "HyprZen", callback = update_laststatus })
-vim.schedule(update_laststatus) -- zen mode may be on already
+vim.schedule(update_laststatus) -- minimalism may be on already
 
 -- in a file: the vim mode (and LSP progress) on the left; the branch and the
 -- diagnostics on the right edge, `room` columns over

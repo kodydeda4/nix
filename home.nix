@@ -287,6 +287,12 @@ in {
       icon = "view-continuous-symbolic";
       exec = ''hyprctl eval "toggle_bar()"'';
     };
+    toggle-minimal = {
+      name = "Toggle Nvim + Tmux Minimalism";
+      comment = "Hide or show tmux's status bar and nvim's bars and line numbers";
+      icon = "utilities-terminal-symbolic";
+      exec = ''hyprctl eval "toggle_minimal()"'';
+    };
     toggle-gaps = {
       name = "Toggle Gaps";
       comment = "Add or remove the space around windows";

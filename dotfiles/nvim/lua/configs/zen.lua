@@ -1,17 +1,18 @@
--- Hyprland's zen mode (Meh+0 / Meh+7, dotfiles/hypr) hides nvim's tab bar and
--- line numbers too (here), and its bottom bar (configs/sidebar_status.lua).
--- Hyprland keeps a flag file while zen mode is on screen; it's watched here,
--- and M.on follows it, with a `User HyprZen` event on every change. (No such
--- file on the Mac: always off there.)
+-- Minimalism, the launcher's Toggle Nvim + Tmux Minimalism (Cmd+Space,
+-- toggle_minimal() in dotfiles/hypr/hyprland.lua): hides nvim's tab bar and
+-- line numbers (here), its bottom bar (configs/sidebar_status.lua), and tmux's
+-- status bar. Hyprland keeps a flag file while it's on; it's watched here, and
+-- M.on follows it, with a `User HyprZen` event on every change. (No such file
+-- on the Mac: always off there.)
 --
--- Space t n shows / hides the line numbers (M.toggle_numbers), in zen mode
--- too; leaving zen mode puts them back how they were before it.
+-- Space t n shows / hides the line numbers (M.toggle_numbers), while it's on
+-- too; turning it off puts them back how they were before it.
 
 local M = {}
 local api = vim.api
 
 local dir = vim.env.XDG_RUNTIME_DIR
-local name = "hypr-zen-shown"
+local name = "hypr-minimal"
 
 local function flag_set()
   return dir ~= nil and vim.uv.fs_stat(dir .. "/" .. name) ~= nil
@@ -52,7 +53,7 @@ api.nvim_create_autocmd("BufWinEnter", {
   end,
 })
 
-local applied = false -- zen mode as last applied (M.on can flip faster)
+local applied = false -- minimalism as last applied (M.on can flip faster)
 local function apply()
   if M.on == applied then
     return

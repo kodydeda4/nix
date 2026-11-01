@@ -207,7 +207,7 @@ map("n", "<leader>ti", function()
 end, { desc = "toggle indent lines" })
 
 -- Space t n: show / hide the line numbers, in every file (configs/zen.lua,
--- which also hides them in Hyprland's zen mode). Instead of NvChad's Space n.
+-- which also hides them with minimalism on). Instead of NvChad's Space n.
 pcall(vim.keymap.del, "n", "<leader>n")
 map("n", "<leader>tn", function()
   require("configs.zen").toggle_numbers()

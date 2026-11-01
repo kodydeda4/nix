@@ -455,16 +455,16 @@ local function snapped_rect(win)
 	end
 end
 
--- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, tmux's status
--- bar, and nvim's bars and line numbers (dotfiles/nvim/lua/configs/zen.lua), and drops the
+-- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, and drops the
 -- gaps and rounded corners (borders and shadows stay), on the workspace
 -- you're on; Meh+0 there again brings them back. Switching workspaces switches zen with it. Snapped
 -- windows are re-fitted to the new space. Which workspaces are zen lives in a
 -- file (one name per line) so it survives config reloads (Hyprland reloads on
--- every save), and resets at log-in.
+-- every save), and resets at log-in. (tmux's and nvim's bars are separate:
+-- toggle_minimal(), below.)
 --
 -- Zen mode 2, Meh+7, per workspace too: zen mode, but keeping the gaps and
--- rounded corners, plus Ghostty with no
+-- rounded corners (and the menu bar, if toggled on there), plus Ghostty with no
 -- background, blur, shadow or border at all and the wallpaper (only the wallpaper) dimmed
 -- (toward black in dark mode, white in light mode), so its text floats over it. Meh+7 again goes back to how it was
 -- (zen mode or not); Meh+0 turns both off. In nvim, Space t b turns the
@@ -520,6 +520,16 @@ local function flag_set(name)
 	return f ~= nil
 end
 
+-- Noctalia's bar (the menu bar): hidden in zen mode, or when toggled off.
+-- Zen mode 2 hides it too, but toggling it there shows it (its own flag, so
+-- it doesn't touch the bar outside zen mode 2).
+local function bar_hidden()
+	if zen2_shown then
+		return not flag_set("zen2-bar-shown")
+	end
+	return zen_shown or flag_set("bar-hidden")
+end
+
 -- gaps (and the snap padding, GAP): off in zen mode (not zen mode 2) or when
 -- toggled off. Borders and shadows: only when toggled off. Corners: square in
 -- zen mode (not zen mode 2).
@@ -531,8 +541,8 @@ local function apply_decorations()
 		general = {
 			gaps_in = no_gaps and 0 or 12,
 			gaps_out = no_gaps and 0 or {
-				-- less under the menu bar (zen mode 2 hides it)
-				top = (zen_shown or flag_set("bar-hidden")) and GAP_NORMAL or BAR_GAP,
+				-- less under the menu bar, when it's shown
+				top = bar_hidden() and GAP_NORMAL or BAR_GAP,
 				right = 24,
 				bottom = 24,
 				left = 24,
@@ -565,8 +575,32 @@ _G.toggle_shadows = function()
 	toggle_flag("shadows-off")
 end
 
+-- `hyprctl eval 'toggle_minimal()'`, the launcher's Toggle Nvim + Tmux
+-- Minimalism (home.nix): hides tmux's status bar and nvim's bars and line
+-- numbers (dotfiles/nvim/lua/configs/zen.lua), or brings them back. The flag
+-- file is what nvim watches, and what tmux.conf checks when tmux starts or
+-- reloads; this sets tmux if it's already running.
+_G.toggle_minimal = function()
+	toggle_flag("minimal")
+	hl.exec_cmd("tmux set -g status " .. (flag_set("minimal") and "off" or "on"))
+end
+
+local bar_shown -- like zen_shown
+
+-- Shows / hides the bar to match bar_hidden(). show_bar = false: see apply_zen.
+local function apply_bar(show_bar)
+	local shown = not bar_hidden()
+	if shown == bar_shown then
+		return
+	end
+	bar_shown = shown
+	if show_bar ~= false then
+		hl.exec_cmd("noctalia msg " .. (shown and "bar-show" or "bar-hide"))
+	end
+end
+
 -- show_bar = false at config load: Noctalia isn't up yet at log-in, and on a
--- reload the bar is already right.
+-- reload the bar and dock are already right.
 local function apply_zen(on, show_bar)
 	if on == zen_shown then
 		return
@@ -574,23 +608,9 @@ local function apply_zen(on, show_bar)
 	zen_shown = on
 	dock_space = (on or dock_hidden()) and 0 or DOCK_SPACE
 	apply_decorations()
-	-- tmux and nvim: the flag file is what nvim watches, and what tmux.conf
-	-- checks when tmux starts or reloads; this sets tmux if it's already running
-	if on then
-		local f = io.open(flag_file("zen-shown"), "w")
-		if f then
-			f:close()
-		end
-	else
-		os.remove(flag_file("zen-shown"))
-	end
-	hl.exec_cmd("tmux set -g status " .. (on and "off" or "on"))
-	if show_bar ~= false then
-		hl.exec_cmd(
-			on and "noctalia msg bar-hide; noctalia msg dock-hide"
-				or (flag_set("bar-hidden") and "true" or "noctalia msg bar-show")
-					.. (dock_hidden() and "" or "; noctalia msg dock-show")
-		)
+	-- (the bar: set_zen, below)
+	if show_bar ~= false and (on or not dock_hidden()) then
+		hl.exec_cmd("noctalia msg " .. (on and "dock-hide" or "dock-show"))
 	end
 end
 
@@ -661,6 +681,14 @@ local function apply_zen2(on)
 	)
 end
 
+-- Zen mode and zen mode 2 on / off, then the bar to match both (going
+-- straight between them would otherwise hide it and show it again)
+local function set_zen(on, on2, show_bar)
+	apply_zen(on, show_bar)
+	apply_zen2(on2)
+	apply_bar(show_bar)
+end
+
 -- whether workspace `name` is in zen mode (either level), and in zen mode 2
 local function zen_state(name)
 	local zen2 = zen_workspaces(ZEN2_FILE)[name] == true
@@ -704,14 +732,13 @@ _G.toggle_gaps = function()
 end
 
 -- `hyprctl eval 'toggle_bar()'`: show/hide Noctalia's bar (the menu bar), on
--- top of zen mode, which hides it anyway. Snapped windows are re-fitted once
--- Noctalia has given back / taken its space.
+-- top of zen mode, which hides it anyway. In zen mode 2, shows / hides it there
+-- instead. Snapped windows are re-fitted once Noctalia has given back / taken
+-- its space.
 _G.toggle_bar = function()
 	refit_snapped(function()
-		toggle_flag("bar-hidden")
-		if not zen_shown then
-			hl.exec_cmd("noctalia msg " .. (flag_set("bar-hidden") and "bar-hide" or "bar-show"))
-		end
+		toggle_flag(zen2_shown and "zen2-bar-shown" or "bar-hidden")
+		apply_bar()
 	end, nil, 300)
 end
 
@@ -727,8 +754,7 @@ local function toggle_zen()
 		set2[name] = nil -- turning zen mode off turns zen mode 2 off too
 		save_zen_workspaces(set)
 		save_zen_workspaces(set2, ZEN2_FILE)
-		apply_zen(on)
-		apply_zen2(false)
+		set_zen(on, false)
 	end, name, 300)
 end
 -- Meh+0 or Meh+6 (so there's no workspace 6, below)
@@ -747,8 +773,7 @@ hl.bind(MEH .. " + 7", function()
 		set2[name] = not set2[name] or nil
 		save_zen_workspaces(set2, ZEN2_FILE)
 		local on, on2 = zen_state(name)
-		apply_zen(on)
-		apply_zen2(on2)
+		set_zen(on, on2)
 	end, name, 300)
 end)
 
@@ -835,15 +860,13 @@ hl.on("workspace.active", function()
 	local name = active_workspace_name()
 	if name then
 		local on, on2 = zen_state(name)
-		apply_zen(on)
-		apply_zen2(on2)
+		set_zen(on, on2)
 	end
 end)
 
 do
 	local on, on2 = zen_state(active_workspace_name() or "")
-	apply_zen(on, false)
-	apply_zen2(on2)
+	set_zen(on, on2, false)
 end
 
 hl.bind(MEH .. " + H", snap(RECTS.left_half))

@@ -1000,6 +1000,10 @@ _G.open_clocks = app({ "org.gnome.clocks" }, "gnome-clocks")
 -- Meh+W: Noctalia's Wallhaven browser (plugin enabled in dotfiles/noctalia)
 hl.bind(MEH .. " + W", hl.dsp.exec_cmd("noctalia msg panel-toggle noctalia/wallhaven:browser"))
 
+-- Meh+Shift+R: reload the config, which also clears the "Your config has
+-- errors" banner left over from a half-written save
+hl.bind(MEH .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))
+
 -------------------------
 ---- LAPTOP FN KEYS  ----
 -------------------------

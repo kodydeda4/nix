@@ -21,6 +21,10 @@
     # Zen browser for the ThinkPad (not in nixpkgs; the Mac uses the Homebrew cask).
     zen-browser.url = "github:0xc000022070/zen-browser-flake";
     zen-browser.inputs.nixpkgs.follows = "nixpkgs";
+    # Decky Loader for the desktop's TV session (not in nixpkgs). Only its
+    # decky-loader module is used (hosts/nixos-desktop), none of the Steam Deck parts.
+    jovian.url = "github:Jovian-Experiments/Jovian-NixOS";
+    jovian.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs @ {
@@ -33,6 +37,7 @@
     claude-desktop,
     apple-fonts,
     zen-browser,
+    jovian,
   }: let
     # System config shared by every machine (Mac and ThinkPad). Anything that
     # only exists on one OS goes in hosts/<machine>/default.nix instead.

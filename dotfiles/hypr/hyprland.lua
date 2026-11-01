@@ -462,7 +462,8 @@ end
 -- file (one name per line) so it survives config reloads (Hyprland reloads on
 -- every save), and resets at log-in.
 --
--- Zen mode 2, Meh+7, per workspace too: zen mode, plus Ghostty with no
+-- Zen mode 2, Meh+7, per workspace too: zen mode, but keeping the gaps and
+-- rounded corners, plus Ghostty with no
 -- background, blur or shadow at all and the wallpaper (only the wallpaper) dimmed, so
 -- its text floats over it. Meh+7 again goes back to how it was
 -- (zen mode or not); Meh+0 turns both off. In nvim, Space t b turns the
@@ -501,6 +502,7 @@ local function active_workspace_name()
 end
 
 local zen_shown -- what's on screen right now (nil until the first apply)
+local zen2_shown -- like zen_shown
 
 -- Gaps, window borders and shadows can each be turned off everywhere, from
 -- the launcher's Toggle Gaps / Borders / Shadows (home.nix). Off = a flag file, so
@@ -517,16 +519,19 @@ local function flag_set(name)
 	return f ~= nil
 end
 
--- gaps (and the snap padding, GAP) and borders: off in zen mode or when
--- toggled off. Shadows: only when toggled off. Corners: square in zen mode.
+-- gaps (and the snap padding, GAP): off in zen mode (not zen mode 2) or when
+-- toggled off. Borders: off in either zen mode or when toggled off. Shadows:
+-- only when toggled off. Corners: square in zen mode (not zen mode 2).
 local function apply_decorations()
-	local no_gaps = zen_shown or flag_set("gaps-off")
+	local flat = zen_shown and not zen2_shown
+	local no_gaps = flat or flag_set("gaps-off")
 	GAP = no_gaps and 0 or GAP_NORMAL
 	hl.config({
 		general = {
 			gaps_in = no_gaps and 0 or 12,
 			gaps_out = no_gaps and 0 or {
-				top = flag_set("bar-hidden") and GAP_NORMAL or BAR_GAP, -- less under the menu bar
+				-- less under the menu bar (zen mode 2 hides it)
+				top = (zen_shown or flag_set("bar-hidden")) and GAP_NORMAL or BAR_GAP,
 				right = 24,
 				bottom = 24,
 				left = 24,
@@ -534,7 +539,7 @@ local function apply_decorations()
 			border_size = (zen_shown or flag_set("borders-off")) and 0 or 1,
 		},
 		decoration = {
-			rounding = zen_shown and 0 or 8,
+			rounding = flat and 0 or 8,
 			shadow = { enabled = not flag_set("shadows-off") },
 		},
 	})
@@ -615,12 +620,12 @@ local GHOSTTY_ZEN_LINES = {
 	"gtk-toolbar-style = flat",
 }
 
-local zen2_shown -- like zen_shown
 local function apply_zen2(on)
 	if on == zen2_shown then
 		return
 	end
 	zen2_shown = on
+	apply_decorations()
 	zen2_ghostty:set_enabled(on)
 	-- (starting it again does nothing if it's already running, e.g. after a
 	-- config reload)

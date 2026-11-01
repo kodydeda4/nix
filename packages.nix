@@ -34,6 +34,7 @@ in {
     jellyfin-tui
     lazygit
     lsd
+    neomutt
     neovim
     nodejs
     opencode
@@ -49,6 +50,7 @@ in {
     swiftformat
     tmux
     tree-sitter
+    w3m # HTML mail as text in neomutt
     wasm-bindgen-cli_0_2_129
     yazi
     zoxide
@@ -140,6 +142,7 @@ in {
     gcc
     git
     gnumake
+    libsecret # secret-tool: neomutt's Gmail password from the keyring
     unzip
     wl-clipboard
   ];

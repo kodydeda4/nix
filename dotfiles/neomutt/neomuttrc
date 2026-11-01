@@ -1,0 +1,119 @@
+# neomutt: Gmail in the terminal, straight over IMAP / SMTP (nothing synced to
+# disk but a cache). ~/.config/neomutt -> dotfiles/neomutt (home.nix).
+#
+# The address is in account.muttrc next to this file: per machine and
+# gitignored, as this repo is public. It sets:
+#   set from = "you@gmail.com"
+#   set imap_user = $from
+#   set smtp_user = $from
+# The password is a Gmail app password (myaccount.google.com/apppasswords,
+# needs 2-Step Verification) in the system keyring, never in a file. Store it
+# once per machine:
+#   Linux:  secret-tool store --label="Gmail (neomutt)" service neomutt account gmail
+#   Mac:    security add-generic-password -s neomutt -a gmail -w
+
+source ~/.config/neomutt/account.muttrc
+set real_name = "Kody Deda"
+set imap_pass = "`secret-tool lookup service neomutt account gmail 2>/dev/null || security find-generic-password -s neomutt -a gmail -w 2>/dev/null`"
+set smtp_pass = $imap_pass
+
+#-------------------------------------------------------------------------------
+# Gmail
+#-------------------------------------------------------------------------------
+
+set folder = "imaps://imap.gmail.com:993"
+set spool_file = "+INBOX"
+set postponed = "+[Gmail]/Drafts"
+set trash = "+[Gmail]/Trash"
+set record = "" # Gmail files sent mail in Sent Mail itself
+set smtp_url = "smtps://smtp.gmail.com:465/"
+set ssl_force_tls = yes
+set imap_keep_alive = 300
+set mail_check = 60
+mailboxes =INBOX "=[Gmail]/Starred" "=[Gmail]/Sent Mail" "=[Gmail]/Drafts" "=[Gmail]/All Mail" "=[Gmail]/Trash"
+
+# a: archive, like Gmail's (out of the inbox, still in All Mail)
+macro index,pager a "<save-message>=[Gmail]/All Mail<enter>" "archive"
+
+# headers and messages already fetched are kept here, so folders open fast
+set header_cache = "~/.cache/neomutt/"
+set message_cache_dir = "~/.cache/neomutt/messages"
+
+#-------------------------------------------------------------------------------
+# reading
+#-------------------------------------------------------------------------------
+
+# conversations as threads, newest first
+set sort = threads
+set sort_aux = reverse-last-date-received
+set date_format = "%b %d"
+set index_format = "%4C %Z %D  %-20.20F  %s"
+
+# the folder list on the left
+set sidebar_visible = yes
+set sidebar_width = 20
+set sidebar_short_path = yes
+set sidebar_delim_chars = "/"
+
+# HTML-only mail as text (w3m, mailcap); the plain text part when there is one
+set mailcap_path = "~/.config/neomutt/mailcap"
+auto_view text/html
+alternative_order text/plain text/html
+
+# the reader: no jumping to the next message at the end of one
+set pager_stop = yes
+set pager_index_lines = 8
+set markers = no
+
+#-------------------------------------------------------------------------------
+# keys: vim's (neomutt's contrib/vim-keys.rc), less the ones tmux takes first
+# outside nvim (Ctrl+E, Ctrl+H/J/K/L: dotfiles/tmux/tmux.conf)
+#-------------------------------------------------------------------------------
+
+bind attach,browser,index,pager g noop
+bind attach,browser,index gg first-entry
+bind attach,browser,index G last-entry
+bind pager gg top
+bind pager G bottom
+bind pager j next-line
+bind pager k previous-line
+bind attach,browser,index,pager \Cf next-page
+bind attach,browser,index,pager \Cb previous-page
+bind attach,browser,index,pager \Cd half-down
+bind attach,browser,index,pager \Cu half-up
+bind browser,index,pager N search-opposite
+# dd deletes (to Gmail's Trash), dt / dT the subthread / whole thread
+bind index,pager d noop
+bind index,pager dd delete-message
+bind index,pager dt delete-subthread
+bind index,pager dT delete-thread
+# gt / gT: next / previous thread; za / zA: fold this thread / all of them
+bind index,pager gt next-thread
+bind index,pager gT previous-thread
+bind index za collapse-thread
+bind index zA collapse-all
+bind index,pager R group-reply
+# Ctrl+N / Ctrl+P: next / previous folder in the sidebar, Ctrl+O opens it
+bind index,pager \Cn sidebar-next
+bind index,pager \Cp sidebar-prev
+bind index,pager \Co sidebar-open
+
+# writing mail: in nvim
+set editor = "nvim"
+
+#-------------------------------------------------------------------------------
+# colors: the terminal's own (Ghostty's theme, light or dark)
+#-------------------------------------------------------------------------------
+
+color normal default default
+color indicator default color8
+color status color8 default
+color tree color8 default
+color index bold default default "~N" # unread
+color index color8 default "~D" # deleted
+color sidebar_highlight default color8
+color sidebar_new bold default default
+color hdrdefault color8 default
+color header blue default "^(From|Subject):"
+color quoted color8 default
+color signature color8 default

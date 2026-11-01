@@ -70,6 +70,7 @@ alias ff='clear && fastfetch && echo'
 alias tt="smassh"
 alias h="history"
 alias conf="cd ~/Developer/personal/Developer/nix/dotfiles/; nvim ."
+alias notes="cd ~/Developer/personal/Documents/notes/Obsidian/; nvim +'Obsidian today'"
 alias mus="jellyfin-tui"
 
 if [[ "$OSTYPE" == darwin* ]]; then

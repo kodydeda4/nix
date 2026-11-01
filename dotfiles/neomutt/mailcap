@@ -1,0 +1,2 @@
+# neomutt shows HTML mail as text with w3m (auto_view in neomuttrc)
+text/html; w3m -I %{charset} -T text/html -dump; copiousoutput;

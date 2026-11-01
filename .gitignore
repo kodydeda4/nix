@@ -8,5 +8,7 @@ dotfiles/hypr/workspaces.conf
 dotfiles/noctalia/zz-gamemode-state.toml
 # Written by dotfiles/hypr/hyprland.lua (tile size button's look)
 dotfiles/noctalia/zz-tile-scale-state.toml
+# neomutt's Gmail account, per machine (the repo is public)
+dotfiles/neomutt/account.muttrc
 # Nix build output symlink (darwin-rebuild / nixos-rebuild build)
 result

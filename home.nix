@@ -77,6 +77,10 @@ in {
   # ~/.config/yazi -> dotfiles/yazi
   xdg.configFile."yazi".source = link "yazi";
 
+  # ~/.config/neomutt -> dotfiles/neomutt (Gmail; the account file in it is
+  # per machine, gitignored)
+  xdg.configFile."neomutt".source = link "neomutt";
+
   # opencode's TUI: its default theme with no background, so Ghostty's shows
   # through (themes/opencode-transparent.json is that theme, copied from the
   # opencode binary, with "background" set to "none"). opencode.jsonc defaults

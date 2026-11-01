@@ -27,6 +27,11 @@ vim.api.nvim_create_autocmd("VimEnter", {
       vim.t.bufs = vim.tbl_filter(vim.api.nvim_buf_is_valid, vim.t.bufs or {})
     end
     vim.schedule(function()
+      -- unless a startup command opened a file by now (`notes`: today's
+      -- daily note)
+      if #args == 0 and vim.api.nvim_buf_get_name(0) ~= "" then
+        return
+      end
       require("configs.tree_fullscreen").open()
     end)
   end,

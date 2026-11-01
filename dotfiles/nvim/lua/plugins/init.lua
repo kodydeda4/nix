@@ -316,6 +316,59 @@ return {
     },
   },
 
+  -- Obsidian notes, in the vault the Obsidian app uses (`notes` in the shell
+  -- opens it, dotfiles/zsh): [[links]] complete as you type and Enter follows
+  -- them. Space o o: today's daily note (from _templates/Daily), Space o f:
+  -- find a note, Space o s: search inside them, Space o n: a new note. Notes
+  -- stay as the app writes them: no frontmatter added, and new notes are
+  -- named by their title as typed.
+  {
+    "obsidian-nvim/obsidian.nvim",
+    version = "*", -- releases only
+    ft = "markdown",
+    cmd = "Obsidian",
+    keys = {
+      { "<leader>oo", "<cmd>Obsidian today<cr>", desc = "Obsidian today's note" },
+      { "<leader>of", "<cmd>Obsidian quick_switch<cr>", desc = "Obsidian find note" },
+      { "<leader>os", "<cmd>Obsidian search<cr>", desc = "Obsidian search notes" },
+      { "<leader>on", "<cmd>Obsidian new<cr>", desc = "Obsidian new note" },
+    },
+    init = function()
+      -- the plugin's checkboxes, hidden link targets etc. need concealing on,
+      -- only in the vault's notes (set before the plugin checks it, on BufEnter)
+      local vault = vim.fn.expand "~/Developer/personal/Documents/notes/Obsidian/"
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "markdown",
+        callback = function(args)
+          if vim.startswith(vim.api.nvim_buf_get_name(args.buf), vault) then
+            vim.opt_local.conceallevel = 2
+          end
+        end,
+      })
+    end,
+    opts = {
+      legacy_commands = false,
+      workspaces = {
+        { name = "notes", path = "~/Developer/personal/Documents/notes/Obsidian" },
+      },
+      picker = { name = "telescope.nvim" },
+      frontmatter = { enabled = false },
+      note_id_func = function(title)
+        return title or os.date "%Y-%m-%d %H%M%S"
+      end,
+      templates = { folder = "_templates" },
+      -- same as the app's Daily notes settings (.obsidian/daily-notes.json)
+      daily_notes = {
+        folder = "📓 Dailies",
+        date_format = "YYYY-MM-DD",
+        template = "Daily.md",
+        default_tags = {},
+        workdays_only = false,
+      },
+      attachments = { folder = "_images" },
+    },
+  },
+
   {
     "stevearc/conform.nvim",
     event = "BufWritePre", -- load before the first save so format-on-save runs

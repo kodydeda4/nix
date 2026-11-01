@@ -35,6 +35,7 @@ in {
     lsd
     neovim
     nodejs
+    opencode
     prettier
     ripgrep
     rustlings

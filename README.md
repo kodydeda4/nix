@@ -206,7 +206,8 @@ On the GDM login screen, the gear icon picks the session:
   - Meh+letter opens/focuses/hides an app (T Ghostty, C Zen, X Zed, A Claude, …)
   - Meh+arrows focus, Meh+1-9 workspaces, Meh+F float/tile (Super is left
     to Ghostty, where it acts as ⌥ like the Mac)
-  - Meh+0 zen mode (hides bar + dock, drops gaps)
+  - Meh+6 zen mode (hides bar + dock, Ghostty floats over the dimmed
+    wallpaper)
   - Super+drag moves a window (Super+right-drag resizes); drop it on a screen
     edge to snap it like Rectangle: left/right half, top = maximize, corners =
     quarters

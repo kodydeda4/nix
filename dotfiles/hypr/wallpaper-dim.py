@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # wallpaper-dim.py: dims the wallpaper, and only the wallpaper, for zen
-# mode 2 (Meh+7, hyprland.lua). Hyprland's own dimming (dim_around) darkens
+# mode (Meh+6, hyprland.lua). Hyprland's own dimming (dim_around) darkens
 # everything behind a window, other apps included; this instead lays a
 # see-through sheet over each monitor on the layer just above the wallpaper
 # (layer shell's "bottom"), so every window stays on top of it, undimmed.

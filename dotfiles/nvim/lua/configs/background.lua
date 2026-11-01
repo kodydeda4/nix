@@ -1,7 +1,7 @@
 -- Space t b: the background on / off. Off, the editor is see-through like the
 -- file tree: the code, its gutter, the tab bar, the status bar, the `:` box
 -- and the ⌘⇧Y terminal lose their solid background, so whatever's behind
--- Ghostty shows through. In Hyprland's zen mode 2 (Meh+7, dotfiles/hypr), that's
+-- Ghostty shows through. In Hyprland's zen mode (Meh+6, dotfiles/hypr), that's
 -- the dimmed wallpaper. Popups stay solid. Remembered across restarts (a flag
 -- file, like Space t i's indent lines).
 --

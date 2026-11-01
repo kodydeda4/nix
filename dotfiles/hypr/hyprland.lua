@@ -146,14 +146,14 @@ hl.animation({ leaf = "border", enabled = true, speed = 3, bezier = "easeOutQuin
 
 hl.config({
 	general = {
-		gaps_in = 12, -- (zen mode, Meh+0, sets these to 0)
+		gaps_in = 12,
 		gaps_out = { top = 8, right = 24, bottom = 24, left = 24 }, -- less under the menu bar (BAR_GAP, below)
 		border_size = 1, -- thin, like the Mac's (colors: BORDER COLORS, below)
 		layout = "dwindle",
 		resize_on_border = true, -- drag a window's edge to resize it, like the Mac
 	},
 	decoration = {
-		rounding = 8, -- (zen mode, Meh+0, sets it to 0: square corners)
+		rounding = 8,
 		-- frosted glass like the Mac's menu bar and dock (and behind Ghostty's
 		-- translucent background): a soft, Gaussian-looking blur about the Mac's
 		-- width (radius ~size * 2^passes: 5 and 3 is ~40px; 8 and 4 smeared
@@ -386,7 +386,7 @@ local function work_area(monitor)
 end
 
 -- Padding (px) around snapped windows: GAP from the screen edges and GAP
--- between two windows side by side. Zen mode (Meh+0) sets it to 0.
+-- between two windows side by side. Toggle Gaps sets it to 0.
 local GAP_NORMAL = 24
 local GAP = GAP_NORMAL
 -- Under the menu bar the gap is smaller: the bar's own height already sets the
@@ -455,27 +455,22 @@ local function snapped_rect(win)
 	end
 end
 
--- Zen mode, Meh+0, per workspace: hides Noctalia's bar and dock, and drops the
--- gaps and rounded corners (borders and shadows stay), on the workspace
--- you're on; Meh+0 there again brings them back. Switching workspaces switches zen with it. Snapped
--- windows are re-fitted to the new space. Which workspaces are zen lives in a
--- file (one name per line) so it survives config reloads (Hyprland reloads on
--- every save), and resets at log-in. (tmux's and nvim's bars are separate:
+-- Zen mode, Meh+6, per workspace: hides Noctalia's bar (Toggle Menu Bar shows
+-- it there) and dock, and Ghostty has no background, blur, shadow or border at
+-- all, with the wallpaper (only the wallpaper) dimmed (toward black in dark
+-- mode, white in light mode), so its text floats over it; Meh+6 there again
+-- brings it all back. Switching workspaces switches zen with it. Snapped
+-- windows are re-fitted to the new space. In nvim, Space t b turns the
+-- editor's own background off too. Which workspaces are zen lives in a file
+-- (one name per line) so it survives config reloads (Hyprland reloads on every
+-- save), and resets at log-in. (tmux's and nvim's bars are separate:
 -- toggle_minimal(), below.)
---
--- Zen mode 2, Meh+7, per workspace too: zen mode, but keeping the gaps and
--- rounded corners (and the menu bar, if toggled on there), plus Ghostty with no
--- background, blur, shadow or border at all and the wallpaper (only the wallpaper) dimmed
--- (toward black in dark mode, white in light mode), so its text floats over it. Meh+7 again goes back to how it was
--- (zen mode or not); Meh+0 turns both off. In nvim, Space t b turns the
--- editor's own background off too. Its workspaces are in a second file.
 local ZEN_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen-workspaces"
-local ZEN2_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen2-workspaces"
 
--- the workspaces in zen mode (in ZEN_FILE), or the ones listed in `file`
-local function zen_workspaces(file)
+-- the workspaces in zen mode
+local function zen_workspaces()
 	local set = {}
-	local f = io.open(file or ZEN_FILE, "r")
+	local f = io.open(ZEN_FILE, "r")
 	if f then
 		for name in f:lines() do
 			set[name] = true
@@ -485,8 +480,8 @@ local function zen_workspaces(file)
 	return set
 end
 
-local function save_zen_workspaces(set, file)
-	local f = io.open(file or ZEN_FILE, "w")
+local function save_zen_workspaces(set)
+	local f = io.open(ZEN_FILE, "w")
 	if not f then
 		return
 	end
@@ -503,7 +498,6 @@ local function active_workspace_name()
 end
 
 local zen_shown -- what's on screen right now (nil until the first apply)
-local zen2_shown -- like zen_shown
 
 -- Gaps, window borders and shadows can each be turned off everywhere, from
 -- the launcher's Toggle Gaps / Borders / Shadows (home.nix). Off = a flag file, so
@@ -520,22 +514,19 @@ local function flag_set(name)
 	return f ~= nil
 end
 
--- Noctalia's bar (the menu bar): hidden in zen mode, or when toggled off.
--- Zen mode 2 hides it too, but toggling it there shows it (its own flag, so
--- it doesn't touch the bar outside zen mode 2).
+-- Noctalia's bar (the menu bar): hidden when toggled off, and in zen mode
+-- unless toggled on there (its own flag, so it doesn't touch the bar outside
+-- zen mode)
 local function bar_hidden()
-	if zen2_shown then
-		return not flag_set("zen2-bar-shown")
+	if zen_shown then
+		return not flag_set("zen-bar-shown")
 	end
-	return zen_shown or flag_set("bar-hidden")
+	return flag_set("bar-hidden")
 end
 
--- gaps (and the snap padding, GAP): off in zen mode (not zen mode 2) or when
--- toggled off. Borders and shadows: only when toggled off. Corners: square in
--- zen mode (not zen mode 2).
+-- gaps (and the snap padding, GAP), borders and shadows: off when toggled off
 local function apply_decorations()
-	local flat = zen_shown and not zen2_shown
-	local no_gaps = flat or flag_set("gaps-off")
+	local no_gaps = flag_set("gaps-off")
 	GAP = no_gaps and 0 or GAP_NORMAL
 	hl.config({
 		general = {
@@ -550,7 +541,6 @@ local function apply_decorations()
 			border_size = flag_set("borders-off") and 0 or 1,
 		},
 		decoration = {
-			rounding = flat and 0 or 8,
 			shadow = { enabled = not flag_set("shadows-off") },
 		},
 	})
@@ -599,35 +589,20 @@ local function apply_bar(show_bar)
 	end
 end
 
--- show_bar = false at config load: Noctalia isn't up yet at log-in, and on a
--- reload the bar and dock are already right.
-local function apply_zen(on, show_bar)
-	if on == zen_shown then
-		return
-	end
-	zen_shown = on
-	dock_space = (on or dock_hidden()) and 0 or DOCK_SPACE
-	apply_decorations()
-	-- (the bar: set_zen, below)
-	if show_bar ~= false and (on or not dock_hidden()) then
-		hl.exec_cmd("noctalia msg " .. (on and "dock-hide" or "dock-show"))
-	end
-end
-
--- Zen mode 2's wallpaper: dimmed by wallpaper-dim.py next to this file, a
+-- Zen mode's wallpaper: dimmed by wallpaper-dim.py next to this file, a
 -- see-through sheet between the wallpaper and the windows (black in dark
 -- mode, white in light mode, following it as it changes), so other apps stay
 -- as they are. (Hyprland's dim_around darkened them too whenever they were
--- behind Ghostty.) ZEN2_DIM is how strong, 0 to 1: the black sheet in dark
+-- behind Ghostty.) ZEN_DIM is how strong, 0 to 1: the black sheet in dark
 -- mode, and the white one in light mode.
-local ZEN2_DIM = { dark = 0.9, light = 0.95 }
+local ZEN_DIM = { dark = 0.9, light = 0.95 }
 local WALLPAPER_DIM = os.getenv("HOME") .. "/.config/hypr/wallpaper-dim.py"
 -- Ghostty: no blur behind it, no shadow (over the dimmed wallpaper it reads
 -- as a gray border) and no border (every other window keeps its own), and
 -- its background goes in GHOSTTY_ZEN, which Ghostty's config loads last
 -- (dotfiles/ghostty/config); SIGUSR2 makes Ghostty reload its config.
-local zen2_ghostty = hl.window_rule({
-	name = "zen2-ghostty",
+local zen_ghostty = hl.window_rule({
+	name = "zen-ghostty",
 	match = { class = "^com\\.mitchellh\\.ghostty$" },
 	no_blur = true,
 	no_shadow = true,
@@ -637,23 +612,30 @@ local zen2_ghostty = hl.window_rule({
 local GHOSTTY_ZEN_DIR = os.getenv("HOME") .. "/.local/state/ghostty"
 local GHOSTTY_ZEN = GHOSTTY_ZEN_DIR .. "/zen.conf"
 local GHOSTTY_ZEN_LINES = {
-	"# zen mode 2 (Meh+7) is on: dotfiles/hypr/hyprland.lua",
+	"# zen mode (Meh+6) is on: dotfiles/hypr/hyprland.lua",
 	"background-opacity = 0",
 	-- no shadow line along the window's top edge (GTK's top bar casts one on
 	-- the terminal by default)
 	"gtk-toolbar-style = flat",
 }
 
-local function apply_zen2(on)
-	if on == zen2_shown then
+-- show_bar = false at config load: Noctalia isn't up yet at log-in, and on a
+-- reload the bar and dock are already right.
+local function apply_zen(on, show_bar)
+	if on == zen_shown then
 		return
 	end
-	zen2_shown = on
+	zen_shown = on
+	dock_space = (on or dock_hidden()) and 0 or DOCK_SPACE
 	apply_decorations()
-	zen2_ghostty:set_enabled(on)
+	apply_bar(show_bar)
+	if show_bar ~= false and (on or not dock_hidden()) then
+		hl.exec_cmd("noctalia msg " .. (on and "dock-hide" or "dock-show"))
+	end
+	zen_ghostty:set_enabled(on)
 	-- (starting it again does nothing if it's already running, e.g. after a
 	-- config reload)
-	hl.exec_cmd("python3 '" .. WALLPAPER_DIM .. "' " .. (on and ZEN2_DIM.dark .. " " .. ZEN2_DIM.light or "off"))
+	hl.exec_cmd("python3 '" .. WALLPAPER_DIM .. "' " .. (on and ZEN_DIM.dark .. " " .. ZEN_DIM.light or "off"))
 	-- Only reload Ghostty when its file changes: this also runs on every config
 	-- reload.
 	local f = io.open(GHOSTTY_ZEN, "r")
@@ -681,18 +663,9 @@ local function apply_zen2(on)
 	)
 end
 
--- Zen mode and zen mode 2 on / off, then the bar to match both (going
--- straight between them would otherwise hide it and show it again)
-local function set_zen(on, on2, show_bar)
-	apply_zen(on, show_bar)
-	apply_zen2(on2)
-	apply_bar(show_bar)
-end
-
--- whether workspace `name` is in zen mode (either level), and in zen mode 2
+-- whether workspace `name` is in zen mode
 local function zen_state(name)
-	local zen2 = zen_workspaces(ZEN2_FILE)[name] == true
-	return zen2 or zen_workspaces()[name] == true, zen2
+	return zen_workspaces()[name] == true
 end
 
 -- Runs change() (something that changes the free space: gaps, the bar, the
@@ -731,49 +704,27 @@ _G.toggle_gaps = function()
 	end)
 end
 
--- `hyprctl eval 'toggle_bar()'`: show/hide Noctalia's bar (the menu bar), on
--- top of zen mode, which hides it anyway. In zen mode 2, shows / hides it there
--- instead. Snapped windows are re-fitted once Noctalia has given back / taken
--- its space.
+-- `hyprctl eval 'toggle_bar()'`: show/hide Noctalia's bar (the menu bar). In
+-- zen mode, which hides it, shows / hides it there instead. Snapped windows are
+-- re-fitted once Noctalia has given back / taken its space.
 _G.toggle_bar = function()
 	refit_snapped(function()
-		toggle_flag(zen2_shown and "zen2-bar-shown" or "bar-hidden")
+		toggle_flag(zen_shown and "zen-bar-shown" or "bar-hidden")
 		apply_bar()
 	end, nil, 300)
 end
 
-local function toggle_zen()
+-- Meh+6 (so there's no workspace 6, below): zen mode on / off
+hl.bind(MEH .. " + 6", function()
 	local name = active_workspace_name()
 	if not name then
 		return
 	end
 	refit_snapped(function()
-		local set, set2 = zen_workspaces(), zen_workspaces(ZEN2_FILE)
-		local on = not zen_state(name)
-		set[name] = on or nil
-		set2[name] = nil -- turning zen mode off turns zen mode 2 off too
+		local set = zen_workspaces()
+		set[name] = not set[name] or nil
 		save_zen_workspaces(set)
-		save_zen_workspaces(set2, ZEN2_FILE)
-		set_zen(on, false)
-	end, name, 300)
-end
--- Meh+0 or Meh+6 (so there's no workspace 6, below)
-hl.bind(MEH .. " + 0", toggle_zen)
-hl.bind(MEH .. " + 6", toggle_zen)
-
--- Meh+7 (so there's no workspace 7 either): zen mode 2 on / off. Off goes back
--- to plain zen mode if the workspace was in it before.
-hl.bind(MEH .. " + 7", function()
-	local name = active_workspace_name()
-	if not name then
-		return
-	end
-	refit_snapped(function()
-		local set2 = zen_workspaces(ZEN2_FILE)
-		set2[name] = not set2[name] or nil
-		save_zen_workspaces(set2, ZEN2_FILE)
-		local on, on2 = zen_state(name)
-		set_zen(on, on2)
+		apply_zen(set[name] == true)
 	end, name, 300)
 end)
 
@@ -859,14 +810,12 @@ write_tile_scale_state()
 hl.on("workspace.active", function()
 	local name = active_workspace_name()
 	if name then
-		local on, on2 = zen_state(name)
-		set_zen(on, on2)
+		apply_zen(zen_state(name))
 	end
 end)
 
 do
-	local on, on2 = zen_state(active_workspace_name() or "")
-	set_zen(on, on2, false)
+	apply_zen(zen_state(active_workspace_name() or ""), false)
 end
 
 hl.bind(MEH .. " + H", snap(RECTS.left_half))
@@ -887,10 +836,10 @@ for i = 1, 5 do
 	hl.workspace_rule({ workspace = tostring(i), persistent = true })
 end
 
--- Meh+1..9: workspaces; Meh+Shift+1..9: send window there. Not 6 or 7: Meh+6
--- is zen mode and Meh+7 zen mode 2 (above).
+-- Meh+1..9: workspaces; Meh+Shift+1..9: send window there. Not 6: Meh+6 is
+-- zen mode (above).
 for i = 1, 9 do
-	if i ~= 6 and i ~= 7 then
+	if i ~= 6 then
 		hl.bind(MEH .. " + " .. i, hl.dsp.focus({ workspace = i }))
 		hl.bind(MEH .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
 	end
@@ -1005,7 +954,7 @@ hl.bind(MEH .. " + D", app({ "discord" }, "discord"))
 
 -- Ghostty focused (Meh+T, Cmd+Tab, a click...): the windows under it that it
 -- overlaps are hidden, like Cmd+H, so nothing shows through its translucent
--- background (or zen mode 2's none at all). Other Ghostty windows and pinned
+-- background (or zen mode's none at all). Other Ghostty windows and pinned
 -- ones stay. Runs a moment after the focus: Meh+T and Cmd+Tab bring Ghostty
 -- to the top just after focusing it. (hl.get_windows() goes bottom to top.)
 local GHOSTTY = "com.mitchellh.ghostty"
@@ -1098,7 +1047,7 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("noctalia msg brightness-down")
 -- from GNOME's color-scheme (the light / dark mode apps and Noctalia follow);
 -- follow-appearance.sh calls apply_border_colors() whenever it changes.
 -- shadow: the tight ring Hyprland draws around each window. Dark mode keeps
--- Hyprland's own near-black; on light mode's whites (zen mode 2's white
+-- Hyprland's own near-black; on light mode's whites (zen mode's white
 -- wallpaper especially) that reads as a dark border, so it's faint there.
 local BORDER_COLORS = {
 	dark = { active = "rgb(5e5e5e)", inactive = "rgb(404040)", shadow = "rgba(1a1a1aee)" },

@@ -214,7 +214,7 @@ map("n", "<leader>tn", function()
 end, { desc = "toggle line numbers" })
 
 -- Space t b: the background on / off, so the code floats over whatever's
--- behind Ghostty (Hyprland's zen mode 2, Meh+7, makes that the dimmed
+-- behind Ghostty (Hyprland's zen mode, Meh+6, makes that the dimmed
 -- wallpaper), remembered across restarts (configs/background.lua)
 map("n", "<leader>tb", function()
   require("configs.background").toggle()

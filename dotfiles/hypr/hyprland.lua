@@ -980,6 +980,52 @@ hl.bind(MEH .. " + A", app({ "com.anthropic.Claude", "Claude" }, "claude-desktop
 hl.bind(MEH .. " + R", app({ "org.gnome.Nautilus", "nautilus" }, "nautilus"))
 hl.bind(MEH .. " + D", app({ "discord" }, "discord"))
 
+-- Ghostty focused (Meh+T, Cmd+Tab, a click...): the windows under it that it
+-- overlaps are hidden, like Cmd+H, so nothing shows through its translucent
+-- background (or zen mode 2's none at all). Other Ghostty windows and pinned
+-- ones stay. Runs a moment after the focus: Meh+T and Cmd+Tab bring Ghostty
+-- to the top just after focusing it. (hl.get_windows() goes bottom to top.)
+local GHOSTTY = "com.mitchellh.ghostty"
+
+local function overlap(a, b)
+	return a.at.x < b.at.x + b.size.x
+		and b.at.x < a.at.x + a.size.x
+		and a.at.y < b.at.y + b.size.y
+		and b.at.y < a.at.y + a.size.y
+end
+
+local function hide_under_ghostty()
+	local g = hl.get_active_window()
+	if not (g and g.class == GHOSTTY and g.workspace and not g.workspace.special) then
+		return
+	end
+	for _, w in ipairs(hl.get_windows() or {}) do
+		if w.address == g.address then
+			return -- the rest are above it
+		end
+		if
+			w.workspace
+			and w.workspace.id == g.workspace.id
+			and w.class ~= GHOSTTY
+			and not w.pinned
+			and not w.hidden
+			and overlap(g, w)
+		then
+			hl.dispatch(hl.dsp.window.move({
+				workspace = "special:hidden",
+				follow = false,
+				window = "address:" .. w.address,
+			}))
+		end
+	end
+end
+
+hl.on("window.active", function(w)
+	if w and w.class == GHOSTTY then
+		hl.timer(hide_under_ghostty, { timeout = 10, type = "oneshot" })
+	end
+end)
+
 -- also `hyprctl eval 'switcher_focus("0x...")'`: the Cmd+Tab app switcher
 -- (dotfiles/noctalia/plugins/app-switcher) picking an app's window, by address.
 -- Brought back first if Cmd+H hid it, and raised (windows float).

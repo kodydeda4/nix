@@ -101,6 +101,9 @@
   services.power-profiles-daemon.enable = true;
 
   services.tailscale.enable = true;
+  # lets kody run Tailscale without sudo: Trayscale (packages.nix), and
+  # `tailscale up` / `down` in a terminal
+  services.tailscale.extraSetFlags = ["--operator=kody"];
 
   # Steam via its module, not a plain package: it's a 32-bit app and needs the
   # 32-bit graphics drivers this turns on (without them: "glXChooseVisual failed").

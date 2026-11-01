@@ -70,6 +70,7 @@ alias ff='clear && fastfetch && echo'
 alias tt="smassh"
 alias h="history"
 alias conf="cd ~/Developer/personal/Developer/nix/dotfiles/; nvim ."
+alias mus="jellyfin-tui"
 
 if [[ "$OSTYPE" == darwin* ]]; then
 	alias ip-address="ipconfig getifaddr en0"

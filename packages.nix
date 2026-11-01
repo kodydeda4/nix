@@ -135,6 +135,7 @@ in {
     nwg-displays
     overskride
     papirus-icon-theme
+    trayscale # Tailscale GUI (the Mac uses the tailscale-app cask)
     python3
     gcc
     git

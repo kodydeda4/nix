@@ -127,6 +127,9 @@ in {
       # Dark mode. Apps read it through xdg-desktop-portal, so in Hyprland it
       # needs the "Hyprland (uwsm-managed)" session (see hosts/nixos).
       color-scheme = "prefer-dark";
+      # GTK 3 apps (Geary) don't follow color-scheme; they follow this.
+      # dotfiles/hypr/follow-appearance.sh switches it to match in Hyprland.
+      gtk-theme = "Adwaita-dark";
       icon-theme = "Papirus-Dark";
       # No window animations (tiling, minimizing, ...). GNOME only has this
       # one global switch, so the overview and workspaces stop animating too.
@@ -200,11 +203,11 @@ in {
   };
 
   # Older GTK 3 apps (and GTK apps outside GNOME, e.g. in Hyprland) don't read
-  # the settings above; tell them directly.
+  # the settings above; tell them directly. (Not dark mode: GTK 3 apps get that
+  # from the gtk-theme above, so it can switch back to light.)
   xdg.configFile."gtk-3.0/settings.ini" = lib.mkIf isLinux {
     text = ''
       [Settings]
-      gtk-application-prefer-dark-theme=1
       gtk-icon-theme-name=Papirus-Dark
       gtk-cursor-theme-name=Adwaita
       gtk-cursor-theme-size=24
@@ -221,8 +224,16 @@ in {
   xdg.configFile."gtk-3.0/gtk.css" = lib.mkIf isLinux {
     text = ''
       @import url("hyprland.css");
+    '';
+  };
+  # GTK 3's dark mode, the gtk-theme above: Adwaita's dark variant (GTK 3 has
+  # no theme by this name of its own; libhandy, which Geary uses, does) with a
+  # darker dark mode, matching gtk-4.0/gtk.css. Only in dark mode: light mode
+  # is plain Adwaita.
+  xdg.dataFile."themes/Adwaita-dark/gtk-3.0/gtk.css" = lib.mkIf isLinux {
+    text = ''
+      @import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained-dark.css");
 
-      /* Darker dark mode, matching gtk-4.0/gtk.css */
       @define-color theme_bg_color #121212;
       @define-color theme_base_color #0d0d0d;
       @define-color theme_unfocused_bg_color #121212;

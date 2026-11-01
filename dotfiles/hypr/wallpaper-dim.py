@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
-# wallpaper-dim.py: darkens the wallpaper, and only the wallpaper, for zen
+# wallpaper-dim.py: dims the wallpaper, and only the wallpaper, for zen
 # mode 2 (Meh+7, hyprland.lua). Hyprland's own dimming (dim_around) darkens
 # everything behind a window, other apps included; this instead lays a
-# see-through black sheet over each monitor on the layer just above the
-# wallpaper (layer shell's "bottom"), so every window stays on top of it,
-# undimmed. Clicks go straight through it. It fades in and out with
-# Hyprland's layer animation.
+# see-through sheet over each monitor on the layer just above the wallpaper
+# (layer shell's "bottom"), so every window stays on top of it, undimmed.
+# Clicks go straight through it. It fades in and out with Hyprland's layer
+# animation. The sheet is black in dark mode and white in light mode, so
+# Ghostty's text (dark on light mode's theme) stays readable over it; it
+# follows GNOME's color-scheme, the one apps follow, switching as it changes.
 #
-#   wallpaper-dim.py <strength>   start (0 to 1, e.g. 0.9); does nothing if
-#                                 it's already running
-#   wallpaper-dim.py off          stop
+#   wallpaper-dim.py <dark> [<light>]   start: how strong the black sheet is in
+#                                       dark mode and the white one in light
+#                                       mode (0 to 1, e.g. 0.9 0.98; light is
+#                                       the same as dark if left out); does
+#                                       nothing if it's already running
+#   wallpaper-dim.py off                stop
 #
 # A tiny Wayland client written straight against the protocol, so it needs
 # nothing but Python (no GTK).
 import array
 import os
+import select
 import signal
 import socket
 import struct
+import subprocess
 import sys
 
 RUNTIME = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
@@ -37,8 +44,8 @@ def running():
     return None
 
 
-if len(sys.argv) != 2:
-    sys.exit(__doc__ or "usage: wallpaper-dim.py <strength> | off")
+if len(sys.argv) not in (2, 3):
+    sys.exit(__doc__ or "usage: wallpaper-dim.py <dark> [<light>] | off")
 if sys.argv[1] == "off":
     pid = running()
     if pid:
@@ -46,13 +53,18 @@ if sys.argv[1] == "off":
     sys.exit(0)
 if running():
     sys.exit(0)
-ALPHA = round(min(max(float(sys.argv[1]), 0.0), 1.0) * 255)
+DARK_ALPHA, LIGHT_ALPHA = (round(min(max(float(a), 0.0), 1.0) * 255) for a in (sys.argv[1], sys.argv[-1]))
 
 with open(PIDFILE, "w") as f:
     f.write(str(os.getpid()))
 
 
+monitor = None  # `gsettings monitor`, watching for light / dark mode
+
+
 def stop(*_):
+    if monitor:
+        monitor.terminate()
     try:
         with open(PIDFILE) as f:
             if int(f.read()) == os.getpid():
@@ -183,12 +195,28 @@ shm = bind("wl_shm", 1)
 layer_shell = bind("zwlr_layer_shell_v1", 4)
 viewporter = bind("wp_viewporter", 1)
 
-# one black pixel at the strength's opacity (ARGB8888, premultiplied: stored
-# B, G, R, A), stretched over each monitor
+# light / dark mode: GNOME's color-scheme ('default' or 'prefer-light' is light)
+SCHEME = ("org.gnome.desktop.interface", "color-scheme")
+
+
+def light_mode(scheme=None):
+    if scheme is None:
+        try:
+            scheme = subprocess.run(["gsettings", "get", *SCHEME], capture_output=True, text=True).stdout
+        except OSError:
+            scheme = ""
+    return "dark" not in scheme
+
+
+light = light_mode()
+
+# two pixels, each at its mode's strength as opacity (ARGB8888, premultiplied:
+# stored B, G, R, A), black at offset 0 and white at 4; one is stretched over
+# each monitor
 fd = os.memfd_create("wallpaper-dim")
-os.write(fd, bytes((0, 0, 0, ALPHA)))
+os.write(fd, bytes((0, 0, 0, DARK_ALPHA) + (LIGHT_ALPHA,) * 4))
 pool = new_id()
-send(shm, 0, uints(pool) + ints(4), fds=[fd])  # wl_shm.create_pool
+send(shm, 0, uints(pool) + ints(8), fds=[fd])  # wl_shm.create_pool
 os.close(fd)
 
 # ── a sheet per monitor ─────────────────────────────────────────────────────
@@ -196,11 +224,15 @@ os.close(fd)
 LAYER_BOTTOM = 1
 ANCHOR_ALL = 1 | 2 | 4 | 8  # top, bottom, left, right
 
+repaints = set()  # each sheet's repaint(), to switch black / white
+
 
 def cover(output_name):
     output = bind("wl_output", 3, output_name)
-    buffer = new_id()
-    send(pool, 0, uints(buffer) + ints(0, 1, 1, 4) + uints(0))  # create_buffer
+    buffers = {}  # light mode? -> its pixel
+    for is_light, offset in ((False, 0), (True, 4)):
+        buffers[is_light] = new_id()
+        send(pool, 0, uints(buffers[is_light]) + ints(offset, 1, 1, 4) + uints(0))  # create_buffer
     surface = new_id()
     send(compositor, 0, uints(surface))  # create_surface
     region = new_id()
@@ -209,19 +241,30 @@ def cover(output_name):
     send(region, 0)  # destroy
     viewport = new_id()
     send(viewporter, 1, uints(viewport, surface))  # get_viewport
+    size = [0, 0]
+
+    def repaint():
+        if all(size):
+            send(surface, 1, uints(buffers[light]) + ints(0, 0))  # attach
+            send(surface, 2, ints(0, 0, *size))  # damage
+            send(surface, 6)  # commit
 
     def layer_event(opcode, payload):
         if opcode == 0:  # configure
             serial, width, height = struct.unpack_from("<III", payload)
             send(layer, 6, uints(serial))  # ack_configure
             if width and height:
+                size[:] = width, height
                 send(viewport, 2, ints(width, height))  # set_destination
-                send(surface, 1, uints(buffer) + ints(0, 0))  # attach
-                send(surface, 2, ints(0, 0, width, height))  # damage
-            send(surface, 6)  # commit
+                repaint()
+            else:
+                send(surface, 6)  # commit
         elif opcode == 1:  # closed: its monitor went away
+            repaints.discard(repaint)
             send(layer, 7)  # destroy
             send(surface, 0)
+
+    repaints.add(repaint)
 
     layer = new_id(layer_event)
     # get_layer_surface on the bottom layer: above the wallpaper, under windows
@@ -235,5 +278,23 @@ for name, _ in globals_.get("wl_output", []):
     cover(name)
 ready = True
 
+# switch black / white whenever light / dark mode changes
+try:
+    monitor = subprocess.Popen(["gsettings", "monitor", *SCHEME], stdout=subprocess.PIPE)
+    watching = [sock, monitor.stdout]
+except OSError:
+    watching = [sock]
+
 while True:
-    dispatch()
+    readable, _, _ = select.select(watching, [], [])
+    if sock in readable:
+        dispatch()
+    if len(watching) > 1 and watching[1] in readable:
+        # lines like "color-scheme: 'prefer-dark'"; the last one is current
+        lines = os.read(watching[1].fileno(), 4096).decode().splitlines()
+        if not lines:  # gsettings quit: stop watching
+            watching.pop()
+        elif light_mode(lines[-1]) != light:
+            light = not light
+            for repaint in list(repaints):
+                repaint()

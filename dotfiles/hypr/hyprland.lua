@@ -464,8 +464,8 @@ end
 --
 -- Zen mode 2, Meh+7, per workspace too: zen mode, but keeping the gaps and
 -- rounded corners, plus Ghostty with no
--- background, blur or shadow at all and the wallpaper (only the wallpaper) dimmed, so
--- its text floats over it. Meh+7 again goes back to how it was
+-- background, blur or shadow at all and the wallpaper (only the wallpaper) dimmed
+-- (toward black in dark mode, white in light mode), so its text floats over it. Meh+7 again goes back to how it was
 -- (zen mode or not); Meh+0 turns both off. In nvim, Space t b turns the
 -- editor's own background off too. Its workspaces are in a second file.
 local ZEN_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen-workspaces"
@@ -593,11 +593,13 @@ local function apply_zen(on, show_bar)
 	end
 end
 
--- Zen mode 2's wallpaper: darkened by wallpaper-dim.py next to this file, a
--- see-through black sheet between the wallpaper and the windows, so other
--- apps stay as bright as ever. (Hyprland's dim_around darkened them too
--- whenever they were behind Ghostty.) ZEN2_DIM is how dark: 0 to 1.
-local ZEN2_DIM = 0.9
+-- Zen mode 2's wallpaper: dimmed by wallpaper-dim.py next to this file, a
+-- see-through sheet between the wallpaper and the windows (black in dark
+-- mode, white in light mode, following it as it changes), so other apps stay
+-- as they are. (Hyprland's dim_around darkened them too whenever they were
+-- behind Ghostty.) ZEN2_DIM is how strong, 0 to 1: the black sheet in dark
+-- mode, and the white one in light mode.
+local ZEN2_DIM = { dark = 0.9, light = 0.98 }
 local WALLPAPER_DIM = os.getenv("HOME") .. "/.config/hypr/wallpaper-dim.py"
 -- Ghostty: no blur behind it, no shadow (over the dimmed wallpaper it reads
 -- as a gray border), and its background goes in GHOSTTY_ZEN, which
@@ -629,7 +631,7 @@ local function apply_zen2(on)
 	zen2_ghostty:set_enabled(on)
 	-- (starting it again does nothing if it's already running, e.g. after a
 	-- config reload)
-	hl.exec_cmd("python3 '" .. WALLPAPER_DIM .. "' " .. (on and ZEN2_DIM or "off"))
+	hl.exec_cmd("python3 '" .. WALLPAPER_DIM .. "' " .. (on and ZEN2_DIM.dark .. " " .. ZEN2_DIM.light or "off"))
 	-- Only reload Ghostty when its file changes: this also runs on every config
 	-- reload.
 	local f = io.open(GHOSTTY_ZEN, "r")
@@ -1024,9 +1026,12 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("noctalia msg brightness-down")
 -- darker gray on light mode's, the focused window's a shade stronger. Picked
 -- from GNOME's color-scheme (the light / dark mode apps and Noctalia follow);
 -- follow-appearance.sh calls apply_border_colors() whenever it changes.
+-- shadow: the tight ring Hyprland draws around each window. Dark mode keeps
+-- Hyprland's own near-black; on light mode's whites (zen mode 2's white
+-- wallpaper especially) that reads as a dark border, so it's faint there.
 local BORDER_COLORS = {
-	dark = { active = "rgb(5e5e5e)", inactive = "rgb(404040)" },
-	light = { active = "rgb(a8a8a8)", inactive = "rgb(cccccc)" },
+	dark = { active = "rgb(5e5e5e)", inactive = "rgb(404040)", shadow = "rgba(1a1a1aee)" },
+	light = { active = "rgb(a8a8a8)", inactive = "rgb(cccccc)", shadow = "rgba(1a1a1a40)" },
 }
 
 -- `hyprctl eval 'apply_border_colors()'`
@@ -1037,6 +1042,9 @@ _G.apply_border_colors = function()
 		p:close()
 	end
 	local c = BORDER_COLORS[scheme:find("dark", 1, true) and "dark" or "light"]
-	hl.config({ general = { col = { active_border = c.active, inactive_border = c.inactive } } })
+	hl.config({
+		general = { col = { active_border = c.active, inactive_border = c.inactive } },
+		decoration = { shadow = { color = c.shadow } },
+	})
 end
 apply_border_colors()

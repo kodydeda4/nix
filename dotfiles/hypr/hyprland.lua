@@ -327,13 +327,6 @@ hl.window_rule({
 })
 hl.bind(MEH .. " + F", hl.dsp.window.float({ action = "toggle" }))
 
--- Every window gets the thin border (zen mode or not) except Ghostty's.
-hl.window_rule({
-	name = "ghostty-no-border",
-	match = { class = "^com\\.mitchellh\\.ghostty$" },
-	border_size = 0,
-})
-
 -- Noctalia's dock and panels (launcher, Cmd+Tab switcher, control
 -- center...) are translucent (dotfiles/noctalia): blur what's behind them,
 -- like the Mac, instead of showing it plainly. ignore_alpha: not the clear
@@ -472,7 +465,7 @@ end
 --
 -- Zen mode 2, Meh+7, per workspace too: zen mode, but keeping the gaps and
 -- rounded corners, plus Ghostty with no
--- background, blur or shadow at all and the wallpaper (only the wallpaper) dimmed
+-- background, blur, shadow or border at all and the wallpaper (only the wallpaper) dimmed
 -- (toward black in dark mode, white in light mode), so its text floats over it. Meh+7 again goes back to how it was
 -- (zen mode or not); Meh+0 turns both off. In nvim, Space t b turns the
 -- editor's own background off too. Its workspaces are in a second file.
@@ -610,14 +603,15 @@ end
 local ZEN2_DIM = { dark = 0.9, light = 0.95 }
 local WALLPAPER_DIM = os.getenv("HOME") .. "/.config/hypr/wallpaper-dim.py"
 -- Ghostty: no blur behind it, no shadow (over the dimmed wallpaper it reads
--- as a gray border), and its background goes in GHOSTTY_ZEN, which
--- Ghostty's config loads last (dotfiles/ghostty/config); SIGUSR2 makes
--- Ghostty reload its config.
+-- as a gray border) and no border (every other window keeps its own), and
+-- its background goes in GHOSTTY_ZEN, which Ghostty's config loads last
+-- (dotfiles/ghostty/config); SIGUSR2 makes Ghostty reload its config.
 local zen2_ghostty = hl.window_rule({
 	name = "zen2-ghostty",
 	match = { class = "^com\\.mitchellh\\.ghostty$" },
 	no_blur = true,
 	no_shadow = true,
+	border_size = 0,
 	enabled = false,
 })
 local GHOSTTY_ZEN_DIR = os.getenv("HOME") .. "/.local/state/ghostty"

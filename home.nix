@@ -77,6 +77,15 @@ in {
   # ~/.config/yazi -> dotfiles/yazi
   xdg.configFile."yazi".source = link "yazi";
 
+  # opencode's TUI: its default theme with no background, so Ghostty's shows
+  # through (themes/opencode-transparent.json is that theme, copied from the
+  # opencode binary, with "background" set to "none"). opencode.jsonc defaults
+  # to Cerebras; the API key comes from `opencode auth login` (auth.json), not
+  # from this repo. opencode writes package.json and node_modules itself.
+  xdg.configFile."opencode/opencode.jsonc".source = link "opencode/opencode.jsonc";
+  xdg.configFile."opencode/tui.json".source = link "opencode/tui.json";
+  xdg.configFile."opencode/themes".source = link "opencode/themes";
+
   # Shortcuts into my personal repos (they're separate git repos, so on a new
   # Mac clone them into ~/Developer/personal first).
   home.file."Music/Music/guitar-pro-tabs/guitar-pro-tabs".source =

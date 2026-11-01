@@ -207,7 +207,7 @@ On the GDM login screen, the gear icon picks the session:
   - Meh+arrows focus, Meh+1-9 workspaces, Meh+F float/tile (Super is left
     to Ghostty, where it acts as ⌥ like the Mac)
   - Meh+6 zen mode (hides bar + dock, Ghostty floats over the dimmed
-    wallpaper)
+    wallpaper); Meh+7 zen mode 2 also hides tmux's and nvim's bars
   - Super+drag moves a window (Super+right-drag resizes); drop it on a screen
     edge to snap it like Rectangle: left/right half, top = maximize, corners =
     quarters

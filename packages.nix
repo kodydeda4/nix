@@ -31,6 +31,7 @@ in {
     imagemagick
     git-lfs
     jdk
+    jellyfin-tui
     lazygit
     lsd
     neovim

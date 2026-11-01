@@ -1,7 +1,7 @@
--- Minimalism, the launcher's Toggle Nvim + Tmux Minimalism (Cmd+Space,
--- toggle_minimal() in dotfiles/hypr/hyprland.lua): hides nvim's tab bar and
--- line numbers (here), its bottom bar (configs/sidebar_status.lua), and tmux's
--- status bar. Hyprland keeps a flag file while it's on; it's watched here, and
+-- Minimalism, from the launcher's Toggle Nvim + Tmux Minimalism (Cmd+Space)
+-- and Hyprland's zen mode 2 (Meh+7, both in dotfiles/hypr/hyprland.lua): hides
+-- nvim's tab bar and line numbers (here), its bottom bar
+-- (configs/sidebar_status.lua), and tmux's status bar. Hyprland keeps a flag file while it's on; it's watched here, and
 -- M.on follows it, with a `User HyprZen` event on every change. (No such file
 -- on the Mac: always off there.)
 --

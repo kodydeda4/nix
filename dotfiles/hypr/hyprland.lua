@@ -463,14 +463,19 @@ end
 -- windows are re-fitted to the new space. In nvim, Space t b turns the
 -- editor's own background off too. Which workspaces are zen lives in a file
 -- (one name per line) so it survives config reloads (Hyprland reloads on every
--- save), and resets at log-in. (tmux's and nvim's bars are separate:
--- toggle_minimal(), below.)
+-- save), and resets at log-in.
+--
+-- Zen mode 2, Meh+7, per workspace too: zen mode, plus tmux's and nvim's bars
+-- hidden (toggle_minimal(), below, does just those) and the menu bar hidden
+-- even when toggled on for zen mode. Meh+7 again goes back to plain zen mode;
+-- Meh+6 turns both off. Its workspaces are in a second file.
 local ZEN_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen-workspaces"
+local ZEN2_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen2-workspaces"
 
--- the workspaces in zen mode
-local function zen_workspaces()
+-- the workspaces in zen mode (in ZEN_FILE), or the ones listed in `file`
+local function zen_workspaces(file)
 	local set = {}
-	local f = io.open(ZEN_FILE, "r")
+	local f = io.open(file or ZEN_FILE, "r")
 	if f then
 		for name in f:lines() do
 			set[name] = true
@@ -480,8 +485,8 @@ local function zen_workspaces()
 	return set
 end
 
-local function save_zen_workspaces(set)
-	local f = io.open(ZEN_FILE, "w")
+local function save_zen_workspaces(set, file)
+	local f = io.open(file or ZEN_FILE, "w")
 	if not f then
 		return
 	end
@@ -498,6 +503,7 @@ local function active_workspace_name()
 end
 
 local zen_shown -- what's on screen right now (nil until the first apply)
+local zen2_shown -- like zen_shown
 
 -- Gaps, window borders and shadows can each be turned off everywhere, from
 -- the launcher's Toggle Gaps / Borders / Shadows (home.nix). Off = a flag file, so
@@ -514,11 +520,13 @@ local function flag_set(name)
 	return f ~= nil
 end
 
--- Noctalia's bar (the menu bar): hidden when toggled off, and in zen mode
--- unless toggled on there (its own flag, so it doesn't touch the bar outside
--- zen mode)
+-- Noctalia's bar (the menu bar): hidden when toggled off, in zen mode unless
+-- toggled on there (its own flag, so it doesn't touch the bar outside zen
+-- mode), and always in zen mode 2
 local function bar_hidden()
-	if zen_shown then
+	if zen2_shown then
+		return true
+	elseif zen_shown then
 		return not flag_set("zen-bar-shown")
 	end
 	return flag_set("bar-hidden")
@@ -565,14 +573,35 @@ _G.toggle_shadows = function()
 	toggle_flag("shadows-off")
 end
 
--- `hyprctl eval 'toggle_minimal()'`, the launcher's Toggle Nvim + Tmux
--- Minimalism (home.nix): hides tmux's status bar and nvim's bars and line
--- numbers (dotfiles/nvim/lua/configs/zen.lua), or brings them back. The flag
--- file is what nvim watches, and what tmux.conf checks when tmux starts or
--- reloads; this sets tmux if it's already running.
+-- Minimalism: tmux's status bar and nvim's bars and line numbers hidden
+-- (dotfiles/nvim/lua/configs/zen.lua), while toggled on from the launcher
+-- (toggle_minimal(), below) or in zen mode 2. The "minimal" flag file is what
+-- nvim watches, and what tmux.conf checks when tmux starts or reloads; this
+-- sets tmux if it's already running.
+local minimal_shown -- like zen_shown
+
+local function apply_minimal()
+	local on = flag_set("minimal-toggled") or zen2_shown == true
+	if on == minimal_shown then
+		return
+	end
+	minimal_shown = on
+	if on then
+		local f = io.open(flag_file("minimal"), "w")
+		if f then
+			f:close()
+		end
+	else
+		os.remove(flag_file("minimal"))
+	end
+	hl.exec_cmd("tmux set -g status " .. (on and "off" or "on"))
+end
+
+-- `hyprctl eval 'toggle_minimal()'`: the launcher's Toggle Nvim + Tmux
+-- Minimalism (home.nix)
 _G.toggle_minimal = function()
-	toggle_flag("minimal")
-	hl.exec_cmd("tmux set -g status " .. (flag_set("minimal") and "off" or "on"))
+	toggle_flag("minimal-toggled")
+	apply_minimal()
 end
 
 local bar_shown -- like zen_shown
@@ -628,7 +657,7 @@ local function apply_zen(on, show_bar)
 	zen_shown = on
 	dock_space = (on or dock_hidden()) and 0 or DOCK_SPACE
 	apply_decorations()
-	apply_bar(show_bar)
+	-- (the bar: set_zen, below)
 	if show_bar ~= false and (on or not dock_hidden()) then
 		hl.exec_cmd("noctalia msg " .. (on and "dock-hide" or "dock-show"))
 	end
@@ -663,9 +692,22 @@ local function apply_zen(on, show_bar)
 	)
 end
 
--- whether workspace `name` is in zen mode
+-- Zen mode and zen mode 2 on / off, then the bar to match both (going
+-- straight between them would otherwise hide it and show it again)
+local function set_zen(on, on2, show_bar)
+	apply_zen(on, show_bar)
+	if on2 ~= zen2_shown then
+		zen2_shown = on2
+		apply_decorations()
+	end
+	apply_minimal()
+	apply_bar(show_bar)
+end
+
+-- whether workspace `name` is in zen mode (either level), and in zen mode 2
 local function zen_state(name)
-	return zen_workspaces()[name] == true
+	local zen2 = zen_workspaces(ZEN2_FILE)[name] == true
+	return zen2 or zen_workspaces()[name] == true, zen2
 end
 
 -- Runs change() (something that changes the free space: gaps, the bar, the
@@ -705,8 +747,9 @@ _G.toggle_gaps = function()
 end
 
 -- `hyprctl eval 'toggle_bar()'`: show/hide Noctalia's bar (the menu bar). In
--- zen mode, which hides it, shows / hides it there instead. Snapped windows are
--- re-fitted once Noctalia has given back / taken its space.
+-- zen mode, which hides it, shows / hides it there instead (zen mode 2 keeps it
+-- hidden). Snapped windows are re-fitted once Noctalia has given back / taken
+-- its space.
 _G.toggle_bar = function()
 	refit_snapped(function()
 		toggle_flag(zen_shown and "zen-bar-shown" or "bar-hidden")
@@ -721,10 +764,28 @@ hl.bind(MEH .. " + 6", function()
 		return
 	end
 	refit_snapped(function()
-		local set = zen_workspaces()
-		set[name] = not set[name] or nil
+		local set, set2 = zen_workspaces(), zen_workspaces(ZEN2_FILE)
+		local on = not zen_state(name)
+		set[name] = on or nil
+		set2[name] = nil -- turning zen mode off turns zen mode 2 off too
 		save_zen_workspaces(set)
-		apply_zen(set[name] == true)
+		save_zen_workspaces(set2, ZEN2_FILE)
+		set_zen(on, false)
+	end, name, 300)
+end)
+
+-- Meh+7 (so there's no workspace 7 either): zen mode 2 on / off. Off goes back
+-- to plain zen mode if the workspace was in it before.
+hl.bind(MEH .. " + 7", function()
+	local name = active_workspace_name()
+	if not name then
+		return
+	end
+	refit_snapped(function()
+		local set2 = zen_workspaces(ZEN2_FILE)
+		set2[name] = not set2[name] or nil
+		save_zen_workspaces(set2, ZEN2_FILE)
+		set_zen(zen_state(name))
 	end, name, 300)
 end)
 
@@ -810,12 +871,13 @@ write_tile_scale_state()
 hl.on("workspace.active", function()
 	local name = active_workspace_name()
 	if name then
-		apply_zen(zen_state(name))
+		set_zen(zen_state(name))
 	end
 end)
 
 do
-	apply_zen(zen_state(active_workspace_name() or ""), false)
+	local on, on2 = zen_state(active_workspace_name() or "")
+	set_zen(on, on2, false)
 end
 
 hl.bind(MEH .. " + H", snap(RECTS.left_half))
@@ -836,10 +898,10 @@ for i = 1, 5 do
 	hl.workspace_rule({ workspace = tostring(i), persistent = true })
 end
 
--- Meh+1..9: workspaces; Meh+Shift+1..9: send window there. Not 6: Meh+6 is
--- zen mode (above).
+-- Meh+1..9: workspaces; Meh+Shift+1..9: send window there. Not 6 or 7: Meh+6
+-- is zen mode and Meh+7 zen mode 2 (above).
 for i = 1, 9 do
-	if i ~= 6 then
+	if i ~= 6 and i ~= 7 then
 		hl.bind(MEH .. " + " .. i, hl.dsp.focus({ workspace = i }))
 		hl.bind(MEH .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
 	end

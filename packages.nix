@@ -54,6 +54,7 @@ in {
     yazi
     zoxide
     awscli2
+    ani-cli
   ];
 
   fonts = with pkgs; [

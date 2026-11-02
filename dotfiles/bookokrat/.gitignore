@@ -1,0 +1,2 @@
+# Bookokrat backs up config.yaml before every save
+config.yaml.bak

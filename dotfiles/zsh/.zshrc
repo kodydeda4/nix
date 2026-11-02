@@ -72,6 +72,7 @@ alias h="history"
 alias conf="cd ~/Developer/personal/Developer/nix/dotfiles/; nvim ."
 alias notes="cd ~/Developer/personal/Documents/notes/Obsidian/; nvim +'Obsidian today'"
 alias mus="jellyfin-tui"
+alias books="cd ~/Developer/personal/Documents/ebooks/; bookokrat"
 
 if [[ "$OSTYPE" == darwin* ]]; then
 	alias ip-address="ipconfig getifaddr en0"

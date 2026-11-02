@@ -77,6 +77,10 @@ in {
   # ~/.config/yazi -> dotfiles/yazi
   xdg.configFile."yazi".source = link "yazi";
 
+  # ~/.config/bookokrat -> dotfiles/bookokrat (folder link: Bookokrat saves
+  # config.yaml by writing a new file and renaming it over the old one)
+  xdg.configFile."bookokrat".source = link "bookokrat";
+
   # opencode's TUI: its default theme with no background, so Ghostty's shows
   # through (themes/opencode-transparent.json is that theme, copied from the
   # opencode binary, with "background" set to "none"). opencode.jsonc defaults

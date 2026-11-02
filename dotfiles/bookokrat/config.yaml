@@ -1,0 +1,105 @@
+version: 3
+theme: "Xcode Dark"
+margin: 0
+transparent_background: true
+pdf_scale: 1
+pdf_pan_shift: 0
+pdf_render_mode: scroll
+pdf_show_link_underlines: false
+pdf_page_layout_mode: single
+epub_column_mode: single
+epub_image_size: adaptive
+pdf_enabled: true
+pdf_settings_configured: true
+justify_text: false
+show_inline_annotations: true
+invert_scroll_direction: false
+zen_hide_border: true
+book_sort_order: by_name
+
+# ============================================================================
+# Lookup Command
+# ============================================================================
+# Shell command to run when you press Space+l on selected text.
+# Use {} as a placeholder for the selected word. If no {} is present,
+# the selected text is appended as a shell-escaped argument.
+#
+# lookup_display controls how output is shown:
+#   popup          - capture stdout and show in a scrollable popup (default)
+#   fire_and_forget - spawn command and move on (e.g., open a browser)
+#
+# Example: CLI dictionary (output shown in popup)
+#   lookup_command: "dict {}"
+#   lookup_display: popup
+#
+# Example: macOS Dictionary.app
+#   lookup_command: "open dict://{}"
+#   lookup_display: fire_and_forget
+#
+# Example: online dictionary in browser
+#   lookup_command: "open 'https://www.merriam-webster.com/dictionary/{}'"
+#   lookup_display: fire_and_forget
+
+# ============================================================================
+# SyncTeX inverse search: editor command to run when you Ctrl+click,
+# secondary-click, or press 'gd' on a PDF rendered from LaTeX.
+# Placeholders: {file}, {line}, {column}
+#
+# Example: neovim via remote socket
+#   synctex_editor: "nvim --server /tmp/nvim.sock --remote-send '<C-\\><C-n>:e {file}<CR>:{line}<CR>'"
+#
+# Example: open in new terminal nvim
+#   synctex_editor: "nvim +{line} {file}"
+
+
+# ============================================================================
+# Custom Themes
+# ============================================================================
+# Add your own themes below. Find Base16 themes at:
+# https://github.com/tinted-theming/schemes
+#
+# Xcode Dark / Xcode Light: the same colors as nvim's xcode_dark / xcode_light
+# (dotfiles/nvim/lua/themes), mapped to Base16 the way configs/xcode_theme.lua
+# does for NvChad. Switch with Space+t.
+custom_themes:
+  - scheme: "Xcode Dark"
+    author: "Kody (from nvim xcode_dark)"
+    base00: "#060607"    # background
+    base01: "#2a2a30"    # status bars, panels
+    base02: "#2e3a52"    # selection
+    base03: "#7f8c98"    # comment: muted text, borders
+    base04: "#8a94a0"
+    base05: "#dfdfe0"    # text
+    base06: "#ededee"
+    base07: "#ffffff"
+    base08: "#ff8170"    # string (red)
+    base09: "#d9c97c"    # number
+    base0A: "#dabaff"    # type
+    base0B: "#ff8170"    # string
+    base0C: "#6bdfff"    # type declaration
+    base0D: "#b281eb"    # member: links, headings
+    base0E: "#ff7ab2"    # keyword
+    base0F: "#ffa14f"    # preprocessor
+  - scheme: "Xcode Light"
+    author: "Kody (from nvim xcode_light)"
+    base00: "#ffffff"
+    base01: "#e4e3e3"
+    base02: "#b2d7ff"
+    base03: "#5d6c79"
+    base04: "#8d898a"
+    base05: "#30282b"
+    base06: "#30282b"
+    base07: "#30282b"
+    base08: "#c41a16"
+    base09: "#1c00cf"
+    base0A: "#8d3faf"
+    base0B: "#c41a16"
+    base0C: "#16768e"
+    base0D: "#77127f"
+    base0E: "#ad3068"
+    base0F: "#643820"
+
+nav_panel_width: null
+lookup_command: null
+lookup_display: popup
+synctex_editor: null

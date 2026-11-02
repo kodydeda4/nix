@@ -474,8 +474,9 @@ end
 --
 -- Zen mode 2, Meh+7, per workspace too: zen mode, plus tmux's and nvim's bars
 -- hidden (toggle_minimal(), below, does just those) and the menu bar hidden
--- even when toggled on for zen mode. Meh+7 again goes back to plain zen mode;
--- Meh+6 turns both off. Its workspaces are in a second file.
+-- even when toggled on for zen mode. Meh+7 again turns zen mode off
+-- altogether; Meh+6 steps down to plain zen mode instead. Its workspaces are
+-- in a second file.
 local ZEN_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen-workspaces"
 local ZEN2_FILE = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-zen2-workspaces"
 
@@ -766,7 +767,9 @@ _G.toggle_bar = function()
 	end, nil, 300)
 end
 
--- Meh+6 (so there's no workspace 6, below): zen mode on / off
+-- Meh+6 (so there's no workspace 6, below): zen mode on / off. In zen mode 2,
+-- steps down to plain zen mode instead, so off -> Meh+7 -> Meh+6 -> Meh+6 goes
+-- zen 2 -> zen 1 -> off.
 hl.bind(MEH .. " + 6", function()
 	local name = active_workspace_name()
 	if not name then
@@ -774,27 +777,31 @@ hl.bind(MEH .. " + 6", function()
 	end
 	refit_snapped(function()
 		local set, set2 = zen_workspaces(), zen_workspaces(ZEN2_FILE)
-		local on = not zen_state(name)
+		local zen, zen2 = zen_state(name)
+		local on = zen2 or not zen -- zen mode 2 -> zen mode 1, else toggle
 		set[name] = on or nil
-		set2[name] = nil -- turning zen mode off turns zen mode 2 off too
+		set2[name] = nil -- zen mode 2 is off either way
 		save_zen_workspaces(set)
 		save_zen_workspaces(set2, ZEN2_FILE)
 		set_zen(on, false)
 	end, name, 300)
 end)
 
--- Meh+7 (so there's no workspace 7 either): zen mode 2 on / off. Off goes back
--- to plain zen mode if the workspace was in it before.
+-- Meh+7 (so there's no workspace 7 either): zen mode 2 on / off, from any
+-- level. Off is all the way off, not back to plain zen mode.
 hl.bind(MEH .. " + 7", function()
 	local name = active_workspace_name()
 	if not name then
 		return
 	end
 	refit_snapped(function()
-		local set2 = zen_workspaces(ZEN2_FILE)
-		set2[name] = not set2[name] or nil
+		local set, set2 = zen_workspaces(), zen_workspaces(ZEN2_FILE)
+		local on2 = not set2[name]
+		set2[name] = on2 or nil
+		set[name] = nil -- zen mode 2 counts as zen mode; off clears both
+		save_zen_workspaces(set)
 		save_zen_workspaces(set2, ZEN2_FILE)
-		set_zen(zen_state(name))
+		set_zen(on2, on2)
 	end, name, 300)
 end)
 

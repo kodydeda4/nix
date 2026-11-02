@@ -1,0 +1,17 @@
+# Yazi settings. ~/.config/yazi -> dotfiles/yazi (home.nix).
+# Only what differs from Yazi's defaults goes here.
+
+# Bookokrat (packages.nix) takes over the terminal while you read, so the
+# opener blocks Yazi until you quit it with q.
+[opener]
+read = [
+	{ run = "bookokrat %s1", desc = "Read in Bookokrat", for = "unix", block = true },
+]
+
+# EPUBs open in Bookokrat on Enter / l. prepend_rules come before Yazi's
+# defaults, so the generic "open" still shows up second in the O menu.
+[open]
+prepend_rules = [
+	{ mime = "application/epub+zip", use = [ "read", "open", "reveal" ] },
+	{ url = "*.epub",                use = [ "read", "open", "reveal" ] },
+]

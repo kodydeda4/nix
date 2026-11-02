@@ -25,6 +25,10 @@
     # decky-loader module is used (hosts/nixos-desktop), none of the Steam Deck parts.
     jovian.url = "github:Jovian-Experiments/Jovian-NixOS";
     jovian.inputs.nixpkgs.follows = "nixpkgs";
+    # Bookokrat, the vim-style terminal EPUB/PDF reader (not in nixpkgs).
+    # Keeps its own nixpkgs: it links against mupdf, so it builds against the
+    # version upstream tested.
+    bookokrat.url = "github:bugzmanov/bookokrat";
   };
 
   outputs = inputs @ {
@@ -38,6 +42,7 @@
     apple-fonts,
     zen-browser,
     jovian,
+    bookokrat,
   }: let
     # System config shared by every machine (Mac and ThinkPad). Anything that
     # only exists on one OS goes in hosts/<machine>/default.nix instead.

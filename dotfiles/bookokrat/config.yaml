@@ -1,6 +1,6 @@
 version: 3
-theme: "Xcode Dark"
-margin: 0
+theme: "Oceanic Next"
+margin: 20
 transparent_background: true
 pdf_scale: 1
 pdf_pan_shift: 0

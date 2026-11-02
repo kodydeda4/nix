@@ -356,9 +356,11 @@ in {
   # set like the Mac's (except Cmd+0, which toggles nvim's file tree from the
   # main config), and take Alt+1-9 for its own tabs (the Mac doesn't), so
   # those are unbound. Super+←/→ (keyd sends Ctrl+←/→, so super here) jumps
-  # words like ⌥←/→ in the Mac's Ghostty.
+  # words like ⌥←/→ in the Mac's Ghostty. Also some vertical padding (the
+  # Mac's is 0), the same as the sides (window-padding-x).
   xdg.configFile."ghostty-linux/config" = lib.mkIf isLinux {
     text = ''
+      window-padding-y = 8, 8
       key-remap = ctrl=super
       key-remap = alt=ctrl
       key-remap = super=alt

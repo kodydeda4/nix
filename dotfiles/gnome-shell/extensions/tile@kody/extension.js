@@ -42,6 +42,7 @@ const APPS = {
     [`${MEH}a`]: 'com.anthropic.Claude.desktop',
     [`${MEH}r`]: 'org.gnome.Nautilus.desktop',
     [`${MEH}d`]: 'discord.desktop',
+    [`${MEH}m`]: 'openbubbles.desktop',
 };
 
 // Cmd+Q (keyd sends Ctrl+Q) force-kills the focused app, same as Hyprland

@@ -385,10 +385,12 @@ local function work_area(monitor)
 	return m.x + left + ix, m.y + top + iy, aw - 2 * ix, ah - 2 * iy
 end
 
--- Padding (px) around snapped windows: GAP from the screen edges and GAP
--- between two windows side by side. Toggle Gaps sets it to 0.
+-- Padding (px) around snapped windows: GAP from the screen edges and
+-- GAP_BETWEEN between two windows side by side (twice GAP in zen mode, see
+-- apply_decorations). Toggle Gaps sets both to 0.
 local GAP_NORMAL = 24
 local GAP = GAP_NORMAL
+local GAP_BETWEEN = GAP_NORMAL
 -- Under the menu bar the gap is smaller: the bar's own height already sets the
 -- windows apart from it. (GAP again when the bar's hidden.)
 local BAR_GAP = 8
@@ -411,17 +413,21 @@ local RECTS = {
 -- `monitor`, or the focused one.
 local function geometry(rect, monitor)
 	local ax, ay, aw, ah = work_area(monitor)
-	ax, ay, aw, ah = ax + GAP / 2, ay + GAP / 2, aw - GAP, ah - GAP
-	if ay > (monitor or hl.get_active_monitor()).y + GAP / 2 then
+	local bar_on_top = ay > (monitor or hl.get_active_monitor()).y
+	-- Each window gets GAP_BETWEEN / 2 all round (so GAP_BETWEEN between two),
+	-- and pad makes up the rest of GAP at the screen edges.
+	local pad = GAP - GAP_BETWEEN / 2
+	ax, ay, aw, ah = ax + pad, ay + pad, aw - 2 * pad, ah - 2 * pad
+	if bar_on_top then
 		-- the bar's on top: start BAR_GAP below it, not GAP
 		local d = math.max(GAP - BAR_GAP, 0)
 		ay, ah = ay - d, ah + d
 	end
 	local x, y, w, h = rect[1], rect[2], rect[3], rect[4]
-	return math.floor(ax + x * aw + GAP / 2),
-		math.floor(ay + y * ah + GAP / 2),
-		math.floor(w * aw - GAP),
-		math.floor(h * ah - GAP)
+	return math.floor(ax + x * aw + GAP_BETWEEN / 2),
+		math.floor(ay + y * ah + GAP_BETWEEN / 2),
+		math.floor(w * aw - GAP_BETWEEN),
+		math.floor(h * ah - GAP_BETWEEN)
 end
 
 local function place(window, rect, monitor)
@@ -458,10 +464,11 @@ end
 -- Zen mode, Meh+6, per workspace: hides Noctalia's bar (Toggle Menu Bar shows
 -- it there) and dock, and Ghostty has no background, blur, shadow or border at
 -- all, with the wallpaper (only the wallpaper) dimmed (toward black in dark
--- mode, white in light mode), so its text floats over it; Meh+6 there again
--- brings it all back. Switching workspaces switches zen with it. Snapped
--- windows are re-fitted to the new space. In nvim, Space t b turns the
--- editor's own background off too. Which workspaces are zen lives in a file
+-- mode, white in light mode), so its text floats over it, and the gap between
+-- windows is doubled; Meh+6 there again brings it all back. Switching
+-- workspaces switches zen with it. Snapped windows are re-fitted to the new
+-- space. In nvim, Space t b turns the editor's own background off too. Which
+-- workspaces are zen lives in a file
 -- (one name per line) so it survives config reloads (Hyprland reloads on every
 -- save), and resets at log-in.
 --
@@ -532,13 +539,15 @@ local function bar_hidden()
 	return flag_set("bar-hidden")
 end
 
--- gaps (and the snap padding, GAP), borders and shadows: off when toggled off
+-- gaps (and the snap padding, GAP), borders and shadows: off when toggled off.
+-- In zen mode the gap between windows is twice as wide (the screen edges stay).
 local function apply_decorations()
 	local no_gaps = flag_set("gaps-off")
 	GAP = no_gaps and 0 or GAP_NORMAL
+	GAP_BETWEEN = GAP * (zen_shown and 2 or 1)
 	hl.config({
 		general = {
-			gaps_in = no_gaps and 0 or 12,
+			gaps_in = math.floor(GAP_BETWEEN / 2), -- per window, so GAP_BETWEEN between two
 			gaps_out = no_gaps and 0 or {
 				-- less under the menu bar, when it's shown
 				top = bar_hidden() and GAP_NORMAL or BAR_GAP,
@@ -1013,6 +1022,7 @@ hl.bind(MEH .. " + N", app({ "obsidian", "md.obsidian.Obsidian" }, "obsidian"))
 hl.bind(MEH .. " + A", app({ "com.anthropic.Claude", "Claude" }, "claude-desktop"))
 hl.bind(MEH .. " + R", app({ "org.gnome.Nautilus", "nautilus" }, "nautilus"))
 hl.bind(MEH .. " + D", app({ "discord" }, "discord"))
+hl.bind(MEH .. " + M", app({ "bluebubbles" }, "openbubbles"))
 
 -- Ghostty focused (Meh+T, Cmd+Tab, a click...): the windows under it that it
 -- overlaps are hidden, like Cmd+H, so nothing shows through its translucent

@@ -177,7 +177,7 @@ The goal is the same keys everywhere. On the ThinkPad that's done by **keyd**
 | Key next to space | ⌘ | acts as ⌘ (sends Ctrl; Ctrl and Alt are swapped) |
 | ⌘←/→, ⌥←/→ | line start/end, word jump | same (Super is where ⌥ is) |
 | ⌘Tab | app switcher | app switcher |
-| Hyper/Meh + letter | open / focus / hide an app: T Ghostty, C Zen, B Zed, X Xcode, F Figma, M Messages, A Claude, … | same idea: T Ghostty, C Brave, X Zed, A Claude, … |
+| Hyper/Meh + letter | open / focus / hide an app: T Ghostty, C Zen, B Zed, X Xcode, F Figma, M Messages, A Claude, … | same idea: T Ghostty, C Brave, X Zed, M OpenBubbles, A Claude, … |
 
 So in the GNOME settings and `hyprland.lua`, **"Cmd" is written as Ctrl.**
 
@@ -203,7 +203,8 @@ On the GDM login screen, the gear icon picks the session:
   [Noctalia](https://docs.noctalia.dev) (`dotfiles/noctalia/`) as the bar,
   launcher (Cmd+Space), notifications and lock screen. Same tiling keys as
   GNOME, plus:
-  - Meh+letter opens/focuses/hides an app (T Ghostty, C Zen, X Zed, A Claude, …)
+  - Meh+letter opens/focuses/hides an app (T Ghostty, C Zen, X Zed, M OpenBubbles,
+    A Claude, …)
   - Meh+arrows focus, Meh+1-9 workspaces, Meh+F float/tile (Super is left
     to Ghostty, where it acts as ⌥ like the Mac)
   - Meh+6 zen mode (hides bar + dock, Ghostty floats over the dimmed

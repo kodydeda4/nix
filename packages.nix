@@ -4,6 +4,7 @@
 }: let
   zed = import ./pkgs/zed.nix {inherit pkgs inputs;};
   zen = import ./pkgs/zen.nix {inherit pkgs inputs;};
+  openbubbles = pkgs.callPackage ./pkgs/openbubbles.nix {};
 in {
   # -------------------------------------------------------------------------
   # shared
@@ -133,6 +134,7 @@ in {
     gnomeExtensions.blur-my-shell
     mpv
     nwg-displays
+    openbubbles # iMessage (pkgs/openbubbles.nix; the Mac has Messages)
     overskride
     papirus-icon-theme
     trayscale # Tailscale GUI (the Mac uses the tailscale-app cask)

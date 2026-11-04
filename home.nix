@@ -157,6 +157,8 @@ in {
       toggle-overview = ["<Control>space"];
       # Cmd+Shift+4: GNOME's screenshot tool (pick a region), like the Mac
       show-screenshot-ui = ["Print" "<Shift><Control>4"];
+      # Cmd+Shift+5: the same tool set to record the screen
+      show-screen-recording-ui = ["<Ctrl><Shift><Alt>R" "<Shift><Control>5"];
     };
     # Cmd+H hides (minimizes) the window, in every app.
     "org/gnome/desktop/wm/keybindings" = {

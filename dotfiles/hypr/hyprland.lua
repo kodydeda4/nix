@@ -265,6 +265,8 @@ hl.bind(CMD .. " + SHIFT + grave", cycle_app_windows(-1))
 -- window looked like it never hid.
 -- Cmd+Shift+4: screenshot of a region (saved to ~/Pictures/Screenshots and copied), like the Mac
 hl.bind(CMD .. " + SHIFT + 4", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
+-- Cmd+Shift+5: record a region or a monitor; press again to stop (screen-record.sh next to this file)
+hl.bind(CMD .. " + SHIFT + 5", hl.dsp.exec_cmd("bash " .. os.getenv("HOME") .. "/.config/hypr/screen-record.sh"))
 hl.bind(CMD .. " + H", hl.dsp.window.move({ workspace = "special:hidden", follow = false }))
 hl.bind(CMD .. " + SHIFT + H", hl.dsp.workspace.toggle_special("hidden"))
 
@@ -634,7 +636,7 @@ end
 -- as they are. (Hyprland's dim_around darkened them too whenever they were
 -- behind Ghostty.) ZEN_DIM is how strong, 0 to 1: the black sheet in dark
 -- mode, and the white one in light mode.
-local ZEN_DIM = { dark = 0.9, light = 0.95 }
+local ZEN_DIM = { dark = 0.8, light = 0.95 }
 local WALLPAPER_DIM = os.getenv("HOME") .. "/.config/hypr/wallpaper-dim.py"
 -- Ghostty: no blur behind it, no shadow (over the dimmed wallpaper it reads
 -- as a gray border) and no border (every other window keeps its own), and

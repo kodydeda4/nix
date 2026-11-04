@@ -151,5 +151,7 @@ in {
     gnumake
     unzip
     wl-clipboard
+    wf-recorder # Cmd+Shift+5 in Hyprland (dotfiles/hypr/screen-record.sh)
+    slurp
   ];
 }

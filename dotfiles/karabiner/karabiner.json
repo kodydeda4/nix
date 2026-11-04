@@ -260,6 +260,19 @@
 						]
 					},
 					{
+						"description": "Hyper + 7 → toggle menu bar auto-hide (menubar-toggle.sh)",
+						"manipulators": [
+							{
+								"from": {
+									"key_code": "7",
+									"modifiers": { "mandatory": ["left_command", "left_control", "left_option"] }
+								},
+								"to": [{ "shell_command": "~/.config/karabiner/menubar-toggle.sh" }],
+								"type": "basic"
+							}
+						]
+					},
+					{
 						"description": "Claude: Cmd+0 → toggle sidebar (Cmd+B)",
 						"manipulators": [
 							{

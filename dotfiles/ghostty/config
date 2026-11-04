@@ -10,13 +10,16 @@ theme = dark:atom-one-dark-oled.conf, light:atom-one-light-thick.conf
 font-family = SF Mono
 font-size = 16
 # background-opacity = 1
-background-opacity = 0.90
+background-opacity = 1
+background-image = "~/Pictures/wallpapers/wallhaven-qdjg57.png"
+background-image-fit = cover
+background-image-opacity = 0.2
 # background-opacity = 0.5
 # background-blur-radius = 20
 # translucent, blurred background; shows wherever nvim leaves the background
 # empty, like the file tree. (macos-glass-regular, the native glass, came out
 # nearly opaque; macos-glass-clear is the see-through variant.)
-background-blur = 25
+background-blur = 0
 unfocused-split-opacity = 0.75
 confirm-close-surface = false
 window-width = 100
@@ -30,7 +33,7 @@ window-padding-balance = true
 # macOS specific features
 #----------------------------------
 macos-titlebar-style = tabs
-# macos-titlebar-style = hidden
+macos-titlebar-style = hidden
 macos-option-as-alt = true
 window-vsync = true
 window-colorspace = display-p3

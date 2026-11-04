@@ -359,10 +359,13 @@ in {
   # main config), and take Alt+1-9 for its own tabs (the Mac doesn't), so
   # those are unbound. Super+←/→ (keyd sends Ctrl+←/→, so super here) jumps
   # words like ⌥←/→ in the Mac's Ghostty. Also some vertical padding (the
-  # Mac's is 0), the same as the sides (window-padding-x).
+  # Mac's is 0), the same as the sides (window-padding-x). And none of the
+  # Mac's wallpaper image: a translucent background, which Hyprland blurs.
   xdg.configFile."ghostty-linux/config" = lib.mkIf isLinux {
     text = ''
       window-padding-y = 8, 8
+      background-opacity = 0.80
+      background-image =
       key-remap = ctrl=super
       key-remap = alt=ctrl
       key-remap = super=alt

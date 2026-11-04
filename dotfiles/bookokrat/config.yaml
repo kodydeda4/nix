@@ -1,6 +1,6 @@
 version: 3
 theme: "Oceanic Next"
-margin: 12
+margin: 0
 transparent_background: true
 pdf_scale: 1
 pdf_pan_shift: 0

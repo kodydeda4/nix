@@ -117,6 +117,7 @@ in {
     "karabiner-elements"
     "macs-fan-control"
     "proxy-audio-device"
+    "sf-symbols"
     "tailscale-app"
     "zen"
   ];

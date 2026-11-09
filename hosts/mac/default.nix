@@ -83,9 +83,6 @@ in {
     NSUserKeyEquivalents = sidebarToggle;
   };
 
-  # Photos: ⌘0 toggles the sidebar too. (Mail's is in postActivation below.)
-  system.defaults.CustomUserPreferences."com.apple.Photos".NSUserKeyEquivalents = sidebarToggle;
-
   # Fast key repeat. Units are 15 ms; System Settings' fastest is
   # KeyRepeat = 2 and shortest delay is InitialKeyRepeat = 15.
   # Takes effect after logging out and back in.
@@ -129,12 +126,15 @@ in {
       sudo -u kody ${pkgs.defaultbrowser}/bin/defaultbrowser zen
     fi
 
-    # Mail: ⌘0 toggles the sidebar, like Finder and Photos. Mail's prefs live
-    # in a protected container, so this needs the terminal's Full Disk Access.
+    # Mail and Photos: ⌘0 toggles the sidebar, like Finder. Their prefs live
+    # in protected containers, so this needs the terminal's Full Disk Access.
     # CustomUserPreferences can't do it: it writes via `launchctl asuser`,
-    # which doesn't inherit that access.
-    sudo -u kody defaults write com.apple.mail NSUserKeyEquivalents \
-      -dict-add "Show Sidebar" "@0" "Hide Sidebar" "@0"
+    # which doesn't inherit that access. Without it, warn rather than abort.
+    for domain in com.apple.mail com.apple.Photos; do
+      sudo -u kody defaults write "$domain" NSUserKeyEquivalents \
+        -dict-add "Show Sidebar" "@0" "Hide Sidebar" "@0" 2>/dev/null ||
+        echo "warning: couldn't set $domain sidebar shortcut; give this terminal Full Disk Access and rebuild" >&2
+    done
   '';
 
   # zsh: grey inline suggestions from history (accept with →).

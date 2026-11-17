@@ -33,7 +33,7 @@ window-padding-balance = true
 # macOS specific features
 #----------------------------------
 macos-titlebar-style = tabs
-macos-titlebar-style = hidden
+# macos-titlebar-style = hidden
 macos-option-as-alt = true
 window-vsync = true
 window-colorspace = display-p3

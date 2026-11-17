@@ -17,6 +17,7 @@ in {
 
   shared = with pkgs; [
     brave
+    localsend # AirDrop-style file sharing with Android
     obsidian
     slack
     zed

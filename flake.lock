@@ -16,11 +16,11 @@
         "sf-pro": "sf-pro"
       },
       "locked": {
-        "lastModified": 1789419105,
-        "narHash": "sha256-T5A/AqlF4iL908aIZh45e35Mvj8lTJKq8ddS5bk7nd8=",
+        "lastModified": 1793889225,
+        "narHash": "sha256-Fjj4Xtklbx6ki5/O+WgiKbJrm+wsI9lVUVNo7OKXsAo=",
         "owner": "Lyndeno",
         "repo": "apple-fonts.nix",
-        "rev": "3861e2249cb244bfbc7cfab2303c152cf5f9d9e9",
+        "rev": "58b7ab5a049c57c4f38f27eac84f45e2903bb687",
         "type": "github"
       },
       "original": {
@@ -61,11 +61,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1792586354,
-        "narHash": "sha256-e3aplQ7T7cWoTEm68/Zs2Ry6/JY4dpoJEGbj/WHRApc=",
+        "lastModified": 1794399365,
+        "narHash": "sha256-KtSWQIxDUAqzeKuHEO+ZskyMbDXK4QydP51ayS+QB/I=",
         "owner": "bugzmanov",
         "repo": "bookokrat",
-        "rev": "9c02ee3b3a0f86791b3917cb1a93436d92a8603e",
+        "rev": "7797df51e8d5b85c3e06bcb936f246a27a996580",
         "type": "github"
       },
       "original": {
@@ -77,16 +77,16 @@
     "brew-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1789661079,
-        "narHash": "sha256-geVTQ51PGZ1mLULM5k7wO7qt/6xenOR/YG8X7Q3eCaI=",
+        "lastModified": 1793000687,
+        "narHash": "sha256-8mCor0DDjNhi+0e+FllfqiMABujBl+/RxYW+wgMpcto=",
         "owner": "Homebrew",
         "repo": "brew",
-        "rev": "edb70f031e4170c780799633a1226ff73e1077f4",
+        "rev": "c6069d2a943b71b0a90d91fc1ac93cb9c1634dcc",
         "type": "github"
       },
       "original": {
         "owner": "Homebrew",
-        "ref": "7.0.4",
+        "ref": "7.0.11",
         "repo": "brew",
         "type": "github"
       }
@@ -118,11 +118,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1790636166,
-        "narHash": "sha256-hTOSqaTx/8PIWRxQ/lPE0+hIIXvebSZW1BuR8eTg6cw=",
+        "lastModified": 1794578122,
+        "narHash": "sha256-6mmedbexjat5Z0MhVKyg1EBn4+mv+h77gcbUumpBxfw=",
         "owner": "tomsch",
         "repo": "claude-desktop-nix",
-        "rev": "e4642c646667424962b05ee2b9da7e29a2c33a1c",
+        "rev": "37c1302bb21a19a7ff1fe1b218104b22e068b547",
         "type": "github"
       },
       "original": {
@@ -156,11 +156,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791642191,
-        "narHash": "sha256-0bK0A59rVUn1SRZzo4cNi4VSqAe7vR1gL2/MZl53Frw=",
+        "lastModified": 1794278858,
+        "narHash": "sha256-rkrJwLgLSHBnXfgoSKIDa+2LLGdTqynsV3GAxOTGhUU=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "c58f54c733a7894d84fa2fdff26cc12088c4b78c",
+        "rev": "82ce401aa350502897c3f2e85f384d61cd3b0b6d",
         "type": "github"
       },
       "original": {
@@ -177,11 +177,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792098797,
-        "narHash": "sha256-u4DIIZgznEGzByxXrxWCXK19VcMtTBmi/M9gZ7Jk9bM=",
+        "lastModified": 1793193205,
+        "narHash": "sha256-X6xa6sGA7RnJQuZGbFMC+K+KToWAlBDCCjJXfTwEPsw=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "640725978b99076e18e069f6e7d2959124584f8f",
+        "rev": "095fef2f265c3c0da4fe315efba8f8a04495ab34",
         "type": "github"
       },
       "original": {
@@ -198,11 +198,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793262559,
-        "narHash": "sha256-UlCGeyKKt4eeY8VpPJFf4EXXzSM4eoG1FJL9xXj2gBk=",
+        "lastModified": 1794477218,
+        "narHash": "sha256-egiRyZq+yEvpF0z5m038SngrDA3hCXlhBB4CoSvrZ6Y=",
         "owner": "Jovian-Experiments",
         "repo": "Jovian-NixOS",
-        "rev": "da68c2038839af4413fadb2b69b591893abddc74",
+        "rev": "fdffe0d20fbadeb4958e16c4e4c41108aff92223",
         "type": "github"
       },
       "original": {
@@ -218,11 +218,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1786845137,
-        "narHash": "sha256-oQFip+v0luP8NIxJzmiW4Wu8bILsbFWom5l0zonl8hQ=",
+        "lastModified": 1793418699,
+        "narHash": "sha256-+RpTlcdh9KqZ+ZiLkNSTvibQWm935EcIdBzRPCTFsrQ=",
         "owner": "nix-darwin",
         "repo": "nix-darwin",
-        "rev": "4cff07de74b50e64bdd68cd4e722ab5b6b35ee48",
+        "rev": "ff0e21a414d4547183396da1b44a66f2577b65e9",
         "type": "github"
       },
       "original": {
@@ -258,11 +258,11 @@
         "brew-src": "brew-src"
       },
       "locked": {
-        "lastModified": 1789928041,
-        "narHash": "sha256-iV37ieTcE4ZLOYEe0VznW6dWMBe4lEL8AbK1vblyZGM=",
+        "lastModified": 1793543863,
+        "narHash": "sha256-oDYLVD8KGT/M57c8HziYSSj0le4wCyA+jZ7+/qUS91M=",
         "owner": "zhaofengli-wip",
         "repo": "nix-homebrew",
-        "rev": "c11cccfdd36dd69b5323d70d354b2853379c2426",
+        "rev": "52bc87da3f30c2261a6d1cfef3c892097b53daeb",
         "type": "github"
       },
       "original": {
@@ -321,11 +321,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1791487292,
-        "narHash": "sha256-tqM7xDEsaeK1p6VvRygeZ9LkQRpUUkbRT02BHv6hnTM=",
+        "lastModified": 1794495034,
+        "narHash": "sha256-E0hYoioqUtM2XmPPvYYpJgdADF5AW9oOoPSEiM9dTHQ=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "8edc0c72e3a38faf5434e40d1f19431125fe4b30",
+        "rev": "2074cc672349f14240fb7ea90d509e0b643e9dd4",
         "type": "github"
       },
       "original": {
@@ -388,7 +388,7 @@
     "sf-compact": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-KjCzuJOrNxgptsMLGaR8wcrU/bBxCpwtUGzGDcCxJTc=",
+        "narHash": "sha256-5qI/CsQ4O06tlYKVCw6DDukYEeaWdB6iO6un0XUqTkw=",
         "type": "file",
         "url": "https://devimages-cdn.apple.com/design/resources/download/SF-Compact.dmg"
       },
@@ -436,7 +436,7 @@
     "sf-pro": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-dvGLO786y9ygKRSKDJlhIF6AGmn2NTJ5tBulKinPRxY=",
+        "narHash": "sha256-vDM+4k+glslI427ijDZNXR+5zEfve8FhR1/IiTVNlRQ=",
         "type": "file",
         "url": "https://devimages-cdn.apple.com/design/resources/download/SF-Pro.dmg"
       },
@@ -468,11 +468,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792271801,
-        "narHash": "sha256-LYN8miMEew9CxgRrF/RCnAyOe6476dQM/JzELnFQef0=",
+        "lastModified": 1794495687,
+        "narHash": "sha256-YufvHb7O/52Cp+B9a3HRVO0HluXSEQ75+WMIcU6YPyE=",
         "owner": "0xc000022070",
         "repo": "zen-browser-flake",
-        "rev": "e1b9b3578ebb388b56012cd9ddd80e19681d2d39",
+        "rev": "46c4140b55328bc3ee32f22c42185bc534998a1d",
         "type": "github"
       },
       "original": {

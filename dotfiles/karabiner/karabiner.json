@@ -260,7 +260,7 @@
 						]
 					},
 					{
-						"description": "Hyper + 7 → toggle menu bar auto-hide (menubar-toggle.sh)",
+						"description": "Hyper + 7 → toggle menu bar auto-hide, Dock and black wallpaper (menubar-toggle.sh)",
 						"manipulators": [
 							{
 								"from": {

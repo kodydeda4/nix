@@ -5,7 +5,6 @@
   zed = import ./pkgs/zed.nix {inherit pkgs inputs;};
   zen = import ./pkgs/zen.nix {inherit pkgs inputs;};
   openbubbles = pkgs.callPackage ./pkgs/openbubbles.nix {};
-  dozer = pkgs.callPackage ./pkgs/dozer.nix {};
   # Bookokrat's flake (not in nixpkgs). Its SVG snapshot tests fail in the Nix
   # build sandbox (3 of 104 at 0.3.14), so skip them; the app itself is fine.
   bookokrat = inputs.bookokrat.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs {
@@ -79,7 +78,6 @@ in {
     espanso
     mos
     alt-tab-macos
-    dozer # menu bar icon hider (pkgs/dozer.nix)
     mkalias
     xcbeautify
   ];

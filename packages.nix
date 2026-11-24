@@ -40,6 +40,7 @@ in {
     git-lfs
     jdk
     jellyfin-tui
+    jira-cli-go # `jira` command
     lazygit
     lsd
     neovim

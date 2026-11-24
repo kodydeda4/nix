@@ -25,6 +25,7 @@ in {
     btop
     bun
     cbonsai
+    claude-code
     cmatrix
     cowsay
     delta
@@ -106,6 +107,7 @@ in {
   casks = [
     "balenaetcher"
     "betterdisplay"
+    "calibre" # nixpkgs marks calibre broken on macOS
     "claude"
     "devcleaner"
     "discord"
@@ -136,6 +138,7 @@ in {
   linux = with pkgs; [
     inputs.claude-desktop.packages.${pkgs.stdenv.hostPlatform.system}.default
     zen
+    calibre # the Mac uses the calibre cask
     discord
     geary
     ghostty
